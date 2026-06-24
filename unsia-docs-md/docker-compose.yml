@@ -1,0 +1,398 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # INFRASTRUCTURE SERVICES
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: unsia-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+      - ./infra/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      - unsia-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: unsia-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata_local:/data
+    networks:
+      - unsia-network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: unsia-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: unsia
+      RABBITMQ_DEFAULT_PASS: unsia
+    volumes:
+      - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - rabbitdata_local:/var/lib/rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # CORE SERVICE (Auth/SSO) - Port 8001
+  # ==========================================
+  unsia-core-service:
+    build:
+      context: ./services/unsia-core-service
+      dockerfile: Dockerfile
+    container_name: unsia-core-service
+    restart: always
+    environment:
+      PORT: "8001"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/core_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "core_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      JWKS_URL: "http://localhost:8001/.well-known/jwks.json"
+      RSA_PRIVATE_KEY_PATH: "/app/keys/private.pem"
+      RSA_PUBLIC_KEY_PATH: "/app/keys/public.pem"
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./services/unsia-core-service:/app
+      - core-keys:/app/keys
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # REFERENCE SERVICE - Port 8002
+  # ==========================================
+  unsia-reference-service:
+    build:
+      context: ./services/unsia-reference-service
+      dockerfile: Dockerfile
+    container_name: unsia-reference-service
+    restart: always
+    environment:
+      PORT: "8002"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/reference_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "reference_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+    ports:
+      - "8002:8002"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # PMB SERVICE - Port 8003
+  # ==========================================
+  unsia-pmb-service:
+    build:
+      context: ./services/unsia-pmb-service
+      dockerfile: Dockerfile
+    container_name: unsia-pmb-service
+    restart: always
+    environment:
+      PORT: "8003"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/pmb_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "pmb_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+    ports:
+      - "8003:8003"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FINANCE SERVICE - Port 8005
+  # ==========================================
+  unsia-finance-service:
+    build:
+      context: ./services/unsia-finance-service
+      dockerfile: Dockerfile
+    container_name: unsia-finance-service
+    restart: always
+    environment:
+      PORT: "8005"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/finance_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "finance_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+      MIDTRANS_SERVER_KEY: "${MIDTRANS_SERVER_KEY:-}"
+      MIDTRANS_CLIENT_KEY: "${MIDTRANS_CLIENT_KEY:-}"
+      MIDTRANS_ENVIRONMENT: "${MIDTRANS_ENVIRONMENT:-sandbox}"
+    ports:
+      - "8005:8005"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # ACADEMIC SERVICE - Port 8004
+  # ==========================================
+  unsia-academic-service:
+    build:
+      context: ./services/unsia-academic-service
+      dockerfile: Dockerfile
+    container_name: unsia-academic-service
+    restart: always
+    environment:
+      PORT: "8004"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/academic_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "academic_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+      FINANCE_SERVICE_URL: "http://unsia-finance-service:8005"
+    ports:
+      - "8004:8004"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # LMS SERVICE - Port 8006
+  # ==========================================
+  unsia-lms-service:
+    build:
+      context: ./services/unsia-lms-service
+      dockerfile: Dockerfile
+    container_name: unsia-lms-service
+    restart: always
+    environment:
+      PORT: "8006"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/lms_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "lms_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+      ACADEMIC_SERVICE_URL: "http://unsia-academic-service:8004"
+    ports:
+      - "8006:8006"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # HRIS SERVICE - Port 8008
+  # ==========================================
+  unsia-hris-service:
+    build:
+      context: ./services/unsia-hris-service
+      dockerfile: Dockerfile
+    container_name: unsia-hris-service
+    restart: always
+    environment:
+      PORT: "8008"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/hris_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "hris_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+      FINANCE_SERVICE_URL: "http://unsia-finance-service:8005"
+    ports:
+      - "8008:8008"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # ASSESSMENT SERVICE - Port 8007
+  # ==========================================
+  unsia-assessment-service:
+    build:
+      context: ./services/unsia-assessment-service
+      dockerfile: Dockerfile
+    container_name: unsia-assessment-service
+    restart: always
+    environment:
+      PORT: "8007"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/assessment_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "assessment_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      LMS_SERVICE_URL: "http://unsia-lms-service:8006"
+    ports:
+      - "8007:8007"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # CRM SERVICE - Port 8009
+  # ==========================================
+  unsia-crm-service:
+    build:
+      context: ./services/unsia-crm-service
+      dockerfile: Dockerfile
+    container_name: unsia-crm-service
+    restart: always
+    environment:
+      PORT: "8009"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/crm_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "crm_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+    ports:
+      - "8009:8009"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # PORTAL SERVICE - Port 8010
+  # ==========================================
+  unsia-portal-service:
+    build:
+      context: ./services/unsia-portal-service
+      dockerfile: Dockerfile
+    container_name: unsia-portal-service
+    restart: always
+    environment:
+      PORT: "8010"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/portal_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "portal_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+    ports:
+      - "8010:8010"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND WEB - Port 3000
+  # ==========================================
+  unsia-portal-web:
+    build:
+      context: ./frontend/unsia-portal-web
+      dockerfile: Dockerfile
+    container_name: unsia-portal-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://unsia-core-service:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://unsia-reference-service:8002"
+      NEXT_PUBLIC_API_PMB_URL: "http://unsia-pmb-service:8003"
+      NEXT_PUBLIC_API_ACADEMIC_URL: "http://unsia-academic-service:8004"
+      NEXT_PUBLIC_API_FINANCE_URL: "http://unsia-finance-service:8005"
+      NEXT_PUBLIC_API_LMS_URL: "http://unsia-lms-service:8006"
+      NEXT_PUBLIC_API_ASSESSMENT_URL: "http://unsia-assessment-service:8007"
+      NEXT_PUBLIC_API_HRIS_URL: "http://unsia-hris-service:8008"
+      NEXT_PUBLIC_API_CRM_URL: "http://unsia-crm-service:8009"
+      NEXT_PUBLIC_API_PORTAL_URL: "http://unsia-portal-service:8010"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-reference-service
+    networks:
+      - unsia-network
+
+networks:
+  unsia-network:
+    driver: bridge
+
+volumes:
+  pgdata_local:
+    driver: local
+  redisdata_local:
+    driver: local
+  rabbitdata_local:
+    driver: local
+  core-keys:
+    driver: local

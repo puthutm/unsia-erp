@@ -1,0 +1,1226 @@
+<!DOCTYPE html> <html lang="id"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>SIAKAD Mahasiswa · Universitas Siber Asia</title> <meta name="description" content="Portal SSO Mahasiswa SIAKAD UNSIA — akses terpadu ke layanan akad
+
+pasted
+
+Hapus IPK dan SKS yang ada di banner pada box Akademik Saya Hari Ini dan beri sedikit space pada box ini agar tidak terlalu menempel dengan sisi bawah banner. 
+background stiky header jadikan warna putih saat di gulir kebawah dan keatas 
+sejajarkan box Dosen PA dengan box Nama mahasiswa pada banner.
+pindahkan widget Kalender akademik dan Pengumuman menjadi menu navigasi pada header. dan tambah 1 menu pada header yaitu website, sehingga di header tersedia 3 menu : Kalender Akademik, Pengumuman dan Website.
+
+7:24 AM
+
+Reading frontend design skill
+Reading frontend design skill
+Now let me implement all the requested changes:
+
+
+Ran 2 commands
+Ran 2 commands
+I'll work directly from the document provided in context. Let me make all the changes:
+
+
+Create working file
+Create working file
+I'll build the modified file with all 5 changes applied directly:
+
+Now I'll create the modified HTML file with all the requested changes:
+
+
+Ran 2 commands, read a file
+Ran 2 commands, read a file
+Semua perubahan sudah diterapkan. Berikut ringkasan yang dilakukan:
+
+1. Box "Akademik Saya Hari Ini"
+
+IPK dan SKS dihapus dari dalam box
+Ditambahkan pb-6 pada wrapper kanan agar ada jarak antara box dengan tepi bawah banner
+2. Header selalu putih
+
+Background header sekarang rgba(255,255,255,0.98) dengan backdrop-filter: blur — konsisten putih saat scroll ke atas maupun ke bawah, tidak lagi transparan di atas hero
+3. Badge Dosen PA sejajar dengan badge Nama Mahasiswa
+
+Keduanya sekarang berada dalam satu flex row yang sama (flex-col sm:flex-row), sehingga sejajar horizontal di layar lebar
+4. Kalender Akademik & Pengumuman dipindah ke header
+
+Keduanya menjadi tombol navigasi di tengah header dengan dropdown panel full-width yang muncul saat diklik
+Kalender menampilkan grid bulan penuh + daftar agenda + detail hari saat diklik
+Pengumuman menampilkan semua pengumuman dengan filter tab
+5. Ditambahkan menu "Website"
+
+Link langsung ke unsia.ac.id dengan ikon globe dan tanda panah eksternal
+Di mobile sidebar, ketiga menu ini juga tersedia di bagian "Portal"
+
+Siakad updated
+Code · HTML 
+
+
+Want to be notified when Claude responds?
+
+
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+
+
+raw
+Siakad updated · HTML
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIAKAD Mahasiswa · Universitas Siber Asia</title>
+<meta name="description" content="Portal SSO Mahasiswa SIAKAD UNSIA" />
+ 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#eef5fb', 100: '#d9e7f1', 200: '#aac6dd', 300: '#7aa5c8',
+          400: '#3d80aa', 500: '#00719f', 600: '#0f487b', 700: '#0a345c',
+          800: '#08294d', 900: '#05203f',
+          accent: '#FED524', 'accent-deep': '#E8B900'
+        }
+      },
+      fontFamily: {
+        display: ['Urbanist', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+      }
+    }
+  }
+};
+</script>
+ 
+<style>
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f0f4f8; overflow-x: hidden; margin: 0; }
+  .display { font-family: 'Urbanist', sans-serif; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+ 
+  /* ════ SPLASH ════ */
+  #splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #05203f 0%, #0a345c 40%, #0f487b 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  body.app-loaded #splash { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+  .splash-logo { animation: splashPulse 1.6s ease-in-out infinite; }
+  @keyframes splashPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.04);opacity:0.85} }
+  .splash-bar-track { width: 220px; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; overflow: hidden; margin-top: 28px; }
+  .splash-bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, #FED524, #fff); border-radius: 2px; animation: fillBar 1.3s ease-out 0.2s forwards; }
+  @keyframes fillBar { to { width: 100%; } }
+  .splash-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); display: inline-block; margin: 0 3px; animation: dotBounce 1.2s ease-in-out infinite; }
+  .splash-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .splash-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dotBounce { 0%,80%,100%{transform:scale(0.6);opacity:0.3} 40%{transform:scale(1.2);opacity:1} }
+ 
+  /* ════ TOP LOADER ════ */
+  #top-loader {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, #FED524 50%, transparent);
+    background-size: 200% 100%; z-index: 10000;
+    animation: topLoader 1.4s ease-in-out infinite;
+    transition: opacity 0.5s;
+  }
+  body.app-loaded #top-loader { opacity: 0; }
+  @keyframes topLoader { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+ 
+  /* ════ APP REVEAL ════ */
+  #app-content { opacity: 0; transform: translateY(12px); transition: opacity 0.7s ease-out, transform 0.7s ease-out; }
+  body.app-loaded #app-content { opacity: 1; transform: translateY(0); }
+ 
+  /* ════ DOT PATTERN ════ */
+  .dot-pattern { background-image: radial-gradient(rgba(255,255,255,0.07) 1.5px, transparent 1.5px); background-size: 22px 22px; }
+ 
+  /* ════ HEADER - Always white ════ */
+  #main-header {
+    background: rgba(255,255,255,0.98) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 0 #e2e8f0, 0 4px 16px rgba(0,0,0,0.04);
+  }
+ 
+  /* ════ NAV MENU ITEMS ════ */
+  .nav-menu-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 10px;
+    font-size: 13px; font-weight: 700; color: #374151;
+    border: none; background: transparent; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+    position: relative;
+  }
+  .nav-menu-btn:hover { background: #f1f5f9; color: #0f487b; }
+  .nav-menu-btn.active { background: #eef5fb; color: #0f487b; }
+  .nav-menu-btn .nav-badge {
+    position: absolute; top: 4px; right: 6px;
+    min-width: 14px; height: 14px; padding: 0 3px;
+    background: #ef4444; color: white;
+    font-size: 8px; font-weight: 800; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+  }
+ 
+  /* ════ NAV DROPDOWN PANEL ════ */
+  .nav-panel {
+    position: fixed; top: 64px; left: 0; right: 0;
+    background: white; border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 16px 48px rgba(5,32,63,0.14);
+    z-index: 35; opacity: 0; pointer-events: none;
+    transform: translateY(-8px);
+    transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+    max-height: 85vh; overflow-y: auto;
+  }
+  .nav-panel.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+ 
+  /* ════ HERO ════ */
+  .hero-mesh {
+    background: radial-gradient(at 0% 0%, #0a345c 0%, transparent 55%),
+                radial-gradient(at 100% 0%, #00719f 0%, transparent 55%),
+                radial-gradient(at 60% 100%, #0f487b 0%, transparent 60%), #08294d;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg-img {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 55%; min-width: 300px;
+    background-image: url('https://i.ytimg.com/vi/bo4rbMMVwWg/maxresdefault.jpg');
+    background-size: cover; background-position: center left; opacity: 0.13;
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.9) 60%, rgba(0,0,0,0.9) 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.9) 60%, rgba(0,0,0,0.9) 100%);
+  }
+ 
+  /* ════ MODULE CARDS ════ */
+  .mod-card { transition: all 0.28s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; cursor: pointer; }
+  .mod-card::before { content:''; position:absolute; inset:0; background: linear-gradient(135deg, transparent 0%, rgba(254,213,36,0.06) 100%); opacity:0; transition:opacity 0.28s; }
+  .mod-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px -8px rgba(15,72,123,0.22); border-color: #0f487b !important; }
+  .mod-card:hover::before { opacity:1; }
+  .mod-card:hover .mod-arrow { transform: translate(2px,-2px); color: #FED524; opacity: 1 !important; }
+  .mod-card:active { transform: translateY(-2px) scale(0.99); }
+ 
+  /* ════ STAT CARDS ════ */
+  .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 18px; padding: 20px; transition: all 0.22s; position: relative; overflow: hidden; }
+  .stat-card:hover { border-color: #0f487b; transform: translateY(-2px); box-shadow: 0 8px 24px -8px rgba(15,72,123,0.18); }
+ 
+  /* ════ PROGRESS ════ */
+  .progress-track { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #0f487b, #FED524); border-radius: 3px; transition: width 1.2s ease-out; }
+ 
+  /* ════ STATUS DOTS ════ */
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .status-online { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); animation: pulse 2s infinite; }
+  .status-warn { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+  .status-info { background: #0f487b; box-shadow: 0 0 0 3px rgba(15,72,123,0.2); }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{box-shadow:0 0 0 6px rgba(16,185,129,0)} }
+ 
+  /* ════ SCHEDULE ════ */
+  .schedule-item { border-left: 3px solid #cbd5e1; transition: all 0.2s; padding-left: 16px; }
+  .schedule-item.active { border-left-color: #FED524; background: linear-gradient(90deg, rgba(254,213,36,0.07), transparent); }
+  .schedule-item:hover { border-left-color: #0f487b; }
+ 
+  /* ════ DROPDOWN ════ */
+  .dropdown { opacity:0; transform:translateY(-8px); pointer-events:none; transition:all 0.2s ease; }
+  .dropdown.open { opacity:1; transform:translateY(0); pointer-events:auto; }
+ 
+  /* ════ MOBILE SIDEBAR ════ */
+  @media (max-width:1023px) {
+    aside.sidebar { transform:translateX(-100%); transition:transform 0.25s ease; }
+    aside.sidebar.open { transform:translateX(0); }
+  }
+ 
+  /* ════ STAGGER ════ */
+  .stagger > * { opacity:0; animation:stag 0.5s ease-out forwards; }
+  .stagger > *:nth-child(1){animation-delay:0.05s}
+  .stagger > *:nth-child(2){animation-delay:0.1s}
+  .stagger > *:nth-child(3){animation-delay:0.15s}
+  .stagger > *:nth-child(4){animation-delay:0.2s}
+  .stagger > *:nth-child(5){animation-delay:0.25s}
+  .stagger > *:nth-child(6){animation-delay:0.3s}
+  .stagger > *:nth-child(7){animation-delay:0.35s}
+  .stagger > *:nth-child(8){animation-delay:0.4s}
+  .stagger > *:nth-child(9){animation-delay:0.45s}
+  .stagger > *:nth-child(10){animation-delay:0.5s}
+  .stagger > *:nth-child(11){animation-delay:0.55s}
+  @keyframes stag { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+ 
+  /* ════ SCROLLBAR ════ */
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:#f1f5f9; }
+  ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+  ::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+ 
+  /* ════ MISC ════ */
+  .notif-badge { position:absolute; top:4px; right:4px; min-width:16px; height:16px; padding:0 4px; background:#ef4444; color:white; font-size:9px; font-weight:800; border-radius:8px; display:flex; align-items:center; justify-content:center; border:2px solid white; }
+  .cat-line { flex:1; height:1px; background:linear-gradient(90deg,#cbd5e1,transparent); }
+  .section-divider { height: 1px; background: linear-gradient(90deg, #e2e8f0, transparent 80%); margin: 8px 0 20px; }
+ 
+  /* ════ MODAL ════ */
+  .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(5,32,63,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-box { background: white; border-radius: 20px; width: 100%; max-width: 660px; max-height: 88vh; overflow-y: auto; transform: scale(0.94) translateY(12px); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 32px 80px rgba(5,32,63,0.28); }
+  .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+ 
+  /* ════ GLASS BADGE ════ */
+  .glass-badge { background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; }
+ 
+  /* ════ SERVICE CARDS ════ */
+  .svc-card { background: white; border: 1.5px solid #e8eef5; border-radius: 18px; padding: 22px 20px; transition: all 0.28s cubic-bezier(0.4,0,0.2,1); cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .svc-card::after { content:''; position:absolute; bottom:0; right:0; width:80px; height:80px; background:radial-gradient(circle at bottom right, rgba(15,72,123,0.06), transparent 70%); pointer-events:none; }
+  .svc-card:hover { transform: translateY(-5px); border-color: #0f487b; box-shadow: 0 18px 40px -10px rgba(15,72,123,0.2); }
+  .svc-card:hover .svc-arrow { transform: translate(3px,-3px); opacity: 1; color: #FED524; }
+  .svc-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  .svc-arrow { color: #cbd5e1; font-size: 14px; opacity: 0.6; transition: all 0.25s; }
+  .svc-name { font-family: 'Urbanist', sans-serif; font-weight: 800; font-size: 15px; color: #0f172a; }
+  .svc-desc { font-size: 11px; color: #64748b; line-height: 1.5; }
+ 
+  /* ════ BUTTONS ════ */
+  .btn-primary { background: linear-gradient(135deg, #0f487b, #0a345c); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(15,72,123,0.4); }
+  .btn-accent { background: linear-gradient(135deg, #FED524, #E8B900); color: #08294d; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(254,213,36,0.5); }
+ 
+  .section-header-line { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-header-line .sh-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .section-header-line .sh-title { font-family: 'Urbanist', sans-serif; font-size: 1.1rem; font-weight: 800; color: #0a345c; }
+  .section-header-line .sh-count { font-size: 10px; font-weight: 700; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+  .section-header-line .cat-line { flex: 1; }
+ 
+  /* ════ CALENDAR WIDGET ════ */
+  .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; position: relative; }
+  .cal-day:hover { background: #e8f0f8; }
+  .cal-day.today { background: #0f487b; color: white !important; font-weight: 800; }
+  .cal-day.has-event::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background: #FED524; }
+  .cal-day.today.has-event::after { background: white; }
+  .cal-day.other-month { opacity: 0.35; }
+  .event-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+ 
+  /* ════ LARGE CALENDAR ════ */
+  .cal-large-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; position: relative; color: #334155; }
+  .cal-large-day:hover { background: #eef5fb; }
+  .cal-large-day.today { background: #0f487b; color: white; font-weight: 800; }
+  .cal-large-day.has-event::after { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background: #FED524; }
+  .cal-large-day.today.has-event::after { background: white; }
+  .cal-large-day.uts { background: rgba(15,72,123,0.07); color: #0f487b; }
+  .cal-large-day.uts:hover { background: rgba(15,72,123,0.12); }
+  .cal-large-day.selected { background: #eef5fb; border: 2px solid #0f487b; }
+ 
+  /* ════ NAV PANEL CALENDAR ════ */
+  .nav-cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; position: relative; }
+  .nav-cal-day:hover { background: #e8f0f8; }
+  .nav-cal-day.today { background: #0f487b; color: white !important; font-weight: 800; }
+  .nav-cal-day.has-event::after { content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background: #FED524; }
+  .nav-cal-day.today.has-event::after { background: white; }
+  .nav-cal-day.other-month { opacity: 0.3; }
+</style>
+</head>
+ 
+<body class="app-loading text-slate-800 antialiased">
+ 
+<div id="top-loader"></div>
+ 
+<!-- SPLASH -->
+<div id="splash">
+  <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px);background-size:28px 28px;"></div>
+  <div style="position:absolute;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;background:rgba(0,113,159,0.25);filter:blur(80px)"></div>
+  <div style="position:absolute;bottom:-80px;left:-80px;width:350px;height:350px;border-radius:50%;background:rgba(254,213,36,0.08);filter:blur(60px)"></div>
+  <div class="splash-logo" style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:16px">
+    <div style="width:80px;height:80px;border-radius:22px;background:linear-gradient(135deg,#1a5fa8,#0a345c);display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.15)">
+      <span style="font-family:Urbanist,sans-serif;font-weight:900;font-size:2.2rem;color:white;">U</span>
+    </div>
+    <div style="text-align:center">
+      <p style="font-family:Urbanist,sans-serif;font-weight:900;font-size:1.25rem;color:white;letter-spacing:-0.02em;margin:0">UNSIA SIAKAD</p>
+      <p style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin:4px 0 0">Portal Akademik Mahasiswa</p>
+    </div>
+  </div>
+  <div style="position:relative;z-index:1;margin-top:8px">
+    <div class="splash-bar-track"><div class="splash-bar-fill"></div></div>
+    <div class="splash-dots" style="display:flex;justify-content:center;margin-top:20px"><span></span><span></span><span></span></div>
+    <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin-top:10px;font-weight:600;letter-spacing:0.05em">Memuat portal mahasiswa...</p>
+  </div>
+</div>
+ 
+<!-- APP -->
+<div id="app-content">
+ 
+<!-- ════ HEADER ════ -->
+<header id="main-header" class="sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Left: Logo -->
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" class="lg:hidden w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600">
+          <i class="ph-bold ph-list text-xl"></i>
+        </button>
+        <a href="#" class="flex items-center gap-2.5">
+          <div class="relative">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center shadow-lg">
+              <span class="text-white font-display font-black text-lg">U</span>
+            </div>
+            <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-brand-accent border-2 border-white"></div>
+          </div>
+          <div class="hidden sm:block leading-tight">
+            <div class="flex items-center gap-1.5">
+              <p class="font-display font-black text-slate-900 text-[15px]">UNSIA SIAKAD</p>
+              <span class="text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Mahasiswa</span>
+            </div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Portal Akademik Saya</p>
+          </div>
+        </a>
+      </div>
+ 
+      <!-- Center: Nav Menu -->
+      <div class="hidden lg:flex items-center gap-1">
+        <!-- Kalender Akademik -->
+        <button class="nav-menu-btn" id="nav-kalender-btn" onclick="toggleNavPanel('kalender')">
+          <i class="ph ph-calendar-dots text-brand-600 text-base"></i>
+          Kalender Akademik
+          <i class="ph ph-caret-down text-xs text-slate-400 ml-0.5"></i>
+        </button>
+        <!-- Pengumuman -->
+        <button class="nav-menu-btn" id="nav-pengumuman-btn" onclick="toggleNavPanel('pengumuman')" style="position:relative;">
+          <i class="ph ph-megaphone text-rose-500 text-base"></i>
+          Pengumuman
+          <i class="ph ph-caret-down text-xs text-slate-400 ml-0.5"></i>
+          <span class="nav-badge" style="top:3px;right:3px;">3</span>
+        </button>
+        <!-- Website -->
+        <a href="https://unsia.ac.id" target="_blank" class="nav-menu-btn" style="text-decoration:none;">
+          <i class="ph ph-globe text-teal-600 text-base"></i>
+          Website
+          <i class="ph ph-arrow-square-out text-xs text-slate-400 ml-0.5"></i>
+        </a>
+      </div>
+ 
+      <!-- Right: Search + Notif + Profile -->
+      <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-50 border border-transparent hover:border-slate-200 rounded-xl w-52 transition-colors cursor-text">
+          <i class="ph ph-magnifying-glass text-slate-400"></i>
+          <input type="text" placeholder="Cari layanan..." class="bg-transparent text-sm flex-1 outline-none placeholder:text-slate-400" />
+          <kbd class="hidden lg:block text-[10px] mono text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded">⌘K</kbd>
+        </div>
+        <button class="md:hidden w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600">
+          <i class="ph ph-magnifying-glass text-xl"></i>
+        </button>
+        <button id="notif-btn" class="relative w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600">
+          <i class="ph ph-bell text-xl"></i>
+          <span class="notif-badge">5</span>
+        </button>
+        <button id="profile-btn" class="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-slate-100 rounded-xl transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-accent to-brand-accent-deep flex items-center justify-center text-brand-900 font-display font-black text-sm">CL</div>
+          <div class="hidden sm:block text-left">
+            <p class="text-xs font-bold text-slate-900 leading-tight">Citra Lestari</p>
+            <p class="text-[10px] text-slate-500 leading-tight mono">25090127</p>
+          </div>
+          <i class="ph ph-caret-down text-xs text-slate-400 hidden sm:block"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Profile Dropdown -->
+  <div id="profile-dropdown" class="dropdown absolute right-4 lg:right-8 top-16 mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+    <div class="p-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-accent to-brand-accent-deep flex items-center justify-center text-brand-900 font-display font-black text-base shadow-md">CL</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">Citra Lestari</p>
+          <p class="text-xs text-slate-500 mono">NIM 25090127</p>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="status-dot status-online"></span>
+            <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Aktif · Semester 4</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+        <div><p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prodi</p><p class="font-bold text-slate-800">Sistem Informasi</p></div>
+        <div><p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Fakultas</p><p class="font-bold text-slate-800">Sains &amp; Teknologi</p></div>
+      </div>
+    </div>
+    <div class="p-2">
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-user-circle text-lg text-slate-500"></i>Profil &amp; Biodata</a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-identification-card text-lg text-slate-500"></i>KTM Digital</a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-shield-check text-lg text-slate-500"></i>Keamanan Akun</a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-question text-lg text-slate-500"></i>Bantuan</a>
+    </div>
+    <div class="p-2 border-t border-slate-100">
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-rose-50 rounded-lg text-sm text-rose-600 font-medium"><i class="ph ph-sign-out text-lg"></i>Keluar dari Sesi</a>
+    </div>
+  </div>
+</header>
+ 
+<!-- ════ NAV PANEL: KALENDER ════ -->
+<div class="nav-panel" id="nav-panel-kalender">
+  <div class="max-w-5xl mx-auto px-6 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Calendar Grid -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <button class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center"><i class="ph ph-caret-left text-slate-600 text-sm"></i></button>
+            <h3 class="display font-black text-slate-900 text-base">Juni 2026</h3>
+            <button class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center"><i class="ph ph-caret-right text-slate-600 text-sm"></i></button>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 text-xs"><div class="w-2.5 h-2.5 rounded-full bg-brand-accent"></div><span class="text-slate-500">Kegiatan</span></div>
+            <div class="flex items-center gap-1.5 text-xs"><div class="w-2.5 h-2.5 rounded-full bg-brand-600"></div><span class="text-slate-500">Hari ini</span></div>
+          </div>
+        </div>
+        <!-- Day headers -->
+        <div class="grid grid-cols-7 mb-2">
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Min</div>
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Sen</div>
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Sel</div>
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Rab</div>
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Kam</div>
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Jum</div>
+          <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">Sab</div>
+        </div>
+        <div class="grid grid-cols-7 gap-1">
+          <div class="nav-cal-day other-month">31</div>
+          <div class="nav-cal-day has-event" data-event="Kuliah reguler dimulai kembali" data-date="1 Juni">1</div>
+          <div class="nav-cal-day today has-event" data-event="Pemrograman Web 10:00, Basis Data 13:00, UI/UX 15:00" data-date="2 Juni">2</div>
+          <div class="nav-cal-day" data-date="3 Juni">3</div>
+          <div class="nav-cal-day has-event" data-event="Konsultasi PA — Dr. Rini Handayani (13:00–15:00)" data-date="4 Juni">4</div>
+          <div class="nav-cal-day has-event" data-event="Deadline Laporan Proyek Web" data-date="5 Juni">5</div>
+          <div class="nav-cal-day has-event" data-event="Kuliah online seluruh prodi" data-date="6 Juni">6</div>
+          <div class="nav-cal-day" data-date="7 Juni">7</div>
+          <div class="nav-cal-day" data-date="8 Juni">8</div>
+          <div class="nav-cal-day has-event" data-event="Deadline Quiz Bab 4: Normalisasi" data-date="9 Juni">9</div>
+          <div class="nav-cal-day has-event" style="background:rgba(15,72,123,0.07);color:#0f487b;" data-event="UTS Hari Pertama" data-date="10 Juni">10</div>
+          <div class="nav-cal-day has-event" style="background:rgba(15,72,123,0.07);color:#0f487b;" data-event="UTS Genap 2025/2026" data-date="11 Juni">11</div>
+          <div class="nav-cal-day has-event" style="background:rgba(15,72,123,0.07);color:#0f487b;" data-event="UTS Genap 2025/2026" data-date="12 Juni">12</div>
+          <div class="nav-cal-day" data-date="13 Juni">13</div>
+          <div class="nav-cal-day has-event" data-event="Deadline Mockup UI Travel App" data-date="14 Juni">14</div>
+          <div class="nav-cal-day has-event" data-event="Tutup Pendaftaran Beasiswa Prestasi 2026" data-date="15 Juni">15</div>
+          <div class="nav-cal-day" data-date="16 Juni">16</div>
+          <div class="nav-cal-day" data-date="17 Juni">17</div>
+          <div class="nav-cal-day has-event" style="background:rgba(15,72,123,0.07);color:#0f487b;" data-event="UTS Genap 2025/2026" data-date="18 Juni">18</div>
+          <div class="nav-cal-day" data-date="19 Juni">19</div>
+          <div class="nav-cal-day has-event" style="background:rgba(15,72,123,0.07);color:#0f487b;" data-event="UTS Genap 2025/2026" data-date="20 Juni">20</div>
+          <div class="nav-cal-day has-event" style="background:rgba(15,72,123,0.07);color:#0f487b;" data-event="UTS Hari Terakhir" data-date="21 Juni">21</div>
+          <div class="nav-cal-day" data-date="22 Juni">22</div>
+          <div class="nav-cal-day" data-date="23 Juni">23</div>
+          <div class="nav-cal-day has-event" data-event="Pengumuman Hasil UTS" data-date="24 Juni">24</div>
+          <div class="nav-cal-day has-event" data-event="Kuliah pasca-UTS dimulai" data-date="25 Juni">25</div>
+          <div class="nav-cal-day has-event" data-event="Jadwal remedial UTS dibuka" data-date="26 Juni">26</div>
+          <div class="nav-cal-day" data-date="27 Juni">27</div>
+          <div class="nav-cal-day" data-date="28 Juni">28</div>
+          <div class="nav-cal-day has-event" data-event="Batas akhir pengajuan dispensasi akademik" data-date="29 Juni">29</div>
+          <div class="nav-cal-day has-event" data-event="Jatuh Tempo Pembayaran UKT Semester 4" data-date="30 Juni">30</div>
+          <div class="nav-cal-day other-month">1</div>
+          <div class="nav-cal-day other-month">2</div>
+          <div class="nav-cal-day other-month">3</div>
+          <div class="nav-cal-day other-month">4</div>
+        </div>
+        <!-- Day detail -->
+        <div id="nav-cal-detail" class="mt-3 px-4 py-3 bg-brand-50 border border-brand-100 rounded-xl hidden">
+          <p class="text-[10px] uppercase font-bold tracking-wider text-brand-600 mb-0.5" id="nav-cal-detail-date"></p>
+          <p class="text-sm font-bold text-slate-900" id="nav-cal-detail-event"></p>
+        </div>
+      </div>
+ 
+      <!-- Events List -->
+      <div class="space-y-2">
+        <p class="text-[10px] uppercase font-bold tracking-wider text-brand-600 mb-3">Agenda Bulan Ini</p>
+        <div class="space-y-2.5">
+          <div class="flex gap-3 items-start p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center shrink-0 font-display font-black text-sky-700 text-sm">2</div>
+            <div><p class="text-xs font-bold text-slate-900">Hari ini — Kuliah Reguler</p><p class="text-[11px] text-slate-500 mt-0.5">Web Dev · Basis Data · UI/UX</p></div>
+          </div>
+          <div class="flex gap-3 items-start p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-9 h-9 rounded-xl bg-teal-100 flex items-center justify-center shrink-0 font-display font-black text-teal-700 text-sm">4</div>
+            <div><p class="text-xs font-bold text-slate-900">Konsultasi PA</p><p class="text-[11px] text-slate-500 mt-0.5">Dr. Rini Handayani · 13:00 WIB</p></div>
+          </div>
+          <div class="flex gap-3 items-start p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 font-display font-black text-rose-600 text-sm">5</div>
+            <div><p class="text-xs font-bold text-slate-900">Deadline Laporan Web</p><p class="text-[11px] text-slate-500 mt-0.5">Pemrograman Web · LMS</p></div>
+          </div>
+          <div class="flex gap-3 items-start p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0 font-display font-black text-brand-700 text-[10px] leading-tight text-center">10–21</div>
+            <div><p class="text-xs font-bold text-slate-900">UTS Semester Genap</p><p class="text-[11px] text-slate-500 mt-0.5">Seluruh MK · Online CBT</p></div>
+          </div>
+          <div class="flex gap-3 items-start p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-9 h-9 rounded-xl bg-yellow-100 flex items-center justify-center shrink-0 font-display font-black text-yellow-700 text-sm">15</div>
+            <div><p class="text-xs font-bold text-slate-900">Tutup Beasiswa Prestasi</p><p class="text-[11px] text-slate-500 mt-0.5">Kemahasiswaan UNSIA</p></div>
+          </div>
+          <div class="flex gap-3 items-start p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 font-display font-black text-amber-700 text-sm">30</div>
+            <div><p class="text-xs font-bold text-slate-900">Jatuh Tempo UKT</p><p class="text-[11px] text-slate-500 mt-0.5">Semester 4 · Rp 6.500.000</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ════ NAV PANEL: PENGUMUMAN ════ -->
+<div class="nav-panel" id="nav-panel-pengumuman">
+  <div class="max-w-5xl mx-auto px-6 py-6">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="display font-black text-slate-900 text-base">Pengumuman</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Portal Mahasiswa UNSIA</p>
+      </div>
+      <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
+        <i class="ph ph-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" placeholder="Cari pengumuman..." class="bg-transparent text-xs outline-none placeholder:text-slate-400 w-40"/>
+      </div>
+    </div>
+    <!-- Filter tabs -->
+    <div class="flex gap-2 mb-5 flex-wrap">
+      <button class="px-3.5 py-1.5 bg-brand-600 text-white text-xs font-bold rounded-full">Semua</button>
+      <button class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-full hover:border-brand-300">Akademik</button>
+      <button class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-full hover:border-brand-300">Keuangan</button>
+      <button class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-full hover:border-brand-300">Kemahasiswaan</button>
+      <button class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-full hover:border-brand-300">Sistem</button>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div class="bg-white border border-slate-200 rounded-xl p-4 hover:border-brand-200 transition-colors cursor-pointer">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0"><i class="ph-fill ph-exam text-brand-600 text-sm"></i></div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded uppercase tracking-wider">Akademik</span>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">Baru</span>
+            </div>
+            <p class="font-bold text-slate-900 text-sm leading-snug">UTS Genap 2025/2026 dijadwalkan 10 – 21 Juni 2026</p>
+            <p class="text-[11px] text-slate-400 mt-1">2 Juni 2026 · Biro Akademik (BAA)</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 hover:border-brand-200 transition-colors cursor-pointer">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-yellow-100 flex items-center justify-center shrink-0"><i class="ph-fill ph-medal text-yellow-700 text-sm"></i></div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded uppercase tracking-wider">Kemahasiswaan</span>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">Baru</span>
+            </div>
+            <p class="font-bold text-slate-900 text-sm leading-snug">Program Beasiswa Prestasi Akademik 2026 Resmi Dibuka</p>
+            <p class="text-[11px] text-slate-400 mt-1">1 Juni 2026 · Direktorat Kemahasiswaan</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 hover:border-brand-200 transition-colors cursor-pointer">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0"><i class="ph-fill ph-warning-circle text-amber-600 text-sm"></i></div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded uppercase tracking-wider">Sistem</span>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">Baru</span>
+            </div>
+            <p class="font-bold text-slate-900 text-sm leading-snug">Maintenance SIAKAD — 2 Juni 2026 Pukul 22:00 WIB</p>
+            <p class="text-[11px] text-slate-400 mt-1">31 Mei 2026 · BPPTI UNSIA</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 hover:border-brand-200 transition-colors cursor-pointer">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center shrink-0"><i class="ph-fill ph-currency-circle-dollar text-sky-600 text-sm"></i></div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded uppercase tracking-wider">Keuangan</span>
+            </div>
+            <p class="font-bold text-slate-900 text-sm leading-snug">Pengingat Jatuh Tempo UKT Semester Genap — 30 Juni 2026</p>
+            <p class="text-[11px] text-slate-400 mt-1">28 Mei 2026 · Biro Keuangan</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 hover:border-brand-200 transition-colors cursor-pointer lg:col-span-2">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0"><i class="ph-fill ph-briefcase text-brand-600 text-sm"></i></div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded uppercase tracking-wider">Karir</span>
+            </div>
+            <p class="font-bold text-slate-900 text-sm leading-snug">Career Fair Virtual UNSIA — 20 Juni 2026 · Pendaftaran dibuka 5 Juni via Career Center SIAKAD</p>
+            <p class="text-[11px] text-slate-400 mt-1">25 Mei 2026 · Career Center UNSIA</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- Nav Panel Backdrop -->
+<div id="nav-panel-backdrop" class="fixed inset-0 z-30 hidden" onclick="closeAllNavPanels()"></div>
+ 
+<!-- Mobile Sidebar Backdrop -->
+<div id="sidebar-backdrop" class="lg:hidden fixed inset-0 bg-black/40 z-30 hidden"></div>
+ 
+<!-- Mobile Sidebar -->
+<aside class="sidebar lg:hidden fixed top-0 left-0 z-40 w-72 h-screen bg-white border-r border-slate-200 p-6 overflow-y-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center">
+        <span class="text-white font-display font-black text-lg">U</span>
+      </div>
+      <div><p class="font-display font-black text-slate-900 text-sm">UNSIA SIAKAD</p><p class="text-[9px] uppercase tracking-wider font-bold text-emerald-700">Mahasiswa</p></div>
+    </div>
+    <button id="mobile-close-btn" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500"><i class="ph-bold ph-x text-lg"></i></button>
+  </div>
+  <nav class="space-y-0.5">
+    <p class="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">Beranda</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 bg-brand-50 text-brand-700 rounded-lg font-bold text-sm"><i class="ph-fill ph-house"></i>Dashboard</a>
+    <p class="px-3 py-2 mt-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">Portal</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-calendar-dots text-brand-600"></i>Kalender Akademik</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-megaphone text-rose-500"></i>Pengumuman <span class="ml-auto text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-bold">3</span></a>
+    <a href="https://unsia.ac.id" target="_blank" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-globe text-teal-600"></i>Website UNSIA</a>
+    <p class="px-3 py-2 mt-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">Layanan</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-graduation-cap text-emerald-600"></i>Akademik</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-currency-circle-dollar text-amber-600"></i>Keuangan</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-monitor-play text-rose-600"></i>LMS</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-certificate text-amber-600"></i>Wisuda</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-share-network text-brand-600"></i>Affiliate</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-chart-line text-teal-600"></i>Tracer Study</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-books text-violet-600"></i>Perpustakaan</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-medal text-yellow-700"></i>Beasiswa</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-briefcase text-pink-600"></i>Career Center</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-chats-circle text-brand-600"></i>Forum</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-lifebuoy text-sky-600"></i>Helpdesk</a>
+  </nav>
+</aside>
+ 
+<!-- ════ HERO BANNER ════ -->
+<section class="relative hero-mesh text-white overflow-hidden">
+  <div class="absolute inset-0 dot-pattern opacity-40"></div>
+  <div class="hero-bg-img"></div>
+  <div style="position:absolute;top:-80px;left:-80px;width:350px;height:350px;border-radius:50%;background:rgba(0,113,159,0.15);filter:blur(70px);pointer-events:none"></div>
+  <div style="position:absolute;bottom:0;right:200px;width:200px;height:200px;border-radius:50%;background:rgba(254,213,36,0.06);filter:blur(50px);pointer-events:none"></div>
+ 
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+ 
+      <div class="lg:col-span-7">
+        <p class="text-brand-accent text-xs font-bold tracking-[0.25em] uppercase mb-3 flex items-center gap-2 flex-wrap">
+          <span id="time-indicator">●</span>
+          <span id="greeting-text">Selamat Datang</span>
+          <span class="text-brand-100">·</span>
+          <span class="mono text-brand-100 normal-case tracking-normal" id="current-date">Selasa, 02 Juni 2026</span>
+          <span class="text-brand-100">·</span>
+          <span class="mono text-brand-100 normal-case tracking-normal" id="current-time">--:--:--</span>
+        </p>
+        <h1 class="display text-4xl lg:text-6xl font-black mb-3 leading-[1.05]">
+          Halo, <span class="text-brand-accent">Citra</span>
+        </h1>
+        <p class="text-brand-100 text-base lg:text-lg max-w-xl leading-relaxed mb-6">
+          Selamat datang di portal mahasiswa SIAKAD. Akses jadwal kuliah, nilai, pembayaran, dan semua layanan akademik dalam satu tempat.
+        </p>
+ 
+        <!-- Profile badge + PA badge: same row, aligned -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+          <!-- Profile mini-badge -->
+          <div class="glass-badge inline-flex items-center gap-3 pl-2 pr-5 py-2">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-accent to-brand-accent-deep flex items-center justify-center text-brand-900 font-display font-black text-sm">CL</div>
+            <div class="leading-tight">
+              <p class="text-sm font-bold">Citra Lestari</p>
+              <p class="text-[11px] text-brand-100 mono">S1 Sistem Informasi · Semester 4</p>
+            </div>
+            <span class="ml-2 inline-flex items-center gap-1.5 text-[10px] bg-emerald-400/20 text-emerald-300 px-2 py-1 rounded-full font-bold uppercase tracking-wider">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Aktif
+            </span>
+          </div>
+ 
+          <!-- PA Info badge - aligned same row -->
+          <div class="glass-badge inline-flex items-center gap-3 pl-3 pr-5 py-2">
+            <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
+              <i class="ph-fill ph-chalkboard-teacher text-brand-accent text-base"></i>
+            </div>
+            <div class="leading-tight">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-accent/80">Dosen PA</p>
+              <p class="text-sm font-bold text-white">Dr. Rini Handayani, M.Pd.</p>
+            </div>
+            <a href="#" class="ml-1 text-[10px] font-bold text-brand-accent/70 hover:text-brand-accent transition-colors">Hubungi →</a>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Right: Snapshot box (NO IPK/SKS) with bottom spacing -->
+      <div class="lg:col-span-5 pb-6">
+        <div class="glass-badge p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <i class="ph-fill ph-bookmark-simple text-brand-accent"></i>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-brand-accent">Akademik Saya Hari Ini</p>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-white/10 rounded-xl py-4">
+              <p class="display text-2xl font-black mono">3</p>
+              <p class="text-[10px] text-brand-100 uppercase tracking-wider font-bold mt-0.5">Kelas</p>
+            </div>
+            <div class="bg-white/10 rounded-xl py-4">
+              <p class="display text-2xl font-black mono text-brand-accent">3</p>
+              <p class="text-[10px] text-brand-100 uppercase tracking-wider font-bold mt-0.5">Tugas</p>
+            </div>
+            <div class="bg-white/10 rounded-xl py-4">
+              <p class="display text-2xl font-black mono">5</p>
+              <p class="text-[10px] text-brand-100 uppercase tracking-wider font-bold mt-0.5">Notifikasi</p>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <svg viewBox="0 0 1440 80" class="absolute bottom-0 left-0 right-0 w-full" style="color:#f0f4f8" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="currentColor" d="M0,32 C240,80 480,80 720,48 C960,16 1200,16 1440,32 L1440,80 L0,80 Z"/>
+  </svg>
+</section>
+ 
+<!-- STATS CARDS -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 lg:-mt-10 relative z-10">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 stagger">
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center"><i class="ph-fill ph-trophy text-emerald-600"></i></div>
+        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Cumlaude</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">IPK Kumulatif</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none">3,<span class="text-brand-600">82</span></p>
+      <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1"><i class="ph-bold ph-arrow-up text-emerald-500 text-xs"></i>+0,07 dari semester lalu</p>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center"><i class="ph-fill ph-books text-brand-600"></i></div>
+        <span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full uppercase tracking-wider">52%</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">SKS Tempuh</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none">76<span class="text-slate-400 text-2xl">/144</span></p>
+      <div class="progress-track mt-3"><div class="progress-fill" style="width:52%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center"><i class="ph-fill ph-calendar-dots text-sky-600"></i></div>
+        <span class="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Aktif</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">Semester Berjalan</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none">Genap <span class="text-sky-600">4</span></p>
+      <p class="text-[11px] text-slate-500 mt-2 mono">TA 2025/2026</p>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center"><i class="ph-fill ph-currency-circle-dollar text-amber-600"></i></div>
+        <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Tertunggak</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">Tagihan UKT</p>
+      <p class="display text-2xl lg:text-3xl font-black text-slate-900 leading-none mono">Rp 6,5<span class="text-slate-400 text-lg">jt</span></p>
+      <p class="text-[11px] text-amber-700 mt-2 flex items-center gap-1 font-bold"><i class="ph-fill ph-clock text-xs"></i>Jatuh tempo 30 Juni</p>
+    </div>
+  </div>
+</section>
+ 
+<!-- MAIN CONTENT -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+ 
+    <div class="lg:col-span-8 space-y-8">
+      <div>
+        <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-600 mb-1">Modul Mahasiswa</p>
+        <h2 class="display text-2xl lg:text-3xl font-black text-slate-900">Layanan &amp; Akademik Saya</h2>
+        <p class="text-sm text-slate-500 mt-1">11 modul layanan yang dapat Anda akses sebagai mahasiswa aktif UNSIA.</p>
+      </div>
+ 
+      <div>
+        <div class="section-header-line">
+          <div class="sh-icon bg-brand-50"><i class="ph-fill ph-squares-four text-brand-600"></i></div>
+          <div><p class="sh-title">Modul Layanan</p></div>
+          <span class="sh-count">11 modul</span>
+          <div class="cat-line"></div>
+        </div>
+ 
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 stagger">
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-sky-100"><i class="ph-duotone ph-graduation-cap text-sky-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Akademik</p><p class="svc-desc">KRS, Jadwal Kuliah, Nilai &amp; KHS, Transkrip, Bimbingan</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-emerald-700">KRS Approved · IPS 3,85</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-amber-100"><i class="ph-duotone ph-currency-circle-dollar text-amber-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Keuangan</p><p class="svc-desc">Tagihan UKT, Pembayaran Online, Riwayat Transaksi</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-warn"></span><span class="text-[10px] font-bold text-amber-700">Rp 6,5jt tertunggak</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-rose-100"><i class="ph-duotone ph-monitor-play text-rose-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">LMS</p><p class="svc-desc">E-Learning, Materi Kuliah, Tugas, Kuis &amp; CBT Ujian</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-warn"></span><span class="text-[10px] font-bold text-rose-600">3 tugas pending</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-purple-100"><i class="ph-duotone ph-certificate text-purple-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Wisuda</p><p class="svc-desc">Yudisium, Pendaftaran Wisuda, Persyaratan Kelulusan</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-info"></span><span class="text-[10px] font-bold text-slate-500">Belum eligible</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-brand-100"><i class="ph-duotone ph-share-network text-brand-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Affiliate</p><p class="svc-desc">Program Referral Mahasiswa, Komisi &amp; Laporan Afiliasi</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-brand-600">3 referral aktif</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-teal-100"><i class="ph-duotone ph-chart-line-up text-teal-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Tracer Study</p><p class="svc-desc">Survei Alumni, Monitoring Karir &amp; Data Lulusan</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-info"></span><span class="text-[10px] font-bold text-teal-700">Survei semester 5+</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-violet-100"><i class="ph-duotone ph-books text-violet-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Perpustakaan</p><p class="svc-desc">e-Library, Jurnal Ilmiah, Repository &amp; Koleksi Digital</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-violet-600">2 buku dipinjam</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-yellow-100"><i class="ph-duotone ph-medal text-yellow-700"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Beasiswa</p><p class="svc-desc">Pendaftaran Beasiswa, Status Pengajuan &amp; Riwayat</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-emerald-700">1 beasiswa aktif</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-pink-100"><i class="ph-duotone ph-briefcase text-pink-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Career Center</p><p class="svc-desc">Bursa Kerja, Magang &amp; PKL, Sertifikasi Kompetensi</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-pink-600">67 lowongan baru</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-brand-100"><i class="ph-duotone ph-chats-circle text-brand-600"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Forum</p><p class="svc-desc">Diskusi Antar Mahasiswa, Tanya Jawab &amp; Komunitas</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-brand-600">12 diskusi baru</span></div>
+          </div>
+          <div class="svc-card" onclick="window.location='#'">
+            <div class="flex items-start justify-between">
+              <div class="svc-icon bg-sky-100"><i class="ph-duotone ph-lifebuoy text-sky-700"></i></div>
+              <i class="ph-bold ph-arrow-up-right svc-arrow"></i>
+            </div>
+            <div><p class="svc-name">Helpdesk</p><p class="svc-desc">Bantuan Teknis 24/7, Tiket Dukungan &amp; FAQ</p></div>
+            <div class="flex items-center gap-1.5"><span class="status-dot status-online"></span><span class="text-[10px] font-bold text-sky-700">Buat tiket baru</span></div>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Today's Schedule (mobile) -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden lg:hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-brand-600">Hari Ini</p>
+            <p class="display font-bold text-slate-900 text-base">Jadwal Kuliah</p>
+          </div>
+          <span class="text-[10px] mono text-slate-400">02 JUNI</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div class="schedule-item active px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-wider">Berlangsung</span></div>
+                <p class="text-sm font-bold text-slate-900">Pemrograman Web</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Dr. Aditya Pratama, M.Kom · Online</p>
+              </div>
+              <div class="text-right shrink-0"><p class="text-xs mono font-bold text-slate-900">10:00</p><p class="text-[10px] text-slate-500">- 11:40</p></div>
+            </div>
+          </div>
+          <div class="schedule-item px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1"><p class="text-sm font-bold text-slate-700">Basis Data Lanjut</p><p class="text-[11px] text-slate-500 mt-0.5">Sari Wahyu, M.T. · Online</p></div>
+              <div class="text-right shrink-0"><p class="text-xs mono font-bold text-slate-600">13:00</p><p class="text-[10px] text-slate-500">- 14:40</p></div>
+            </div>
+          </div>
+          <div class="schedule-item px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1"><p class="text-sm font-bold text-slate-700">UI/UX Design</p><p class="text-[11px] text-slate-500 mt-0.5">Bayu Anggoro, M.Ds · Online</p></div>
+              <div class="text-right shrink-0"><p class="text-xs mono font-bold text-slate-600">15:00</p><p class="text-[10px] text-slate-500">- 16:40</p></div>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="block px-5 py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-brand-600">Lihat jadwal lengkap →</a>
+      </div>
+    </div>
+ 
+    <!-- ═ RIGHT SIDEBAR ═ -->
+    <aside class="lg:col-span-4 space-y-5 stagger">
+      <!-- Today's Schedule (desktop) -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden hidden lg:block">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-brand-600">Hari Ini</p>
+            <p class="display font-bold text-slate-900 text-base">Jadwal Kuliah</p>
+          </div>
+          <span class="text-[10px] mono text-slate-400">02 JUNI</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div class="schedule-item active px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-wider">Berlangsung</span></div>
+                <p class="text-sm font-bold text-slate-900">Pemrograman Web</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Dr. Aditya Pratama, M.Kom</p>
+              </div>
+              <div class="text-right shrink-0"><p class="text-xs mono font-bold text-slate-900">10:00</p><p class="text-[10px] text-slate-500">- 11:40</p></div>
+            </div>
+          </div>
+          <div class="schedule-item px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1"><p class="text-sm font-bold text-slate-700">Basis Data Lanjut</p><p class="text-[11px] text-slate-500 mt-0.5">Sari Wahyu, M.T.</p></div>
+              <div class="text-right shrink-0"><p class="text-xs mono font-bold text-slate-600">13:00</p><p class="text-[10px] text-slate-500">- 14:40</p></div>
+            </div>
+          </div>
+          <div class="schedule-item px-5 py-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1"><p class="text-sm font-bold text-slate-700">UI/UX Design</p><p class="text-[11px] text-slate-500 mt-0.5">Bayu Anggoro, M.Ds</p></div>
+              <div class="text-right shrink-0"><p class="text-xs mono font-bold text-slate-600">15:00</p><p class="text-[10px] text-slate-500">- 16:40</p></div>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="block px-5 py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-brand-600">Lihat jadwal lengkap →</a>
+      </div>
+ 
+      <!-- Tagihan Reminder -->
+      <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-2xl p-5">
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-200 flex items-center justify-center shrink-0"><i class="ph-fill ph-warning-circle text-amber-700 text-lg"></i></div>
+          <div class="flex-1">
+            <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-0.5">Tagihan Tertunggak</p>
+            <p class="display font-bold text-slate-900 text-base leading-tight">UKT Semester 4</p>
+          </div>
+        </div>
+        <p class="display text-2xl font-black text-amber-700 mono mb-3">Rp 6.500.000</p>
+        <div class="flex items-center gap-2 mb-4 text-[11px] text-amber-800"><i class="ph-fill ph-clock"></i><span>Jatuh tempo <strong>30 Juni 2026</strong></span></div>
+        <button class="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+          <i class="ph-bold ph-credit-card"></i>Bayar Sekarang
+        </button>
+      </div>
+ 
+      <!-- Tugas Pending -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-rose-600">Aksi Diperlukan</p>
+            <p class="display font-bold text-slate-900 text-base">Tugas Pending</p>
+          </div>
+          <span class="text-[10px] bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">3 baru</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <a href="#" class="block px-5 py-3.5 hover:bg-slate-50">
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0"><i class="ph ph-file-text text-xs"></i></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 leading-tight">Laporan Proyek Web</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Pemrog. Web · Deadline 5 Juni</p>
+              </div>
+              <span class="text-[10px] mono font-bold text-rose-600 shrink-0">3d</span>
+            </div>
+          </a>
+          <a href="#" class="block px-5 py-3.5 hover:bg-slate-50">
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"><i class="ph ph-exam text-xs"></i></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 leading-tight">Quiz Bab 4: Normalisasi</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Basis Data · Deadline 8 Juni</p>
+              </div>
+              <span class="text-[10px] mono font-bold text-amber-600 shrink-0">6d</span>
+            </div>
+          </a>
+          <a href="#" class="block px-5 py-3.5 hover:bg-slate-50">
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0"><i class="ph ph-figma-logo text-xs"></i></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 leading-tight">Mockup UI Travel App</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">UI/UX Design · Deadline 14 Juni</p>
+              </div>
+              <span class="text-[10px] mono font-bold text-emerald-600 shrink-0">12d</span>
+            </div>
+          </a>
+        </div>
+        <a href="#" class="block px-5 py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-brand-600">Buka LMS →</a>
+      </div>
+ 
+      <!-- Motivational Quote -->
+      <div class="bg-brand-700 text-white rounded-2xl p-5 relative overflow-hidden">
+        <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-brand-accent/10 blur-2xl"></div>
+        <div class="relative">
+          <i class="ph-fill ph-quotes text-brand-accent/40 text-3xl mb-2"></i>
+          <p class="text-sm text-brand-50 leading-relaxed italic mb-3">Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia.</p>
+          <p class="text-[11px] text-brand-100">— Nelson Mandela</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+ 
+<!-- FOOTER -->
+<footer class="bg-slate-900 text-slate-400 mt-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg">
+            <span class="text-white font-display font-black text-xl">U</span>
+          </div>
+          <div>
+            <p class="font-display font-black text-white text-base">UNSIA SIAKAD</p>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Portal Mahasiswa · v2.4.1</p>
+          </div>
+        </div>
+        <p class="text-sm leading-relaxed text-slate-400 max-w-md">Portal terpadu untuk seluruh kebutuhan akademik mahasiswa Universitas Siber Asia. Akses ke 11 modul layanan dalam satu sign-on.</p>
+      </div>
+      <div>
+        <p class="text-[10px] font-bold text-white uppercase tracking-wider mb-4">Bantuan Cepat</p>
+        <ul class="space-y-2 text-xs">
+          <li><a href="#" class="hover:text-white">Panduan SSO</a></li>
+          <li><a href="#" class="hover:text-white">FAQ Mahasiswa</a></li>
+          <li><a href="#" class="hover:text-white">Helpdesk BPPTI</a></li>
+          <li><a href="#" class="hover:text-white">Kontak Kemahasiswaan</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-slate-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-slate-500">© 2026 Universitas Siber Asia · Biro Pemasaran, Publikasi &amp; Teknologi Informasi</p>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="#" class="text-slate-500 hover:text-slate-300">Kebijakan Privasi</a>
+        <a href="#" class="text-slate-500 hover:text-slate-300">Syarat Layanan</a>
+      </div>
+    </div>
+  </div>
+</footer>
+ 
+</div><!-- /app-content -->
+ 
+<script>
+// ── LOADING
+window.addEventListener('load', () => { setTimeout(() => document.body.classList.add('app-loaded'), 1300); });
+setTimeout(() => { if (!document.body.classList.contains('app-loaded')) document.body.classList.add('app-loaded'); }, 1600);
+ 
+// ── CLOCK
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  let greeting = 'Selamat Datang', icon = '●';
+  if (h >= 5 && h < 11) { greeting = 'Selamat Pagi'; icon = '☀'; }
+  else if (h >= 11 && h < 15) { greeting = 'Selamat Siang'; icon = '☀'; }
+  else if (h >= 15 && h < 18) { greeting = 'Selamat Sore'; icon = '🌤'; }
+  else { greeting = 'Selamat Malam'; icon = '🌙'; }
+  const grEl = document.getElementById('greeting-text');
+  const inEl = document.getElementById('time-indicator');
+  const dtEl = document.getElementById('current-date');
+  const tmEl = document.getElementById('current-time');
+  if (grEl) grEl.textContent = greeting;
+  if (inEl) inEl.textContent = icon;
+  const hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  if (dtEl) dtEl.textContent = `${hari[now.getDay()]}, ${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+  if (tmEl) {
+    const hh = String(h).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    tmEl.textContent = `${hh}:${mm}:${ss} WIB`;
+  }
+}
+updateClock(); setInterval(updateClock, 1000);
+ 
+// ── PROFILE DROPDOWN
+document.getElementById('profile-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  closeAllNavPanels();
+  document.getElementById('profile-dropdown').classList.toggle('open');
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+});
+ 
+// ── NAV PANELS
+let activePanel = null;
+ 
+function toggleNavPanel(name) {
+  const panel = document.getElementById('nav-panel-' + name);
+  const btn = document.getElementById('nav-' + name + '-btn');
+  const backdrop = document.getElementById('nav-panel-backdrop');
+ 
+  if (activePanel === name) {
+    closeAllNavPanels();
+    return;
+  }
+  closeAllNavPanels(false);
+ 
+  panel.classList.add('open');
+  btn && btn.classList.add('active');
+  backdrop.classList.remove('hidden');
+  activePanel = name;
+}
+ 
+function closeAllNavPanels(clearBackdrop = true) {
+  document.querySelectorAll('.nav-panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.nav-menu-btn').forEach(b => b.classList.remove('active'));
+  if (clearBackdrop) {
+    document.getElementById('nav-panel-backdrop').classList.add('hidden');
+    activePanel = null;
+  }
+}
+ 
+// ── NAV CAL DAY CLICK
+document.querySelectorAll('.nav-cal-day').forEach(day => {
+  day.addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.querySelectorAll('.nav-cal-day').forEach(d => d.classList.remove('selected'));
+    this.classList.add('selected');
+    const event = this.getAttribute('data-event');
+    const date = this.getAttribute('data-date');
+    const detail = document.getElementById('nav-cal-detail');
+    if (event && detail) {
+      detail.classList.remove('hidden');
+      document.getElementById('nav-cal-detail-date').textContent = date;
+      document.getElementById('nav-cal-detail-event').textContent = event;
+    } else if (detail) {
+      detail.classList.add('hidden');
+    }
+  });
+});
+ 
+// ── MOBILE SIDEBAR
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileCloseBtn = document.getElementById('mobile-close-btn');
+const sidebarEl = document.querySelector('aside.sidebar');
+const backdrop = document.getElementById('sidebar-backdrop');
+function openSidebar() { sidebarEl?.classList.add('open'); backdrop?.classList.remove('hidden'); }
+function closeSidebar() { sidebarEl?.classList.remove('open'); backdrop?.classList.add('hidden'); }
+mobileMenuBtn?.addEventListener('click', openSidebar);
+mobileCloseBtn?.addEventListener('click', closeSidebar);
+backdrop?.addEventListener('click', closeSidebar);
+ 
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.querySelector('input[type="text"]')?.focus(); }
+  if (e.key === 'Escape') { closeAllNavPanels(); closeSidebar(); document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open')); }
+});
+</script>
+</body>
+</html>
+ 

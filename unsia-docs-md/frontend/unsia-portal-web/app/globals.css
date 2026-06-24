@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Urbanist:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 25% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 17%;
+    --primary: 215 59% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 199 90% 35%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 45%;
+    --accent: 48 96% 52%;
+    --accent-foreground: 215 25% 17%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 59% 27%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 215 28% 10%;
+    --foreground: 210 40% 98%;
+    --card: 215 28% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 215 28% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 215 59% 47%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 199 90% 35%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 16% 64%;
+    --accent: 48 96% 52%;
+    --accent-foreground: 215 25% 17%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 28% 22%;
+    --input: 215 28% 22%;
+    --ring: 215 59% 47%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Urbanist', sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .animate-in {
+    animation: animate-in 0.3s ease-out;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Toast styles */
+[data-sonner-toast] {
+  @apply rounded-card shadow-dropdown;
+}
+
+/* Homepage Portal Styles */
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  padding: 1rem;
+}
+
+.card-glass {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.auth-card {
+  max-width: 420px;
+  padding: 2.5rem;
+  border-radius: 1rem;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: hsl(var(--secondary));
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,405 @@
+{
+  "rabbit_version": "3.12.0",
+  "users": [
+    {
+      "name": "guest",
+      "password_hash": "2P4vA+Hn9795w51h4bZq14rVf5E=",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": [
+        "administrator"
+      ]
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "topic_permissions": [],
+  "parameters": [],
+  "global_parameters": [
+    {
+      "name": "internal_cluster_id",
+      "value": "rabbitmq-cluster-id-unsia-erp"
+    }
+  ],
+  "policies": [],
+  "queues": [
+    { "name": "core-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "reference-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "crm-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "pmb-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "finance-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "academic-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "hris-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "lms-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "assessment-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "portal-queue", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
+  ],
+  "exchanges": [
+    {
+      "name": "unsia-erp-exchange",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "core-queue",
+      "destination_type": "queue",
+      "routing_key": "core.#",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "reference-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.#",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "crm-queue",
+      "destination_type": "queue",
+      "routing_key": "core.person_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "crm-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.study_program_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "core.person_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.study_program_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.academic_period_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "crm.lead_qualified",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.invoice_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.payment_paid",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "pmb-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.clearance_changed",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "finance-queue",
+      "destination_type": "queue",
+      "routing_key": "pmb.applicant_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "finance-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.krs_approved",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "core.person_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.study_program_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.academic_period_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.payment_paid",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.clearance_changed",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "pmb.ready_for_academic",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "lms.grade_input_submitted",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "academic-queue",
+      "destination_type": "queue",
+      "routing_key": "assessment.result_calculated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "hris-queue",
+      "destination_type": "queue",
+      "routing_key": "core.person_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "hris-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.study_program_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.study_program_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.academic_period_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.clearance_changed",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.student_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.class_opened",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.krs_approved",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "lms-queue",
+      "destination_type": "queue",
+      "routing_key": "assessment.result_calculated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "assessment-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.academic_period_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "assessment-queue",
+      "destination_type": "queue",
+      "routing_key": "pmb.applicant_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "core.person_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.study_program_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "reference.academic_period_updated",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "pmb.applicant_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.invoice_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.payment_paid",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "finance.clearance_changed",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.student_created",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.class_opened",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "academic.krs_approved",
+      "arguments": {}
+    },
+    {
+      "source": "unsia-erp-exchange",
+      "vhost": "/",
+      "destination": "portal-queue",
+      "destination_type": "queue",
+      "routing_key": "assessment.result_calculated",
+      "arguments": {}
+    }
+  ]
+}

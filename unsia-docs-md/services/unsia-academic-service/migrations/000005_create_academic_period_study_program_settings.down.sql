@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS academic_period_study_program_settings;

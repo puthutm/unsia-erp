@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIAKAD Super Admin · Universitas Siber Asia</title>
+<meta name="description" content="Portal Super Administrator SIAKAD Universitas Siber Asia — akses terpadu ke 26 modul operasional kampus." />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+
+<!-- Phosphor Icons -->
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css" />
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#eef5fb', 100: '#d9e7f1', 200: '#aac6dd', 300: '#7aa5c8',
+          400: '#3d80aa', 500: '#00719f', 600: '#0f487b', 700: '#0a345c',
+          800: '#08294d', 900: '#05203f',
+          accent: '#FED524',
+          'accent-deep': '#E8B900'
+        }
+      },
+      fontFamily: {
+        display: ['Urbanist', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+      }
+    }
+  }
+};
+</script>
+
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; overflow-x: hidden; }
+  .display { font-family: 'Urbanist', sans-serif; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ═══════════════════════════════════════════════════════════════ */
+  /* SKELETON LOADING — Smooth Shimmer                                  */
+  /* ═══════════════════════════════════════════════════════════════ */
+  #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #f8fafc;
+    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+  }
+  body.app-loaded #splash {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  body.app-loaded #app-content {
+    animation: contentReveal 0.7s ease-out;
+  }
+
+  @keyframes contentReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Top progress bar */
+  #top-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #FED524 50%, transparent);
+    background-size: 200% 100%;
+    z-index: 10000;
+    animation: topLoader 1.4s ease-in-out infinite;
+    transition: opacity 0.3s;
+  }
+  body.app-loaded #top-loader { opacity: 0; }
+  @keyframes topLoader {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Skeleton shimmer */
+  .sk {
+    background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+    border-radius: 6px;
+  }
+  .sk-dark {
+    background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Brand logo pulse during loading */
+  .sk-logo-pulse {
+    animation: logoPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.95); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════ */
+  /* APP STYLES                                                          */
+  /* ═══════════════════════════════════════════════════════════════ */
+
+  /* Brand patterns */
+  .dot-pattern {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+
+  .hero-mesh {
+    background:
+      radial-gradient(at 0% 0%, #0a345c 0%, transparent 50%),
+      radial-gradient(at 100% 0%, #00719f 0%, transparent 50%),
+      radial-gradient(at 60% 100%, #0f487b 0%, transparent 60%),
+      #0a345c;
+  }
+
+  /* Module card */
+  .mod-card {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .mod-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255, 213, 36, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .mod-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px -8px rgba(15, 72, 123, 0.18);
+    border-color: #0f487b !important;
+  }
+  .mod-card:hover::before { opacity: 1; }
+  .mod-card:hover .mod-arrow {
+    transform: translate(2px, -2px);
+    color: #FED524;
+    opacity: 1;
+  }
+
+  /* Stat card */
+  .stat-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle at top right, rgba(15, 72, 123, 0.05), transparent 70%);
+    pointer-events: none;
+  }
+  .stat-card:hover {
+    border-color: #0f487b;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -8px rgba(15, 72, 123, 0.15);
+  }
+
+  /* Status dot */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-online { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); animation: pulse 2s infinite; }
+  .status-warn { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+  .status-offline { background: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  }
+
+  /* Approval queue item */
+  .approval-item {
+    border-left: 3px solid #cbd5e1;
+    transition: all 0.2s;
+  }
+  .approval-item.urgent { border-left-color: #ef4444; background: linear-gradient(90deg, rgba(239, 68, 68, 0.04), transparent); }
+  .approval-item.warning { border-left-color: #f59e0b; }
+  .approval-item:hover { border-left-color: #0f487b; background: #f8fafc; }
+
+  /* Dropdown */
+  .dropdown {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: all 0.2s ease;
+  }
+  .dropdown.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* Mobile sidebar */
+  @media (max-width: 1023px) {
+    aside.sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+    aside.sidebar.open { transform: translateX(0); }
+  }
+
+  /* Stagger animation — content reveal */
+  .stagger > * { opacity: 0; animation: stag 0.5s ease-out forwards; }
+  .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.15s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.2s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.25s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.3s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.35s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.4s; }
+  @keyframes stag {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* Notification badge */
+  .notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: #ef4444;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+  }
+
+  /* Module category divider */
+  .cat-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #cbd5e1, transparent);
+  }
+</style>
+</head>
+
+<body class="app-loading text-slate-800 antialiased">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TOP LOADER BAR                                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="top-loader"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SPLASH / SKELETON LOADING                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="splash">
+  <!-- Skeleton Header -->
+  <div class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-3">
+      <div class="sk-logo-pulse w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg">
+        <span class="text-white font-display font-black text-lg">U</span>
+      </div>
+      <div class="hidden sm:block space-y-1.5">
+        <div class="sk h-3 w-28"></div>
+        <div class="sk h-2 w-20"></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="hidden md:block sk h-9 w-56 rounded-xl"></div>
+      <div class="sk h-9 w-9 rounded-lg"></div>
+      <div class="sk h-9 w-9 rounded-lg"></div>
+      <div class="sk h-9 w-36 rounded-xl"></div>
+    </div>
+  </div>
+
+  <!-- Skeleton Hero -->
+  <div class="hero-mesh relative overflow-hidden">
+    <div class="absolute inset-0 dot-pattern opacity-30"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+        <div class="lg:col-span-7 space-y-4">
+          <div class="sk-dark h-3 w-48"></div>
+          <div class="sk-dark h-12 w-72 rounded-lg"></div>
+          <div class="space-y-2">
+            <div class="sk-dark h-3 w-full max-w-md"></div>
+            <div class="sk-dark h-3 w-3/4 max-w-sm"></div>
+          </div>
+          <div class="sk-dark h-14 w-80 rounded-xl"></div>
+        </div>
+        <div class="hidden lg:block lg:col-span-5 space-y-2">
+          <div class="sk-dark h-2 w-32"></div>
+          <div class="sk-dark h-8 w-full rounded"></div>
+          <div class="sk-dark h-8 w-5/6 rounded"></div>
+        </div>
+      </div>
+    </div>
+    <svg viewBox="0 0 1440 80" class="absolute bottom-0 left-0 right-0 w-full text-[#f8fafc]" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="currentColor" d="M0,32 C240,80 480,80 720,48 C960,16 1200,16 1440,32 L1440,80 L0,80 Z"/>
+    </svg>
+  </div>
+
+  <!-- Skeleton Stats Row -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+        <div class="flex justify-between"><div class="sk h-10 w-10 rounded-xl"></div><div class="sk h-4 w-16 rounded-full"></div></div>
+        <div class="sk h-2 w-24"></div>
+        <div class="sk h-8 w-32"></div>
+        <div class="sk h-2 w-28"></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+        <div class="flex justify-between"><div class="sk h-10 w-10 rounded-xl"></div><div class="sk h-4 w-16 rounded-full"></div></div>
+        <div class="sk h-2 w-24"></div>
+        <div class="sk h-8 w-32"></div>
+        <div class="sk h-2 w-28"></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+        <div class="flex justify-between"><div class="sk h-10 w-10 rounded-xl"></div><div class="sk h-4 w-16 rounded-full"></div></div>
+        <div class="sk h-2 w-24"></div>
+        <div class="sk h-8 w-32"></div>
+        <div class="sk h-2 w-28"></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+        <div class="flex justify-between"><div class="sk h-10 w-10 rounded-xl"></div><div class="sk h-4 w-16 rounded-full"></div></div>
+        <div class="sk h-2 w-24"></div>
+        <div class="sk h-8 w-32"></div>
+        <div class="sk h-2 w-28"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skeleton Module Grid -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+      <!-- Modules skeleton -->
+      <div class="lg:col-span-8 space-y-8">
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="sk h-3 w-32"></div>
+            <div class="cat-line"></div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div><div class="sk h-2 w-24"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div><div class="sk h-2 w-24"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div><div class="sk h-2 w-24"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div><div class="sk h-2 w-24"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div><div class="sk h-2 w-24"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div><div class="sk h-2 w-24"></div></div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center gap-3"><div class="sk h-3 w-32"></div><div class="cat-line"></div></div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div></div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-2"><div class="sk h-10 w-10 rounded-lg"></div><div class="sk h-3 w-20"></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Sidebar skeleton -->
+      <div class="lg:col-span-4 space-y-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+          <div class="flex justify-between"><div class="sk h-3 w-24"></div><div class="sk h-3 w-12"></div></div>
+          <div class="sk h-2 w-full"></div>
+          <div class="sk h-2 w-5/6"></div>
+          <div class="sk h-2 w-4/6"></div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+          <div class="sk h-3 w-32"></div>
+          <div class="sk h-2 w-full"></div>
+          <div class="sk h-2 w-5/6"></div>
+          <div class="sk h-2 w-4/6"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading indicator at bottom -->
+  <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 shadow-xl rounded-full px-4 py-2 flex items-center gap-2.5">
+    <span class="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></span>
+    <span class="text-xs font-bold text-slate-600">Memuat dashboard Super Admin...</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- APP CONTENT                                                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="app-content">
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!-- HEADER                                                            -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+
+      <!-- Left: Logo + Brand -->
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" class="lg:hidden w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600">
+          <i class="ph-bold ph-list text-xl"></i>
+        </button>
+
+        <a href="#" class="flex items-center gap-2.5">
+          <div class="relative">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center shadow-lg">
+              <span class="text-white font-display font-black text-lg">U</span>
+            </div>
+            <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-brand-accent border-2 border-white"></div>
+          </div>
+          <div class="hidden sm:block leading-tight">
+            <div class="flex items-center gap-1.5">
+              <p class="font-display font-black text-slate-900 text-[15px]">UNSIA SIAKAD</p>
+              <span class="text-[9px] font-bold uppercase tracking-wider bg-brand-accent text-brand-900 px-1.5 py-0.5 rounded">Super Admin</span>
+            </div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Command Center · 26 Modul</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Right: Search + Actions -->
+      <div class="flex items-center gap-2">
+        <!-- Search -->
+        <div class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-50 border border-transparent hover:border-slate-200 rounded-xl w-64 transition-colors cursor-text">
+          <i class="ph ph-magnifying-glass text-slate-400"></i>
+          <input type="text" placeholder="Cari modul, user, atau menu..." class="bg-transparent text-sm flex-1 outline-none placeholder:text-slate-400" />
+          <kbd class="hidden lg:block text-[10px] mono text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded">⌘ K</kbd>
+        </div>
+
+        <button class="md:hidden w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600">
+          <i class="ph ph-magnifying-glass text-xl"></i>
+        </button>
+
+        <!-- Notifications -->
+        <button id="notif-btn" class="relative w-10 h-10 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-600">
+          <i class="ph ph-bell text-xl"></i>
+          <span class="notif-badge">14</span>
+        </button>
+
+        <!-- Profile -->
+        <button id="profile-btn" class="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-slate-100 rounded-xl transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-display font-black text-sm">ND</div>
+          <div class="hidden sm:block text-left">
+            <p class="text-xs font-bold text-slate-900 leading-tight">Novi Dian N.</p>
+            <p class="text-[10px] text-brand-600 leading-tight font-bold">Super Admin · BPPTI</p>
+          </div>
+          <i class="ph ph-caret-down text-xs text-slate-400 hidden sm:block"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Dropdown -->
+  <div id="profile-dropdown" class="dropdown absolute right-4 lg:right-8 top-16 mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+    <div class="p-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-display font-black text-base shadow-md">ND</div>
+        <div class="flex-1">
+          <p class="font-bold text-slate-900 text-sm">Novi Dian Natashia, MMSI</p>
+          <p class="text-xs text-slate-500">Owner BPPTI · Super Administrator</p>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="status-dot status-online"></span>
+            <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Online · Full Access</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-2">
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-user-circle text-lg text-slate-500"></i>Profil Saya</a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-user-switch text-lg text-slate-500"></i>Ganti Role <span class="ml-auto text-[10px] bg-slate-100 px-1.5 py-0.5 rounded">Admin/Dosen/Mhs</span></a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-shield-check text-lg text-slate-500"></i>Keamanan &amp; 2FA</a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-clock-counter-clockwise text-lg text-slate-500"></i>Riwayat Sesi</a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-lg text-sm text-slate-700"><i class="ph ph-question text-lg text-slate-500"></i>Bantuan</a>
+    </div>
+    <div class="p-2 border-t border-slate-100">
+      <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-rose-50 rounded-lg text-sm text-rose-600 font-medium"><i class="ph ph-sign-out text-lg"></i>Keluar dari Sesi</a>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile sidebar backdrop -->
+<div id="sidebar-backdrop" class="lg:hidden fixed inset-0 bg-black/40 z-30 hidden"></div>
+
+<!-- Mobile sidebar -->
+<aside class="sidebar lg:hidden fixed top-0 left-0 z-40 w-72 h-screen bg-white border-r border-slate-200 p-6 overflow-y-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center">
+        <span class="text-white font-display font-black text-lg">U</span>
+      </div>
+      <div>
+        <p class="font-display font-black text-slate-900 text-sm">UNSIA SIAKAD</p>
+        <p class="text-[9px] uppercase tracking-wider font-bold text-brand-600">Super Admin</p>
+      </div>
+    </div>
+    <button id="mobile-close-btn" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
+      <i class="ph-bold ph-x text-lg"></i>
+    </button>
+  </div>
+
+  <nav class="space-y-0.5">
+    <p class="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">Beranda</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 bg-brand-50 text-brand-700 rounded-lg font-bold text-sm"><i class="ph-fill ph-house"></i>Dashboard</a>
+
+    <p class="px-3 py-2 mt-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">Quick Access</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-clipboard-text text-violet-600"></i>PMB</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-graduation-cap text-emerald-600"></i>Akademik</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-currency-circle-dollar text-amber-600"></i>Keuangan</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-identification-badge text-sky-600"></i>HRIS</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-monitor-play text-rose-600"></i>LMS</a>
+
+    <p class="px-3 py-2 mt-2 text-[10px] uppercase tracking-wider font-bold text-slate-400">Sistem</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-gear"></i>Pengaturan</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-user-list"></i>User Management</a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 text-slate-700 rounded-lg text-sm"><i class="ph ph-scroll"></i>Audit Log</a>
+  </nav>
+</aside>
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!-- HERO GREETING (Super Admin Context)                              -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<section class="relative hero-mesh text-white overflow-hidden">
+  <div class="absolute inset-0 dot-pattern opacity-40"></div>
+  <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-brand-accent/10 blur-3xl"></div>
+  <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-brand-500/20 blur-3xl"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+
+      <!-- Greeting -->
+      <div class="lg:col-span-7">
+        <p class="text-brand-accent text-xs font-bold tracking-[0.25em] uppercase mb-3 flex items-center gap-2 flex-wrap">
+          <span id="time-indicator">●</span>
+          <span id="greeting-text">Selamat Datang</span>
+          <span class="text-brand-100">·</span>
+          <span class="mono text-brand-100 normal-case tracking-normal" id="current-date">Sabtu, 31 Mei 2026</span>
+          <span class="text-brand-100">·</span>
+          <span class="mono text-brand-100 normal-case tracking-normal" id="current-time">--:--:--</span>
+        </p>
+        <h1 class="display text-4xl lg:text-6xl font-black mb-3 leading-[1.05]">
+          Halo, <span class="text-brand-accent">Novi</span>
+        </h1>
+        <p class="text-brand-100 text-base lg:text-lg max-w-xl leading-relaxed mb-6">
+          Dashboard Super Administrator UNSIA. Anda memiliki akses penuh ke <strong class="text-brand-accent">26 modul</strong> operasional kampus. Semua sistem berjalan normal.
+        </p>
+
+        <!-- System status bar -->
+        <div class="inline-flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur border border-white/20 rounded-xl px-4 py-2.5">
+          <div class="flex items-center gap-2">
+            <span class="status-dot status-online"></span>
+            <span class="text-xs font-bold">26/26 Modul Online</span>
+          </div>
+          <div class="w-px h-4 bg-white/20"></div>
+          <div class="flex items-center gap-1.5">
+            <i class="ph-fill ph-pulse text-brand-accent text-xs"></i>
+            <span class="text-xs text-brand-100 mono">Uptime 99,8%</span>
+          </div>
+          <div class="w-px h-4 bg-white/20"></div>
+          <div class="flex items-center gap-1.5">
+            <i class="ph-fill ph-shield-check text-brand-accent text-xs"></i>
+            <span class="text-xs text-brand-100">Tidak ada incident</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Quick System Snapshot -->
+      <div class="lg:col-span-5">
+        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <i class="ph-fill ph-chart-line text-brand-accent"></i>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-brand-accent">Aktivitas Hari Ini</p>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <p class="display text-2xl font-black mono">347</p>
+              <p class="text-[10px] text-brand-100 uppercase tracking-wider font-bold mt-0.5">Login</p>
+            </div>
+            <div>
+              <p class="display text-2xl font-black mono">89</p>
+              <p class="text-[10px] text-brand-100 uppercase tracking-wider font-bold mt-0.5">Transaksi</p>
+            </div>
+            <div>
+              <p class="display text-2xl font-black mono text-brand-accent">14</p>
+              <p class="text-[10px] text-brand-100 uppercase tracking-wider font-bold mt-0.5">Pending</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 1440 80" class="absolute bottom-0 left-0 right-0 w-full text-[#f8fafc]" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="currentColor" d="M0,32 C240,80 480,80 720,48 C960,16 1200,16 1440,32 L1440,80 L0,80 Z"/>
+  </svg>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!-- SYSTEM STATS — 4 KPI Cards                                       -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 lg:-mt-10 relative z-10">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 stagger">
+
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+          <i class="ph-fill ph-users-three text-emerald-600"></i>
+        </div>
+        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">+12 hari ini</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">Mahasiswa Aktif</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none mono">2.847</p>
+      <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
+        <i class="ph-bold ph-arrow-up text-emerald-500 text-xs"></i>
+        +234 dari semester lalu
+      </p>
+    </div>
+
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center">
+          <i class="ph-fill ph-identification-badge text-sky-700"></i>
+        </div>
+        <span class="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full uppercase tracking-wider">156 aktif</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">Total Pegawai</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none mono">156</p>
+      <p class="text-[11px] text-slate-500 mt-2 mono">98 dosen · 58 tendik</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+          <i class="ph-fill ph-stack text-violet-600"></i>
+        </div>
+        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">100%</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">Modul Online</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none">
+        26<span class="text-slate-400 text-2xl">/26</span>
+      </p>
+      <p class="text-[11px] text-emerald-700 mt-2 font-bold flex items-center gap-1">
+        <span class="status-dot status-online"></span>
+        Semua sistem normal
+      </p>
+    </div>
+
+    <div class="stat-card">
+      <div class="flex items-start justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+          <i class="ph-fill ph-warning-circle text-amber-600"></i>
+        </div>
+        <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Urgent</span>
+      </div>
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">Pending Approval</p>
+      <p class="display text-3xl lg:text-4xl font-black text-slate-900 leading-none mono">14</p>
+      <p class="text-[11px] text-amber-700 mt-2 font-bold flex items-center gap-1">
+        <i class="ph-fill ph-clock text-xs"></i>
+        3 melewati SLA
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!-- MAIN GRID — 26 Modules + Sidebar                                 -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
+    <!-- ═════ MODULES GRID (Main) ═════ -->
+    <div class="lg:col-span-8 space-y-10">
+
+      <!-- Section header -->
+      <div>
+        <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-600 mb-1">Modul Kampus</p>
+        <h2 class="display text-2xl lg:text-3xl font-black text-slate-900">26 Modul Operasional</h2>
+        <p class="text-sm text-slate-500 mt-1">Klik kartu modul untuk masuk ke dashboard masing-masing.</p>
+      </div>
+
+      <!-- ═══ CATEGORY 1: AKADEMIK & PEMBELAJARAN ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-graduation-cap text-emerald-600 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Akademik &amp; Pembelajaran</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">6 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <!-- PMB -->
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                <i class="ph-duotone ph-clipboard-text text-violet-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">PMB</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Penerimaan Mahasiswa Baru</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">237 pendaftar aktif</span>
+            </div>
+          </a>
+
+          <!-- Akademik -->
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <i class="ph-duotone ph-graduation-cap text-emerald-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Akademik</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">KRS, KHS, Transkrip</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">2.847 mahasiswa aktif</span>
+            </div>
+          </a>
+
+          <!-- CBT -->
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+                <i class="ph-duotone ph-exam text-sky-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">CBT</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Computer Based Test</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">12 ujian terjadwal</span>
+            </div>
+          </a>
+
+          <!-- LMS -->
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+                <i class="ph-duotone ph-monitor-play text-rose-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">LMS</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Learning Management System</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">128 course aktif</span>
+            </div>
+          </a>
+
+          <!-- Perpustakaan -->
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                <i class="ph-duotone ph-books text-purple-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Perpustakaan</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">e-Library &amp; Katalog</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">14.230 koleksi</span>
+            </div>
+          </a>
+
+          <!-- Wisuda -->
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                <i class="ph-duotone ph-certificate text-amber-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Wisuda</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Yudisium &amp; Sertifikat</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-warn"></span>
+              <span class="text-[10px] font-bold text-slate-600">Periode Sept 2026</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ═══ CATEGORY 2: KEUANGAN ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-currency-circle-dollar text-amber-600 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Keuangan</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">3 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                <i class="ph-duotone ph-currency-circle-dollar text-amber-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Keuangan</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">UKT, Payroll, Rekonsiliasi</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">89 transaksi hari ini</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+                <i class="ph-duotone ph-medal text-yellow-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Beasiswa</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Pengajuan &amp; Disbursement</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">47 aktif · 8 pending</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                <i class="ph-duotone ph-calculator text-orange-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Akuntansi</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Jurnal, Neraca, Laporan</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">Closing Mei pending</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ═══ CATEGORY 3: SUMBER DAYA MANUSIA ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-identification-badge text-sky-700 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Sumber Daya &amp; Operasional</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">3 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+                <i class="ph-duotone ph-identification-badge text-sky-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">HRIS</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">SDM, Payroll, Evaluasi</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">156 pegawai</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                <i class="ph-duotone ph-package text-cyan-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Aset Mgmt</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Inventaris Kampus</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">1.842 unit terdata</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+                <i class="ph-duotone ph-handshake text-teal-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Kerjasama</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">MoU &amp; Partnership</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">23 MoU aktif</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ═══ CATEGORY 4: MARKETING & HUBUNGAN ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-megaphone-simple text-violet-600 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Marketing &amp; Hubungan</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">4 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                <i class="ph-duotone ph-megaphone-simple text-violet-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">CRM</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Leads, Agen, Komisi</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">432 leads aktif</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
+                <i class="ph-duotone ph-users-three text-pink-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Alumni</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Database &amp; Network</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">3.124 alumni</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-fuchsia-100 flex items-center justify-center">
+                <i class="ph-duotone ph-chart-line-up text-fuchsia-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Tracer Study</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Survey Lulusan</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-warn"></span>
+              <span class="text-[10px] font-bold text-slate-600">Periode 2026 buka</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+                <i class="ph-duotone ph-briefcase text-rose-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Career Center</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Bursa Kerja &amp; Magang</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">67 lowongan terbuka</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ═══ CATEGORY 5: PENELITIAN & PUBLIKASI ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-microscope text-indigo-600 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Penelitian &amp; Publikasi</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">2 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <i class="ph-duotone ph-microscope text-indigo-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Penelitian</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Grants &amp; Pengabdian</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">18 proyek aktif</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <i class="ph-duotone ph-files text-blue-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Repository</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Karya Ilmiah &amp; Jurnal</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">892 dokumen</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ═══ CATEGORY 6: SISTEM & ADMINISTRASI ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-gear text-slate-700 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Sistem &amp; Administrasi</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">6 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <i class="ph-duotone ph-gear-six text-slate-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Pengaturan</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Konfigurasi Sistem</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">v2.4.1 stable</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center">
+                <i class="ph-duotone ph-database text-zinc-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Data Referensi</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Master Data &amp; Lookup</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">14 tabel master</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center">
+                <i class="ph-duotone ph-user-list text-stone-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">User Management</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Akun, Role, Permission</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">3.149 akun aktif</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center">
+                <i class="ph-duotone ph-scroll text-neutral-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Audit Log</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Activity History</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">847 events 24j</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <i class="ph-duotone ph-plugs-connected text-emerald-700 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">PDDikti Sync</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Integrasi Eksternal</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">Last sync: 2 jam lalu</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                <i class="ph-duotone ph-cloud-arrow-up text-red-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Backup &amp; Recovery</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Data Backup System</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">Last backup: 04:00</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ═══ CATEGORY 7: KOMUNIKASI ═══ -->
+      <section>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <i class="ph-fill ph-chats-circle text-brand-600 text-lg"></i>
+            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Komunikasi</p>
+            <span class="text-[10px] font-bold text-slate-400 mono">2 modul</span>
+          </div>
+          <div class="cat-line"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 stagger">
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center">
+                <i class="ph-duotone ph-lifebuoy text-brand-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Helpdesk</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Ticketing System</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-warn"></span>
+              <span class="text-[10px] font-bold text-slate-600">23 ticket open</span>
+            </div>
+          </a>
+          <a href="#" class="mod-card group bg-white border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+                <i class="ph-duotone ph-bell-ringing text-sky-600 text-xl"></i>
+              </div>
+              <i class="mod-arrow ph-bold ph-arrow-up-right text-slate-300 text-sm opacity-50 transition-all"></i>
+            </div>
+            <h3 class="display font-bold text-sm text-slate-900 mb-0.5">Notifikasi</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">Broadcast &amp; Pengumuman</p>
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+              <span class="status-dot status-online"></span>
+              <span class="text-[10px] font-bold text-slate-600">5 pending kirim</span>
+            </div>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═════ SIDEBAR (Admin Widgets) ═════ -->
+    <aside class="lg:col-span-4 space-y-6 stagger">
+
+      <!-- System Health Monitor -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-brand-600">Monitoring</p>
+            <p class="display font-bold text-slate-900 text-base">System Health</p>
+          </div>
+          <span class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
+            <span class="status-dot status-online"></span>
+            All OK
+          </span>
+        </div>
+        <div class="p-5 space-y-3">
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-slate-700">API Response Time</span>
+              <span class="mono font-bold text-emerald-700">142 ms</span>
+            </div>
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style="width: 18%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-slate-700">Database Load</span>
+              <span class="mono font-bold text-amber-700">68%</span>
+            </div>
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full" style="width: 68%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-slate-700">Storage Used</span>
+              <span class="mono font-bold text-brand-600">42%</span>
+            </div>
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full" style="width: 42%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-slate-700">Active Sessions</span>
+              <span class="mono font-bold text-slate-700">347 / 5000</span>
+            </div>
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full" style="width: 7%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Approvals -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-amber-600">Membutuhkan Aksi</p>
+            <p class="display font-bold text-slate-900 text-base">Pending Approval</p>
+          </div>
+          <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-full uppercase tracking-wider">14 item</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <a href="#" class="approval-item urgent block px-5 py-3.5 pl-4 hover:bg-slate-50">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-0.5">
+                  <span class="text-[9px] font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded uppercase tracking-wider">SLA Lewat</span>
+                </div>
+                <p class="text-sm font-bold text-slate-900 truncate">Disbursement Komisi Agen</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Rp 4,2jt · 5 referral · 3 hari lalu</p>
+              </div>
+              <i class="ph-bold ph-arrow-right text-slate-300 mt-1"></i>
+            </div>
+          </a>
+          <a href="#" class="approval-item warning block px-5 py-3.5 pl-4 hover:bg-slate-50">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 truncate">Pengajuan Beasiswa Prestasi</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">8 pendaftar · Kemahasiswaan</p>
+              </div>
+              <i class="ph-bold ph-arrow-right text-slate-300 mt-1"></i>
+            </div>
+          </a>
+          <a href="#" class="approval-item warning block px-5 py-3.5 pl-4 hover:bg-slate-50">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 truncate">Closing Akuntansi Mei 2026</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Verifikasi sebelum 5 Juni · Keuangan</p>
+              </div>
+              <i class="ph-bold ph-arrow-right text-slate-300 mt-1"></i>
+            </div>
+          </a>
+          <a href="#" class="approval-item block px-5 py-3.5 pl-4 hover:bg-slate-50">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 truncate">User Baru: 3 Akun Dosen</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Pending verifikasi role · HRIS</p>
+              </div>
+              <i class="ph-bold ph-arrow-right text-slate-300 mt-1"></i>
+            </div>
+          </a>
+        </div>
+        <a href="#" class="block px-5 py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-brand-600 transition-colors">
+          Lihat semua 14 approval →
+        </a>
+      </div>
+
+      <!-- Recent Activity Log -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100">
+          <p class="text-[10px] uppercase tracking-wider font-bold text-brand-600">Activity Log</p>
+          <p class="display font-bold text-slate-900 text-base">Aktivitas Terbaru</p>
+        </div>
+        <div class="divide-y divide-slate-100 max-h-64 overflow-y-auto">
+          <div class="px-5 py-3 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+              <i class="ph ph-check text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-700 leading-tight"><strong>Admin Keuangan</strong> menyetujui disbursement komisi Rp 750rb</p>
+              <p class="text-[10px] text-slate-400 mono mt-0.5">5 menit lalu · IP 103.x.x.x</p>
+            </div>
+          </div>
+          <div class="px-5 py-3 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center shrink-0">
+              <i class="ph ph-user-plus text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-700 leading-tight"><strong>Sistem</strong> generate NIM untuk 12 mahasiswa baru</p>
+              <p class="text-[10px] text-slate-400 mono mt-0.5">23 menit lalu</p>
+            </div>
+          </div>
+          <div class="px-5 py-3 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
+              <i class="ph ph-megaphone text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-700 leading-tight"><strong>Marketing</strong> blast email pendaftaran ke 234 leads</p>
+              <p class="text-[10px] text-slate-400 mono mt-0.5">1 jam lalu</p>
+            </div>
+          </div>
+          <div class="px-5 py-3 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <i class="ph ph-cloud-arrow-up text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-700 leading-tight"><strong>Sistem</strong> backup database harian berhasil (2,4 GB)</p>
+              <p class="text-[10px] text-slate-400 mono mt-0.5">04:00 · scheduled</p>
+            </div>
+          </div>
+          <div class="px-5 py-3 flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <i class="ph ph-warning text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-700 leading-tight"><strong>Sistem</strong> deteksi 3 login attempt gagal dari IP unknown</p>
+              <p class="text-[10px] text-slate-400 mono mt-0.5">03:47 · security alert</p>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="block px-5 py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-brand-600 transition-colors">
+          Lihat audit log lengkap →
+        </a>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-brand-700 text-white rounded-2xl p-5 relative overflow-hidden">
+        <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-brand-accent/10 blur-2xl"></div>
+        <div class="relative">
+          <div class="flex items-center gap-2 mb-3">
+            <i class="ph-fill ph-lightning text-brand-accent text-xl"></i>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-brand-accent">Quick Actions</p>
+          </div>
+          <h3 class="display font-bold text-lg mb-4">Aksi Cepat Admin</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <a href="#" class="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-lg p-3 transition-colors">
+              <i class="ph-fill ph-user-plus text-brand-accent text-lg mb-1"></i>
+              <p class="text-xs font-bold">Tambah User</p>
+            </a>
+            <a href="#" class="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-lg p-3 transition-colors">
+              <i class="ph-fill ph-megaphone text-brand-accent text-lg mb-1"></i>
+              <p class="text-xs font-bold">Broadcast</p>
+            </a>
+            <a href="#" class="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-lg p-3 transition-colors">
+              <i class="ph-fill ph-download-simple text-brand-accent text-lg mb-1"></i>
+              <p class="text-xs font-bold">Export Data</p>
+            </a>
+            <a href="#" class="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-lg p-3 transition-colors">
+              <i class="ph-fill ph-cloud-arrow-up text-brand-accent text-lg mb-1"></i>
+              <p class="text-xs font-bold">Force Backup</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                            -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<footer class="bg-slate-900 text-slate-400 mt-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg">
+            <span class="text-white font-display font-black text-xl">U</span>
+          </div>
+          <div>
+            <p class="font-display font-black text-white text-base">UNSIA SIAKAD</p>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Super Admin Portal · v2.4.1</p>
+          </div>
+        </div>
+        <p class="text-sm leading-relaxed text-slate-400 max-w-md">
+          Command center untuk operasional terpadu Universitas Siber Asia. Akses ke 26 modul kampus dengan kontrol penuh atas sistem informasi akademik.
+        </p>
+      </div>
+      <div>
+        <p class="text-[10px] font-bold text-white uppercase tracking-wider mb-4">System Info</p>
+        <ul class="space-y-2 text-xs">
+          <li class="flex items-center gap-2"><span class="status-dot status-online"></span><span>26/26 modul online</span></li>
+          <li class="flex items-center gap-2"><span class="mono text-slate-500">UPTIME</span><span class="text-emerald-400 font-bold">99.8%</span></li>
+          <li class="flex items-center gap-2"><span class="mono text-slate-500">VERSION</span><span class="text-slate-300 font-bold">v2.4.1</span></li>
+          <li class="flex items-center gap-2"><span class="mono text-slate-500">REGION</span><span class="text-slate-300 font-bold">ID-WEST</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-slate-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-slate-500">© 2026 Universitas Siber Asia · Biro Pemasaran, Publikasi &amp; Teknologi Informasi</p>
+      <div class="flex items-center gap-4 text-xs">
+        <a href="#" class="text-slate-500 hover:text-slate-300">Kebijakan Privasi</a>
+        <a href="#" class="text-slate-500 hover:text-slate-300">Syarat Layanan</a>
+        <a href="#" class="text-slate-500 hover:text-slate-300">Sistem Status</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /app-content -->
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────────────────────
+// Smooth loading transition — Skeleton → Content
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Wait minimum 1.2s for satisfying loading feel
+  const MIN_LOAD_MS = 1200;
+  const startTime = performance.now();
+  const elapsed = startTime;
+
+  const remaining = Math.max(0, MIN_LOAD_MS - elapsed);
+  setTimeout(() => {
+    document.body.classList.add('app-loaded');
+  }, remaining);
+});
+
+// Fallback: if load event doesn't fire (cached), trigger after 1.2s
+setTimeout(() => {
+  if (!document.body.classList.contains('app-loaded')) {
+    document.body.classList.add('app-loaded');
+  }
+}, 1500);
+
+// ─────────────────────────────────────────────────────────────
+// Time-aware greeting + real-time clock
+// ─────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const hour = now.getHours();
+  const greetingEl = document.getElementById('greeting-text');
+  const indicatorEl = document.getElementById('time-indicator');
+  const dateEl = document.getElementById('current-date');
+  const timeEl = document.getElementById('current-time');
+
+  let greeting = 'Selamat Datang';
+  let icon = '☀';
+  if (hour >= 5 && hour < 11) { greeting = 'Selamat Pagi'; icon = '☀'; }
+  else if (hour >= 11 && hour < 15) { greeting = 'Selamat Siang'; icon = '☀'; }
+  else if (hour >= 15 && hour < 18) { greeting = 'Selamat Sore'; icon = '🌤'; }
+  else { greeting = 'Selamat Malam'; icon = '🌙'; }
+
+  if (greetingEl) greetingEl.textContent = greeting;
+  if (indicatorEl) indicatorEl.textContent = icon;
+
+  const hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  if (dateEl) dateEl.textContent = `${hari[now.getDay()]}, ${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  if (timeEl) timeEl.textContent = `${hh}:${mm}:${ss} WIB`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ─────────────────────────────────────────────────────────────
+// Dropdown toggles
+// ─────────────────────────────────────────────────────────────
+function toggleDropdown(triggerId, dropdownId) {
+  const trigger = document.getElementById(triggerId);
+  const dropdown = document.getElementById(dropdownId);
+  if (!trigger || !dropdown) return;
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.dropdown.open').forEach(d => { if (d !== dropdown) d.classList.remove('open'); });
+    dropdown.classList.toggle('open');
+  });
+}
+toggleDropdown('profile-btn', 'profile-dropdown');
+
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.dropdown.open').forEach(d => { if (!d.contains(e.target)) d.classList.remove('open'); });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Mobile sidebar
+// ─────────────────────────────────────────────────────────────
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileCloseBtn = document.getElementById('mobile-close-btn');
+const sidebar = document.querySelector('aside.sidebar');
+const backdrop = document.getElementById('sidebar-backdrop');
+
+function openSidebar() {
+  if (sidebar) sidebar.classList.add('open');
+  if (backdrop) backdrop.classList.remove('hidden');
+}
+function closeSidebar() {
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.add('hidden');
+}
+if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
+if (mobileCloseBtn) mobileCloseBtn.addEventListener('click', closeSidebar);
+if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+// ─────────────────────────────────────────────────────────────
+// Keyboard shortcuts
+// ─────────────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    const searchInput = document.querySelector('input[type="text"]');
+    if (searchInput) searchInput.focus();
+  }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+    closeSidebar();
+  }
+});
+</script>
+
+</body>
+</html>

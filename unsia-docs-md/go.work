@@ -1,0 +1,23 @@
+go 1.22
+
+use (
+	./packages/shared-audit
+	./packages/shared-auth
+	./packages/shared-errorenvelope
+	./packages/shared-event
+	./packages/shared-httpclient
+	./packages/shared-idempotency
+	./packages/shared-observability
+	./packages/shared-rbac
+	./services/unsia-core-service
+	./services/unsia-reference-service
+	./services/unsia-crm-service
+	./services/unsia-pmb-service
+	./services/unsia-finance-service
+	./services/unsia-academic-service
+	./services/unsia-hris-service
+	./services/unsia-lms-service
+	./services/unsia-assessment-service
+	./services/unsia-portal-service
+	./services/unsia-integration-worker
+)

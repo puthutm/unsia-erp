@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+*.egg-info
+__pycache__/
+.pytest_cache/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go build outputs
+/bin/
+/vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+
+# Misc
+*.tgz
+.cache/

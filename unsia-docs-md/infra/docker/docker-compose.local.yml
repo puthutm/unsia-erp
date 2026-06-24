@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  unsia-postgres:
+    image: postgres:16-alpine
+    container_name: unsia-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+      - ../postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+
+  unsia-redis:
+    image: redis:7-alpine
+    container_name: unsia-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata_local:/data
+
+  unsia-rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: unsia-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ../rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ../rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - rabbitdata_local:/var/lib/rabbitmq
+
+volumes:
+  pgdata_local:
+    driver: local
+  redisdata_local:
+    driver: local
+  rabbitdata_local:
+    driver: local

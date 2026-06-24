@@ -1,0 +1,25 @@
+# Folder Tree
+
+- 01-prd/
+  - PRD_Global_UNSIA_v6_5_Event_Contract_Updated.md
+- 02-brd/
+  - BRD_UNSIA_v1_1_Event_Contract_Updated.md
+- 03-fsd/
+  - FSD_Per_Modul_UNSIA_v1_0_Event_Contract_Updated.md
+- 04-api-contract/
+  - OpenAPI_Swagger_Final_ERP_UNSIA_v1_0_1_Event_Contract_Updated.md
+- 05-event-contract/
+  - Event_Contract_ERP_UNSIA.md
+- 06-erd-dbml/
+  - DBML_Global_UNSIA_v1_0_1_Event_Contract_Updated.md
+- 07-uat/
+  - UAT_Scenario_QA_Test_Plan_Detail_ERP_UNSIA_v1_0_1_Event_Contract_Updated.md
+- 08-developer/
+  - Developer_Implementation_Specification_ERP_UNSIA.md
+- 09-workplan/
+  - Rencana_Kerja_Developer_ERP_UNSIA.md
+- 10-repo-structure/
+  - Struktur_Repo_ERP_UNSIA.md
+- 11-srs/
+  - SRS_ERP_UNSIA.md
+- README.md
