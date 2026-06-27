@@ -261,7 +261,7 @@ func (p *OutboxPoller) GetPendingCount(ctx context.Context) (int64, error) {
 	err := p.db.WithContext(ctx).
 		Model(&OutboxEvent{}).
 		Where("status = ?", "pending").
-		Count(&count)
+		Count(&count).Error
 
 	return count, err
 }

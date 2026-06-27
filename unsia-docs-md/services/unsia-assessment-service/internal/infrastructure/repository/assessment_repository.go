@@ -132,3 +132,28 @@ func (r *AssessmentRepository) GetAnswersByAttemptID(attemptID string) ([]domain
 	err := r.db.Where("attempt_id = ?", attemptID).Find(&answers).Error
 	return answers, err
 }
+
+func (r *AssessmentRepository) ListSessions(limit, offset int) ([]domain.AssessmentSession, int64, error) {
+	var list []domain.AssessmentSession
+	var total int64
+	r.db.Model(&domain.AssessmentSession{}).Count(&total)
+	err := r.db.Limit(limit).Offset(offset).Order("created_at desc").Find(&list).Error
+	return list, total, err
+}
+
+func (r *AssessmentRepository) ListParticipantsBySessionID(sessionID string, limit, offset int) ([]domain.AssessmentParticipant, int64, error) {
+	var list []domain.AssessmentParticipant
+	var total int64
+	r.db.Model(&domain.AssessmentParticipant{}).Where("assessment_session_id = ?", sessionID).Count(&total)
+	err := r.db.Where("assessment_session_id = ?", sessionID).Limit(limit).Offset(offset).Find(&list).Error
+	return list, total, err
+}
+
+func (r *AssessmentRepository) ListAttempts(limit, offset int) ([]domain.AssessmentAttempt, int64, error) {
+	var list []domain.AssessmentAttempt
+	var total int64
+	r.db.Model(&domain.AssessmentAttempt{}).Count(&total)
+	err := r.db.Limit(limit).Offset(offset).Order("started_at desc").Find(&list).Error
+	return list, total, err
+}
+

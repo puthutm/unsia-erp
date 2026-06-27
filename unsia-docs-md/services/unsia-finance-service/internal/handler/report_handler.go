@@ -9,18 +9,10 @@ import (
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
 )
 
-// ReportHandler handles report-related endpoints
-type ReportHandler struct {
-	*FinanceHandler
-}
 
-// NewReportHandler creates a new ReportHandler
-func NewReportHandler(fh *FinanceHandler) *ReportHandler {
-	return &ReportHandler{FinanceHandler: fh}
-}
 
 // GetBalanceSheet handles GET /api/v1/finance/reports/position
-func (h *ReportHandler) GetBalanceSheet(c *gin.Context) {
+func (h *FinanceHandler) GetBalanceSheet(c *gin.Context) {
 	month := 1
 	year := time.Now().Year()
 
@@ -41,7 +33,7 @@ func (h *ReportHandler) GetBalanceSheet(c *gin.Context) {
 }
 
 // GetIncomeStatement handles GET /api/v1/finance/reports/activity
-func (h *ReportHandler) GetIncomeStatement(c *gin.Context) {
+func (h *FinanceHandler) GetIncomeStatement(c *gin.Context) {
 	startDateStr := c.Query("start_date")
 	endDateStr := c.Query("end_date")
 
@@ -71,7 +63,7 @@ func (h *ReportHandler) GetIncomeStatement(c *gin.Context) {
 }
 
 // GetCashFlow handles GET /api/v1/finance/reports/cashflow
-func (h *ReportHandler) GetCashFlow(c *gin.Context) {
+func (h *FinanceHandler) GetCashFlow(c *gin.Context) {
 	startDateStr := c.Query("start_date")
 	endDateStr := c.Query("end_date")
 

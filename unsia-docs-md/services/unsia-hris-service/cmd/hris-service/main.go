@@ -70,12 +70,29 @@ func main() {
 
 	// Protected routes
 	protected := r.Group("/api", middleware.AuthRequired())
-		protected.GET("/v1/hris/lecturers", hrisHandler.ListActiveLecturers)
-		protected.GET("/v1/hris/lecturers/:id", hrisHandler.GetLecturer)
-		protected.POST("/v1/hris/employees", hrisHandler.CreateEmployee)
-		protected.POST("/v1/hris/lecturers", hrisHandler.CreateLecturer)
-		protected.PUT("/v1/hris/employees/:id/positions", hrisHandler.PlotPosition)
-		protected.POST("/v1/hris/bkd-records", hrisHandler.CreateBkdRecord)
+	{
+		// Lecturers
+		protected.GET("/v1/hris/lecturers", middleware.PermissionRequired("hris.lecturer.view"), hrisHandler.ListActiveLecturers)
+		protected.GET("/v1/hris/lecturers/:id", middleware.PermissionRequired("hris.lecturer.view"), hrisHandler.GetLecturer)
+		protected.POST("/v1/hris/lecturers", middleware.PermissionRequired("hris.lecturer.manage"), hrisHandler.CreateLecturer)
+
+		// Employees
+		protected.GET("/v1/hris/employees", middleware.PermissionRequired("hris.employee.view"), hrisHandler.ListEmployees)
+		protected.POST("/v1/hris/employees", middleware.PermissionRequired("hris.employee.manage"), hrisHandler.CreateEmployee)
+		protected.GET("/v1/hris/employees/:id", middleware.PermissionRequired("hris.employee.view"), hrisHandler.GetEmployee)
+		protected.PUT("/v1/hris/employees/:id", middleware.PermissionRequired("hris.employee.manage"), hrisHandler.UpdateEmployee)
+		protected.POST("/v1/hris/employees/:id/plot-position", middleware.PermissionRequired("hris.employee.manage"), hrisHandler.PlotPosition)
+
+		// Attendances
+		protected.GET("/v1/hris/attendances", middleware.PermissionRequired("hris.attendance.view"), hrisHandler.ListAttendances)
+		protected.POST("/v1/hris/attendances", hrisHandler.RecordAttendance)
+
+		// Leave requests
+		protected.GET("/v1/hris/leave-requests", middleware.PermissionRequired("hris.leave.view"), hrisHandler.ListLeaveRequests)
+		protected.POST("/v1/hris/leave-requests", hrisHandler.SubmitLeaveRequest)
+
+		// BKD records
+		protected.POST("/v1/hris/bkd-records", middleware.PermissionRequired("hris.bkd.manage"), hrisHandler.CreateBkdRecord)
 	}
 
 	port := os.Getenv("PORT")

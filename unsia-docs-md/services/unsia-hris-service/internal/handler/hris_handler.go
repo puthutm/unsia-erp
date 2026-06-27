@@ -2,9 +2,12 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
+	"github.com/unsia-erp/unsia-hris-service/internal/domain"
 	"github.com/unsia-erp/unsia-hris-service/internal/infrastructure/repository"
 	"gorm.io/gorm"
 )
@@ -37,6 +40,20 @@ type BkdRecordCreateRequest struct {
 	TeachingLoad     float64 `json:"teaching_load"`
 	ResearchLoad     float64 `json:"research_load"`
 	ServiceLoad      float64 `json:"service_load"`
+}
+
+type AttendanceRecordRequest struct {
+	EmployeeID string  `json:"employee_id" binding:"required"`
+	CheckIn    *string `json:"check_in"`
+	CheckOut   *string `json:"check_out"`
+	Status     string  `json:"status"`
+}
+
+type LeaveRequestSubmitRequest struct {
+	EmployeeID string `json:"employee_id" binding:"required"`
+	LeaveType  string `json:"leave_type" binding:"required"`
+	StartDate  string `json:"start_date" binding:"required"`
+	EndDate    string `json:"end_date" binding:"required"`
 }
 
 type HRISHandler struct {
@@ -176,3 +193,186 @@ func (h *HRISHandler) CreateBkdRecord(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, sharederr.Success(br).WithContext(c))
 }
+
+func (h *HRISHandler) ListEmployees(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListEmployees(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data pegawai").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"employees": list,
+		"total":     total,
+	}).WithContext(c))
+}
+
+func (h *HRISHandler) GetEmployee(c *gin.Context) {
+	id := c.Param("id")
+	emp, err := h.repo.GetEmployeeByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data pegawai").WithContext(c))
+		return
+	}
+	if emp == nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Pegawai tidak ditemukan").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(emp).WithContext(c))
+}
+
+func (h *HRISHandler) UpdateEmployee(c *gin.Context) {
+	id := c.Param("id")
+	emp, err := h.repo.GetEmployeeByID(id)
+	if err != nil || emp == nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Pegawai tidak ditemukan").WithContext(c))
+		return
+	}
+
+	var req EmployeeCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	emp.PersonID = req.PersonID
+	emp.EmployeeTypeID = req.EmployeeTypeID
+	emp.WorkUnitID = req.WorkUnitID
+	emp.PositionID = req.PositionID
+	emp.Nip = req.Nip
+	if req.EmploymentStatus != "" {
+		emp.EmploymentStatus = req.EmploymentStatus
+	}
+
+	if err := h.repo.UpdateEmployee(emp); err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal memperbarui data pegawai").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(emp).WithContext(c))
+}
+
+func (h *HRISHandler) ListAttendances(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListAttendances(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data kehadiran").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"attendances": list,
+		"total":       total,
+	}).WithContext(c))
+}
+
+func (h *HRISHandler) RecordAttendance(c *gin.Context) {
+	var req AttendanceRecordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	status := req.Status
+	if status == "" {
+		status = "present"
+	}
+
+	att := domain.Attendance{
+		EmployeeID:     req.EmployeeID,
+		AttendanceDate: time.Now(),
+		CheckIn:        req.CheckIn,
+		CheckOut:       req.CheckOut,
+		Status:         status,
+	}
+
+	if err := h.repo.RecordAttendance(&att); err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mencatat kehadiran").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(att).WithContext(c))
+}
+
+func (h *HRISHandler) ListLeaveRequests(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListLeaveRequests(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil pengajuan cuti").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"leave_requests": list,
+		"total":          total,
+	}).WithContext(c))
+}
+
+func (h *HRISHandler) SubmitLeaveRequest(c *gin.Context) {
+	var req LeaveRequestSubmitRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	start, errStart := time.Parse("2006-01-02", req.StartDate)
+	end, errEnd := time.Parse("2006-01-02", req.EndDate)
+	if errStart != nil || errEnd != nil {
+		c.JSON(http.StatusBadRequest, sharederr.Error("VALIDATION_ERROR", "Format tanggal harus YYYY-MM-DD").WithContext(c))
+		return
+	}
+
+	leave := domain.LeaveRequest{
+		EmployeeID: req.EmployeeID,
+		LeaveType:  req.LeaveType,
+		StartDate:  start,
+		EndDate:    end,
+		Status:     "pending",
+	}
+
+	if err := h.repo.CreateLeaveRequest(&leave); err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengajukan cuti").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusCreated, sharederr.Success(leave).WithContext(c))
+}
+

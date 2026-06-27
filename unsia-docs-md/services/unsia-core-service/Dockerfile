@@ -8,19 +8,22 @@ RUN apk add --no-cache git gcc musl-dev
 
 WORKDIR /app
 
-# Copy go mod files
-COPY go.mod go.mod.sum ./
-COPY ../packages/*/go.mod ../packages/
-COPY ../packages/*/go.sum ../packages/ || true
+# Copy go.mod/go.sum of the service and the shared packages
+COPY services/unsia-core-service/go.mod services/unsia-core-service/go.sum* ./services/unsia-core-service/
+COPY packages/ ./packages/
+
+# Change working directory to the service directory
+WORKDIR /app/services/unsia-core-service
+
+# Copy the service source code
+COPY services/unsia-core-service/ ./
 
 # Download dependencies
-RUN go mod download
-
-# Copy source code
-COPY . .
+RUN go mod tidy
 
 # Build binary
 RUN CGO_ENABLED=1 go build -o /unsia-core-service ./cmd/core-service
+
 
 # ==============================
 # Stage 2: Runner

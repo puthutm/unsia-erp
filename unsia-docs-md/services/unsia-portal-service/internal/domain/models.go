@@ -41,6 +41,73 @@ func (UserPreference) TableName() string {
 	return "user_preferences"
 }
 
+type MenuResponse struct {
+	MenuCode string         `json:"menu_code"`
+	Label    string         `json:"label"`
+	Path     string         `json:"path"`
+	Icon     string         `json:"icon"`
+	Children []MenuResponse `json:"children,omitempty"`
+}
+
+type Menu struct {
+	Code               string  `gorm:"primaryKey;column:code"`
+	Label              string  `gorm:"column:label;not null"`
+	Path               string  `gorm:"column:path;not null"`
+	Icon               string  `gorm:"column:icon"`
+	ParentCode         *string `gorm:"column:parent_code"`
+	SortOrder          int     `gorm:"column:sort_order;default:0;not null"`
+	RequiredPermission string  `gorm:"column:required_permission"`
+}
+
+func (Menu) TableName() string {
+	return "menus"
+}
+
+type RoleMenu struct {
+	RoleID   string `gorm:"primaryKey;column:role_id"`
+	MenuCode string `gorm:"primaryKey;column:menu_code"`
+}
+
+func (RoleMenu) TableName() string {
+	return "role_menus"
+}
+
+type News struct {
+	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	Title       string    `gorm:"column:title;not null"`
+	Content     string    `gorm:"column:content;not null"`
+	Author      string    `gorm:"column:author"`
+	PublishedAt time.Time `gorm:"column:published_at"`
+}
+
+func (News) TableName() string {
+	return "news"
+}
+
+type Announcement struct {
+	ID         string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	Title      string    `gorm:"column:title;not null"`
+	Message    string    `gorm:"column:message;not null"`
+	TargetRole string    `gorm:"column:target_role;default:'all';not null"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (Announcement) TableName() string {
+	return "announcements"
+}
+
+type Event struct {
+	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	Title       string    `gorm:"column:title;not null"`
+	Description string    `gorm:"column:description"`
+	EventDate   time.Time `gorm:"column:event_date;not null"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+}
+
+func (Event) TableName() string {
+	return "events"
+}
+
 type MenuShortcut struct {
 	ID        string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	UserID    string `gorm:"column:user_id;not null"`

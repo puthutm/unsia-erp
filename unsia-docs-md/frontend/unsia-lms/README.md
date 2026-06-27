@@ -1,64 +1,111 @@
-# unsia-lms
+# UNSIA LMS Frontend
 
-**Stack:** Next.js 14+ (App Router) · TypeScript · TanStack Query · Tailwind CSS
+Learning Management System frontend untuk Universitas Sintang.
 
-**Backend:** `unsia-lms-service` → `lms_db`
-
-## Tanggung Jawab
-
-Frontend modul LMS — platform pembelajaran online untuk dosen dan mahasiswa.
-
-## Route Structure
+## Struktur Folder
 
 ```
-app/
-├── (mahasiswa)/
-│   ├── dashboard/
-│   ├── kelas/
-│   │   ├── page.tsx               → List kelas aktif semester ini
-│   │   └── [classId]/
-│   │       ├── page.tsx           → Overview kelas
-│   │       ├── sesi/[sessionId]/  → Detail sesi + materi
-│   │       ├── tugas/
-│   │       │   ├── page.tsx
-│   │       │   └── [taskId]/submit/
-│   │       ├── diskusi/
-│   │       └── presensi/
-│   └── progress/
-│
-└── (dosen)/
-    ├── dashboard/
-    ├── kelas/
-    │   ├── page.tsx               → List kelas yang diajar
-    │   └── [classId]/
-    │       ├── page.tsx
-    │       ├── sesi/
-    │       │   ├── page.tsx       → Buat/edit sesi
-    │       │   └── [sessionId]/
-    │       │       ├── materi/
-    │       │       ├── tugas/
-    │       │       └── attendance/
-    │       ├── diskusi/
-    │       ├── peserta/
-    │       └── nilai-input/
-    └── laporan/
+unsia-lms/
+├── app/
+│   ├── page.tsx              # Halaman utama LMS
+│   ├── layout.tsx            # Layout LMS
+│   ├── globals.css          # Global styles
+│   └── session/
+│       └── [id]/
+│           └── page.tsx    # Detail sesi/material
+├── hooks/
+│   └── use-lms.ts          # LMS API hooks
+├── components/            # Reusable components
+├── contexts/              # React contexts
+└── lib/                   # Utilities
 ```
 
-## Role yang Dilayani
+## Fitur
 
-| Role | Scope | Akses Utama |
-|------|-------|-------------|
-| Mahasiswa | Self | Kelas aktif, materi, tugas, diskusi, presensi, progress |
-| Dosen | Assigned class | Sesi, materi, tugas, presensi, grade input |
+1. **Dashboard LMS**
+   - Tampilan statistik kursus
+   - Daftar sesi kuliyah
+   - Monitoring progress
 
-## Integrasi API
+2. **Manajemen Kursus**
+   - Daftar kursus yang diambil
+   - Detail informasi kursus
+   - Progres pembelajaran
 
-- `unsia-lms-service` — semua data LMS
-- `unsia-core-service` — auth/token
+3. **Sesi Kuliyah**
+   - Jadwal sesi
+   - Materi pembelajaran
+   - Tugas dan quiz
+   - Diskusi
 
-## Aturan UI
+4. **Materi**
+   - Upload/download materi
+   - Video conference
+   - Dokumen PDF
 
-- Kelas dan peserta berasal dari **Academic** via sync — jika sync tertunda, tampilkan label + `synced_at`
-- Grade input **bukan nilai final** — tampilkan disclaimer "Nilai final ditetapkan oleh Admin Akademik"
-- Upload materi: tampilkan progress upload + validasi tipe file
-- Presensi: QR code atau input manual per mahasiswa
+5. **Tugas**
+   - Pengumpulan tugas
+   - Penilaian
+   - Feedback
+
+6. **Diskusi**
+   - Forum diskusi
+   - Q&A dengan dosen
+
+## API Integration
+
+Menggunakan LMS Service di `http://localhost:8081/api/v1/lms`
+
+### Endpoints
+
+```typescript
+// Courses
+GET    /api/v1/lms/courses
+POST   /api/v1/lms/courses
+
+// Sessions  
+GET    /api/v1/lms/sessions
+POST   /api/v1/lms/sessions
+GET    /api/v1/lms/sessions/:id
+
+// Materials
+GET    /api/v1/lms/sessions/:id/materials
+POST   /api/v1/lms/sessions/:id/materials
+
+// Assignments
+GET    /api/v1/lms/sessions/:id/assignments
+POST   /api/v1/lms/sessions/:id/assignments
+
+// Discussions
+GET    /api/v1/lms/sessions/:id/discussions
+POST   /api/v1/lms/sessions/:id/discussions
+POST   /api/v1/lms/discussions/:id/replies
+
+// Attendance
+GET    /api/v1/lms/sessions/:id/attendance
+POST   /api/v1/lms/sessions/:id/attendance
+```
+
+## Tech Stack
+
+- **Framework**: Next.js 13+ (App Router)
+- **Styling**: Tailwind CSS
+- **State**: React Hooks
+- **API**: REST
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Run development
+npm run dev
+```
+
+## Konfigurasi
+
+Buat file `.env.local`:
+
+```env
+NEXT_PUBLIC_LMS_API_URL=http://localhost:8081/api/v1/lms

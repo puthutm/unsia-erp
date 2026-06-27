@@ -216,3 +216,49 @@ func (h *PortalHandler) DeleteShortcut(c *gin.Context) {
 
 	c.JSON(http.StatusOK, sharederr.SuccessWithMessage(nil, "Shortcut menu berhasil dihapus").WithContext(c))
 }
+
+func (h *PortalHandler) GetRoleMenus(c *gin.Context) {
+	claimsVal, _ := c.Get("claims")
+	claims, _ := claimsVal.(*sharedauth.Claims)
+	role := "public"
+	if claims != nil && claims.ActiveRole != "" {
+		role = claims.ActiveRole
+	}
+
+	menus, err := h.repo.GetMenusByRole(role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data menu navigasi").WithContext(c))
+		return
+	}
+
+	var finalTree []domain.MenuResponse
+
+	// Filter top-level menus
+	for _, m := range menus {
+		if m.ParentCode == nil || *m.ParentCode == "" {
+			mr := domain.MenuResponse{
+				MenuCode: m.Code,
+				Label:    m.Label,
+				Path:     m.Path,
+				Icon:     m.Icon,
+				Children: []domain.MenuResponse{},
+			}
+
+			// Find submenus
+			for _, sub := range menus {
+				if sub.ParentCode != nil && *sub.ParentCode == m.Code {
+					mr.Children = append(mr.Children, domain.MenuResponse{
+						MenuCode: sub.Code,
+						Label:    sub.Label,
+						Path:     sub.Path,
+						Icon:     sub.Icon,
+					})
+				}
+			}
+			finalTree = append(finalTree, mr)
+		}
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(finalTree).WithContext(c))
+}
+

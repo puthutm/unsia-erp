@@ -1,0 +1,24 @@
+# Ignore frontend node_modules and build directories
+frontend/unsia-portal-web/node_modules
+frontend/unsia-portal-web/.next
+frontend/unsia-portal-web/out
+**/node_modules
+**/.next
+
+# Ignore git and IDE directories
+.git
+.gitignore
+.vscode
+.idea
+.agents
+
+# Ignore logs and temporary files
+*.log
+tmp/
+dist/
+build/
+
+# Ignore local Go workspace and binary build artifacts
+bin/
+**/go.work.sum
+**/go.work

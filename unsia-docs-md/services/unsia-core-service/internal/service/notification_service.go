@@ -87,7 +87,7 @@ func (s *NotificationService) MarkAllAsRead(userID string) error {
 // GetUnreadCount gets unread notification count
 func (s *NotificationService) GetUnreadCount(userID string) (int64, error) {
 	var count int64
-	err := s.db.Model(&Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Count(&count)
+	err := s.db.Model(&Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Count(&count).Error
 	return count, err
 }
 

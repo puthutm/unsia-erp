@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/unsia-erp/unsia-finance-service/internal/domain"
@@ -203,7 +204,8 @@ type PaginatedResult struct {
 }
 
 func (r *FinanceRepository) GetInvoices(filter InvoiceListFilter) (*PaginatedResult, error) {
-	query := r.db.Model(&domain.Invoice{}).Preload("Items")
+	query := r.db.Model(&domain.Invoice{}).
+		Select("id, invoice_number, target_type, applicant_id, student_id, academic_period_id, total_amount, paid_amount, status, due_date, created_at")
 
 	// Apply filters
 	if filter.Status != "" {

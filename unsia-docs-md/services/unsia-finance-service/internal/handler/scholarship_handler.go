@@ -12,18 +12,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// ScholarshipHandler handles scholarship-related endpoints
-type ScholarshipHandler struct {
-	*FinanceHandler
-}
 
-// NewScholarshipHandler creates a new ScholarshipHandler
-func NewScholarshipHandler(fh *FinanceHandler) *ScholarshipHandler {
-	return &ScholarshipHandler{FinanceHandler: fh}
-}
 
 // GetScholarships handles GET /api/v1/finance/scholarships
-func (h *ScholarshipHandler) GetScholarships(c *gin.Context) {
+func (h *FinanceHandler) GetScholarships(c *gin.Context) {
 	filter := repository.ScholarshipFilter{
 		IsActive: c.Query("is_active") == "true",
 		Search:  c.Query("search"),
@@ -50,7 +42,7 @@ func (h *ScholarshipHandler) GetScholarships(c *gin.Context) {
 }
 
 // CreateScholarship handles POST /api/v1/finance/scholarships
-func (h *ScholarshipHandler) CreateScholarship(c *gin.Context) {
+func (h *FinanceHandler) CreateScholarship(c *gin.Context) {
 	var req ScholarshipCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -105,7 +97,7 @@ func (h *ScholarshipHandler) CreateScholarship(c *gin.Context) {
 }
 
 // UpdateScholarship handles PUT /api/v1/finance/scholarships/:id
-func (h *ScholarshipHandler) UpdateScholarship(c *gin.Context) {
+func (h *FinanceHandler) UpdateScholarship(c *gin.Context) {
 	id := c.Param("id")
 	var req ScholarshipUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -165,7 +157,7 @@ func (h *ScholarshipHandler) UpdateScholarship(c *gin.Context) {
 }
 
 // DeleteScholarship handles DELETE /api/v1/finance/scholarships/:id
-func (h *ScholarshipHandler) DeleteScholarship(c *gin.Context) {
+func (h *FinanceHandler) DeleteScholarship(c *gin.Context) {
 	id := c.Param("id")
 
 	existing, err := h.repo.GetScholarshipByID(id)

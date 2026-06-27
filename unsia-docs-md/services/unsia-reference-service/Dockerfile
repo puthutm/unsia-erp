@@ -7,14 +7,20 @@ RUN apk add --no-cache git gcc musl-dev
 
 WORKDIR /app
 
-COPY go.mod go.mod.sum ./
-COPY ../packages/*/go.mod ../packages/ || true
-COPY ../packages/*/go.sum ../packages/ || true
+# Copy go.mod/go.sum of the service and the shared packages
+COPY services/unsia-reference-service/go.mod services/unsia-reference-service/go.sum* ./services/unsia-reference-service/
+COPY packages/ ./packages/
 
-RUN go mod download
+# Change working directory to the service directory
+WORKDIR /app/services/unsia-reference-service
 
-COPY . .
+# Copy the service source code
+COPY services/unsia-reference-service/ ./
 
+# Download dependencies
+RUN go mod tidy
+
+# Build binary
 RUN CGO_ENABLED=1 go build -o /unsia-reference-service ./cmd/reference-service
 
 # ==============================

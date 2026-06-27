@@ -144,17 +144,3 @@ func hashToken(token string) string {
 	return token[:64]
 }
 
-func toJSONArray(arr []string) string {
-	if len(arr) == 0 {
-		return "[]"
-	}
-	result := "["
-	for i, s := range arr {
-		if i > 0 {
-			result += ","
-		}
-		result += `"` + s + `"`
-	}
-	result += "]"
-	return result
-}

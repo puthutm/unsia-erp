@@ -102,6 +102,12 @@ func main() {
 		protected.POST("/v1/crm/leads", middleware.PermissionRequired("crm.lead.create"), crmHandler.CreateLead)
 		protected.POST("/v1/crm/leads/:id/activities", middleware.PermissionRequired("crm.lead.activity"), crmHandler.CreateLeadActivity)
 		protected.POST("/v1/crm/leads/:id/convert-to-applicant", middleware.PermissionRequired("crm.lead.convert"), crmHandler.ConvertLeadToApplicant)
+
+		// Contacts & Opportunities
+		protected.GET("/v1/crm/contacts", crmHandler.ListContacts)
+		protected.POST("/v1/crm/contacts", crmHandler.CreateContact)
+		protected.GET("/v1/crm/opportunities", crmHandler.ListOpportunities)
+		protected.POST("/v1/crm/opportunities", crmHandler.CreateOpportunity)
 	}
 
 	port := os.Getenv("PORT")

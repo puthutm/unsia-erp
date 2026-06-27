@@ -7,11 +7,20 @@ RUN apk add --no-cache git gcc musl-dev
 
 WORKDIR /app
 
-COPY go.mod go.mod.sum ./
-RUN go mod download
+# Copy go.mod/go.sum of the service and the shared packages
+COPY services/unsia-academic-service/go.mod services/unsia-academic-service/go.sum* ./services/unsia-academic-service/
+COPY packages/ ./packages/
 
-COPY . .
+# Change working directory to the service directory
+WORKDIR /app/services/unsia-academic-service
 
+# Copy the service source code
+COPY services/unsia-academic-service/ ./
+
+# Download dependencies
+RUN go mod tidy
+
+# Build binary
 RUN CGO_ENABLED=1 go build -o /unsia-academic-service ./cmd/academic-service
 
 # ==============================

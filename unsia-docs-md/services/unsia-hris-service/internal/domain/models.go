@@ -57,3 +57,33 @@ type BkdRecord struct {
 func (BkdRecord) TableName() string {
 	return "bkd_records"
 }
+
+type Attendance struct {
+	ID             string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	EmployeeID     string    `gorm:"column:employee_id;not null"`
+	AttendanceDate time.Time `gorm:"column:attendance_date;not null"`
+	CheckIn        *string   `gorm:"column:check_in"`
+	CheckOut       *string   `gorm:"column:check_out"`
+	Status         string    `gorm:"column:status;default:'present';not null"`
+}
+
+func (Attendance) TableName() string {
+	return "attendances"
+}
+
+type LeaveRequest struct {
+	ID          string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	EmployeeID  string     `gorm:"column:employee_id;not null"`
+	LeaveType   string     `gorm:"column:leave_type;not null"`
+	StartDate   time.Time  `gorm:"column:start_date;not null"`
+	EndDate     time.Time  `gorm:"column:end_date;not null"`
+	Status      string     `gorm:"column:status;default:'pending';not null"`
+	ApprovedBy  *string    `gorm:"column:approved_by"`
+	CreatedAt   time.Time  `gorm:"column:created_at"`
+	UpdatedAt   time.Time  `gorm:"column:updated_at"`
+}
+
+func (LeaveRequest) TableName() string {
+	return "leave_requests"
+}
+

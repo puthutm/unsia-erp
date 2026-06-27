@@ -260,7 +260,7 @@ func (h *DocumentRequestHandler) GetMyRequests(c *gin.Context) {
 func (h *DocumentRequestHandler) GetDocumentTypes(c *gin.Context) {
 docTypes := []gin.H{
 		{"id": DocTypeTranskrip, "name": "Transkrip Nilai", "description": "Transkrip akademik", "processing_days": 3},
-		{"id": DocTypeIjzahCopy, "name": "Salinan Ijazah", "description": "Salinan ijazah legalisir", "processing_days": 7},
+		{"id": DocTypeIjazahCopy, "name": "Salinan Ijazah", "description": "Salinan ijazah legalisir", "processing_days": 7},
 		{"id": DocTypeKTM, "name": "KTM Baru", "description": "Kartu Tanda Mahasiswa", "processing_days": 14},
 		{"id": DocTypeKartuKelulusan, "name": "Kartu Kelulusan", "description": "Kartu kelulusan wisuda", "processing_days": 5},
 		{"id": DocTypePrestasi, "name": "Sertifikat Prestasi", "description": "Sertifikat prestasi akademik", "processing_days": 3},

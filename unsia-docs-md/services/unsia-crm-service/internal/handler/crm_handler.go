@@ -571,3 +571,50 @@ func (h *CRMHandler) ConvertLeadToApplicant(c *gin.Context) {
 		"status":       "converted",
 	}).WithContext(c))
 }
+
+func (h *CRMHandler) ListContacts(c *gin.Context) {
+	var personIDs []string
+	err := h.db.Model(&domain.Lead{}).Distinct("person_id").Pluck("person_id", &personIDs).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data kontak").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"contacts": personIDs,
+	}).WithContext(c))
+}
+
+func (h *CRMHandler) CreateContact(c *gin.Context) {
+	var req struct {
+		PersonID string `json:"person_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+	lead := domain.Lead{
+		PersonID:   req.PersonID,
+		LeadNumber: generateLeadNumber(),
+		Status:     "new",
+	}
+	if err := h.db.Create(&lead).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menyimpan kontak baru").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusCreated, sharederr.Success(lead).WithContext(c))
+}
+
+func (h *CRMHandler) ListOpportunities(c *gin.Context) {
+	var opportunities []domain.Lead
+	err := h.db.Where("status NOT IN (?)", []string{"converted", "lost"}).Order("created_at desc").Find(&opportunities).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data peluang").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(opportunities).WithContext(c))
+}
+
+func (h *CRMHandler) CreateOpportunity(c *gin.Context) {
+	h.CreateLead(c)
+}
+

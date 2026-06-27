@@ -1,0 +1,13 @@
+# Ignore local dependencies and builds
+node_modules
+.next
+out
+
+# Ignore git and IDE settings
+.git
+.gitignore
+.vscode
+.idea
+
+# Ignore logs
+*.log

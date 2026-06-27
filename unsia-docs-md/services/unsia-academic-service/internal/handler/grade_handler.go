@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -45,7 +44,7 @@ type GradeEntryRequest struct {
 	StudentID   string                 `json:"student_id" binding:"required"`
 	KrsItemID   string                 `json:"krs_item_id" binding:"required"`
 	Components []GradeComponentScore    `json:"components" binding:"gt=0"`
-	FinalGrade *string                 `json:"final_grade"`
+	FinalGrade *float64                `json:"final_grade"`
 	LetterGrade *string                `json:"letter_grade"`
 	Status     string                 `json:"status" binding:"required,oneof=in_progress submitted final"`
 }
@@ -70,7 +69,7 @@ type BulkGradeEntryRequest struct {
 type GradeEntryRequestBulk struct {
 	StudentID   string            `json:"student_id" binding:"required"`
 	Scores     map[string]float64 `json:"scores"`
-	FinalGrade *string           `json:"final_grade"`
+	FinalGrade *float64          `json:"final_grade"`
 	LetterGrade *string          `json:"letter_grade"`
 }
 
@@ -216,6 +215,7 @@ func (h *GradeHandler) EnterStudentGrade(c *gin.Context) {
 		return
 	}
 
+	now := time.Now()
 	entry := domain.GradeEntry{
 		GradeID:     gradeID,
 		StudentID:  req.StudentID,
@@ -223,7 +223,7 @@ func (h *GradeHandler) EnterStudentGrade(c *gin.Context) {
 		FinalGrade: req.FinalGrade,
 		LetterGrade: req.LetterGrade,
 		Status:     req.Status,
-		EnteredAt:  time.Now(),
+		EnteredAt:  &now,
 	}
 
 	if err := h.db.Create(&entry).Error; err != nil {
@@ -264,6 +264,7 @@ func (h *GradeHandler) BulkEnterGrades(c *gin.Context) {
 	var failed []string
 
 	for _, entryReq := range req.Entries {
+		now := time.Now()
 		entry := domain.GradeEntry{
 			GradeID:     gradeID,
 			StudentID:   entryReq.StudentID,
@@ -271,7 +272,7 @@ func (h *GradeHandler) BulkEnterGrades(c *gin.Context) {
 			FinalGrade: entryReq.FinalGrade,
 			LetterGrade: entryReq.LetterGrade,
 			Status:     "in_progress",
-			EnteredAt:  time.Now(),
+			EnteredAt:  &now,
 		}
 
 		if err := h.db.Create(&entry).Error; err != nil {

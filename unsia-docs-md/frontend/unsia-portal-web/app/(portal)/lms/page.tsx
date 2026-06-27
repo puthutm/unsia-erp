@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { API_BASE_URLS, LMS_ENDPOINTS, STORAGE_KEYS } from "@/lib/constants";
+import { CreateClassModal } from "@/components/lms/create-class-modal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface LmsCourse {
   id: string;
@@ -57,12 +59,17 @@ export default function LmsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"courses" | "classes" | "enrollments" | "sessions">("courses");
+  const [showCreateClassModal, setShowCreateClassModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchLmsData();
     }
   }, [isAuthenticated]);
+
+  const handleCreateClassSuccess = () => {
+    fetchLmsData();
+  };
 
   const fetchLmsData = async () => {
     const token = localStorage.getItem(STORAGE_KEYS.accessToken);
@@ -124,7 +131,7 @@ export default function LmsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       active: "bg-green-100 text-green-800",
       inactive: "bg-gray-100 text-gray-800",
@@ -137,52 +144,71 @@ export default function LmsPage() {
     return styles[status] || "bg-gray-100 text-gray-800";
   };
 
-  return (
+return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-dark-900">LMS - Learning Management System</h1>
-          <p className="text-dark-500 mt-1">Kelola pembelajaran online</p>
+          <h1 className="text-2xl font-bold text-slate-900">LMS - Learning Management System</h1>
+          <p className="text-slate-500 mt-1">Kelola pembelajaran online</p>
         </div>
-        <button className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors">
+<button 
+          onClick={() => setShowCreateClassModal(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           + Buat Kelas
         </button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-6 border border-surface-border">
-          <h3 className="text-sm font-medium text-dark-500">Mata Kuliah</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">{courses.length}</p>
+        <div className="bg-white rounded-xl p-6 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-500">Mata Kuliah</h3>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-slate-900 mt-2">{courses.length}</p>
+          )}
         </div>
-        <div className="bg-white rounded-xl p-6 border border-surface-border">
-          <h3 className="text-sm font-medium text-dark-500">Kelas Aktif</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">
-            {classes.filter(c => c.enrolledCount > 0 && c.enrolledCount < c.maxStudents).length}
-          </p>
+        <div className="bg-white rounded-xl p-6 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-500">Kelas Aktif</h3>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-slate-900 mt-2">
+              {classes.filter(c => c.enrolledCount > 0 && c.enrolledCount < c.maxStudents).length}
+            </p>
+          )}
         </div>
-        <div className="bg-white rounded-xl p-6 border border-surface-border">
-          <h3 className="text-sm font-medium text-dark-500">Total Enrollment</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">{enrollments.length}</p>
+        <div className="bg-white rounded-xl p-6 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-500">Total Enrollment</h3>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-slate-900 mt-2">{enrollments.length}</p>
+          )}
         </div>
-        <div className="bg-white rounded-xl p-6 border border-surface-border">
-          <h3 className="text-sm font-medium text-dark-500">Sesi Aktif</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">
-            {sessions.filter(s => s.status === "ongoing").length}
-          </p>
+        <div className="bg-white rounded-xl p-6 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-500">Sesi Aktif</h3>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-slate-900 mt-2">
+              {sessions.filter(s => s.status === "ongoing").length}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl border border-surface-border">
-        <div className="flex border-b border-surface-border">
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="flex border-b border-slate-200">
           <button
             onClick={() => setActiveTab("courses")}
             className={`px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === "courses"
-                ? "text-brand-600 border-b-2 border-brand-600"
-                : "text-dark-500 hover:text-dark-700"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             Mata Kuliah
@@ -191,8 +217,8 @@ export default function LmsPage() {
             onClick={() => setActiveTab("classes")}
             className={`px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === "classes"
-                ? "text-brand-600 border-b-2 border-brand-600"
-                : "text-dark-500 hover:text-dark-700"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             Kelas
@@ -201,8 +227,8 @@ export default function LmsPage() {
             onClick={() => setActiveTab("enrollments")}
             className={`px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === "enrollments"
-                ? "text-brand-600 border-b-2 border-brand-600"
-                : "text-dark-500 hover:text-dark-700"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             Enrollment
@@ -211,65 +237,65 @@ export default function LmsPage() {
             onClick={() => setActiveTab("sessions")}
             className={`px-6 py-3 text-sm font-medium transition-colors ${
               activeTab === "sessions"
-                ? "text-brand-600 border-b-2 border-brand-600"
-                : "text-dark-500 hover:text-dark-700"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             Sesi Kuliah
           </button>
         </div>
 
-        {/* Tab Content */}
+{/* Tab Content */}
         <div className="p-6">
           {loading ? (
-            <div className="text-center text-dark-500 py-8">Memuat data...</div>
+            <Skeleton variant="table" rows={5} />
           ) : activeTab === "courses" && courses.length === 0 ? (
-            <div className="text-center text-dark-500 py-8">Tidak ada mata kuliah</div>
+            <div className="text-center text-slate-500 py-8">Tidak ada mata kuliah</div>
           ) : activeTab === "courses" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.map((course) => (
-                <div key={course.id} className="p-4 border border-surface-border rounded-lg">
+                <div key={course.id} className="p-4 border border-slate-200 rounded-lg">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium text-dark-900">{course.name}</h4>
-                      <p className="text-sm text-dark-500">{course.code}</p>
+                      <h4 className="font-medium text-slate-900">{course.name}</h4>
+                      <p className="text-sm text-slate-500">{course.code}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${course.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                       {course.isActive ? "Aktif" : "Nonaktif"}
                     </span>
                   </div>
-                  <div className="mt-3 space-y-1 text-sm text-dark-500">
+                  <div className="mt-3 space-y-1 text-sm text-slate-500">
                     <p>{course.studyProgramName}</p>
                     <p>Semester {course.semester}</p>
-                    <p className="text-dark-400">{course.lecturerName}</p>
+                    <p className="text-slate-400">{course.lecturerName}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : activeTab === "classes" && classes.length === 0 ? (
-            <div className="text-center text-dark-500 py-8">Tidak ada kelas</div>
+            <div className="text-center text-slate-500 py-8">Tidak ada kelas</div>
           ) : activeTab === "classes" ? (
             <table className="w-full">
-              <thead className="bg-surface-subtle">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Kelas</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Mata Kuliah</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Dosen</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Jadwal</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Kapasitas</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Kelas</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Mata Kuliah</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Dosen</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Jadwal</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Kapasitas</th>
                 </tr>
               </thead>
               <tbody>
                 {classes.slice(0, 10).map((cls) => (
-                  <tr key={cls.id} className="border-t border-surface-border">
-                    <td className="p-4 text-dark-900">{cls.className}</td>
-                    <td className="p-4 text-dark-600">{cls.courseName}</td>
-                    <td className="p-4 text-dark-600">{cls.lecturerName}</td>
-                    <td className="p-4 text-dark-600">
+                  <tr key={cls.id} className="border-t border-slate-200">
+                    <td className="p-4 text-slate-900">{cls.className}</td>
+                    <td className="p-4 text-slate-600">{cls.courseName}</td>
+                    <td className="p-4 text-slate-600">{cls.lecturerName}</td>
+                    <td className="p-4 text-slate-600">
                       <div>{cls.schedule}</div>
-                      <div className="text-xs text-dark-400">{cls.room}</div>
+                      <div className="text-xs text-slate-400">{cls.room}</div>
                     </td>
-                    <td className="p-4 text-dark-600">
+                    <td className="p-4 text-slate-600">
                       {cls.enrolledCount}/{cls.maxStudents}
                     </td>
                   </tr>
@@ -277,25 +303,25 @@ export default function LmsPage() {
               </tbody>
             </table>
           ) : activeTab === "enrollments" && enrollments.length === 0 ? (
-            <div className="text-center text-dark-500 py-8">Tidak ada enrollment</div>
+            <div className="text-center text-slate-500 py-8">Tidak ada enrollment</div>
           ) : activeTab === "enrollments" ? (
             <table className="w-full">
-              <thead className="bg-surface-subtle">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">NIM</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Nama</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Kelas</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Mata Kuliah</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Status</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">NIM</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Nama</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Kelas</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Mata Kuliah</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {enrollments.slice(0, 10).map((enrollment) => (
-                  <tr key={enrollment.id} className="border-t border-surface-border">
-                    <td className="p-4 text-dark-900 font-mono">{enrollment.studentNim}</td>
-                    <td className="p-4 text-dark-900">{enrollment.studentName}</td>
-                    <td className="p-4 text-dark-600">{enrollment.className}</td>
-                    <td className="p-4 text-dark-600">{enrollment.courseName}</td>
+                  <tr key={enrollment.id} className="border-t border-slate-200">
+                    <td className="p-4 text-slate-900 font-mono">{enrollment.studentNim}</td>
+                    <td className="p-4 text-slate-900">{enrollment.studentName}</td>
+                    <td className="p-4 text-slate-600">{enrollment.className}</td>
+                    <td className="p-4 text-slate-600">{enrollment.courseName}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(enrollment.status)}`}>
                         {enrollment.status}
@@ -306,26 +332,26 @@ export default function LmsPage() {
               </tbody>
             </table>
           ) : activeTab === "sessions" && sessions.length === 0 ? (
-            <div className="text-center text-dark-500 py-8">Tidak ada sesi</div>
+            <div className="text-center text-slate-500 py-8">Tidak ada sesi</div>
           ) : activeTab === "sessions" ? (
             <table className="w-full">
-              <thead className="bg-surface-subtle">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Topik</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Kelas</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Mata Kuliah</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Jam</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Status</th>
-                  <th className="text-left p-4 text-sm font-medium text-dark-500">Hadir</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Topik</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Kelas</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Mata Kuliah</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Jam</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Hadir</th>
                 </tr>
               </thead>
               <tbody>
                 {sessions.slice(0, 10).map((session) => (
-                  <tr key={session.id} className="border-t border-surface-border">
-                    <td className="p-4 text-dark-900">{session.topic}</td>
-                    <td className="p-4 text-dark-600">{session.className}</td>
-                    <td className="p-4 text-dark-600">{session.courseName}</td>
-                    <td className="p-4 text-dark-600">
+                  <tr key={session.id} className="border-t border-slate-200">
+                    <td className="p-4 text-slate-900">{session.topic}</td>
+                    <td className="p-4 text-slate-600">{session.className}</td>
+                    <td className="p-4 text-slate-600">{session.courseName}</td>
+                    <td className="p-4 text-slate-600">
                       {session.startTime} - {session.endTime}
                     </td>
                     <td className="p-4">
@@ -333,14 +359,22 @@ export default function LmsPage() {
                         {session.status}
                       </span>
                     </td>
-                    <td className="p-4 text-dark-600">{session.attendanceCount}</td>
+                    <td className="p-4 text-slate-600">{session.attendanceCount}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : null}
-        </div>
+</div>
       </div>
+
+      {/* Create Class Modal */}
+      <CreateClassModal
+        isOpen={showCreateClassModal}
+        onClose={() => setShowCreateClassModal(false)}
+        onSuccess={handleCreateClassSuccess}
+        courses={courses}
+      />
     </div>
   );
 }

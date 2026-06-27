@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,14 @@ type AttemptCreateRequest struct {
 type ResultPublishRequest struct {
 	AttemptID string  `json:"attempt_id" binding:"required"`
 	Score     float64 `json:"score" binding:"required"`
+}
+
+type ParticipantRegisterRequest struct {
+	AssessmentSessionID string  `json:"assessment_session_id" binding:"required"`
+	ParticipantType     string  `json:"participant_type" binding:"required,oneof=applicant student"`
+	ApplicantID         *string `json:"applicant_id"`
+	StudentID           *string `json:"student_id"`
+	UserID              *string `json:"user_id"`
 }
 
 type QuestionBankCreateRequest struct {
@@ -148,6 +157,121 @@ func (h *AssessmentHandler) CreateAttempt(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, sharederr.Success(attempt).WithContext(c))
 }
+
+func (h *AssessmentHandler) RegisterParticipant(c *gin.Context) {
+	var req ParticipantRegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	session, err := h.repo.GetSessionByID(req.AssessmentSessionID)
+	if err != nil || session == nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Sesi ujian tidak ditemukan").WithContext(c))
+		return
+	}
+
+	part := domain.AssessmentParticipant{
+		AssessmentSessionID: req.AssessmentSessionID,
+		ParticipantType:     req.ParticipantType,
+		ApplicantID:         req.ApplicantID,
+		StudentID:           req.StudentID,
+		UserID:              req.UserID,
+		Status:              "registered",
+	}
+
+	if err := h.repo.RegisterParticipant(&part); err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mendaftarkan peserta").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusCreated, sharederr.Success(part).WithContext(c))
+}
+
+func (h *AssessmentHandler) ListSessions(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListSessions(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data sesi").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"sessions": list,
+		"total":    total,
+	}).WithContext(c))
+}
+
+func (h *AssessmentHandler) ListParticipants(c *gin.Context) {
+	sessionID := c.Query("assessment_session_id")
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, sharederr.Error("VALIDATION_ERROR", "assessment_session_id query parameter is required").WithContext(c))
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListParticipantsBySessionID(sessionID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data peserta").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"participants": list,
+		"total":        total,
+	}).WithContext(c))
+}
+
+func (h *AssessmentHandler) ListAttempts(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListAttempts(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data attempts").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"attempts": list,
+		"total":    total,
+	}).WithContext(c))
+}
+
 
 func (h *AssessmentHandler) PublishResult(c *gin.Context) {
 	var req ResultPublishRequest

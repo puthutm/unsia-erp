@@ -12,18 +12,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// DisbursementHandler handles disbursement-related endpoints
-type DisbursementHandler struct {
-	*FinanceHandler
-}
 
-// NewDisbursementHandler creates a new DisbursementHandler
-func NewDisbursementHandler(fh *FinanceHandler) *DisbursementHandler {
-	return &DisbursementHandler{FinanceHandler: fh}
-}
 
 // GetDisbursements handles GET /api/v1/finance/disbursements
-func (h *DisbursementHandler) GetDisbursements(c *gin.Context) {
+func (h *FinanceHandler) GetDisbursements(c *gin.Context) {
 	filter := repository.DisbursementFilter{
 		Status:       c.Query("status"),
 		ReferenceType: c.Query("reference_type"),
@@ -50,7 +42,7 @@ func (h *DisbursementHandler) GetDisbursements(c *gin.Context) {
 }
 
 // CreateDisbursement handles POST /api/v1/finance/disbursements
-func (h *DisbursementHandler) CreateDisbursement(c *gin.Context) {
+func (h *FinanceHandler) CreateDisbursement(c *gin.Context) {
 	var req struct {
 		ReferenceID   string  `json:"reference_id" binding:"required"`
 		ReferenceType string  `json:"reference_type" binding:"required,oneof=commission referral"`
@@ -93,7 +85,7 @@ func (h *DisbursementHandler) CreateDisbursement(c *gin.Context) {
 }
 
 // ApproveDisbursement handles POST /api/v1/finance/disbursements/:id/approve
-func (h *DisbursementHandler) ApproveDisbursement(c *gin.Context) {
+func (h *FinanceHandler) ApproveDisbursement(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := h.repo.UpdateDisbursementStatus(id, "approved"); err != nil {
@@ -112,7 +104,7 @@ func (h *DisbursementHandler) ApproveDisbursement(c *gin.Context) {
 }
 
 // ProcessDisbursement handles POST /api/v1/finance/disbursements/:id/process
-func (h *DisbursementHandler) ProcessDisbursement(c *gin.Context) {
+func (h *FinanceHandler) ProcessDisbursement(c *gin.Context) {
 	id := c.Param("id")
 
 	// Here you would integrate with actual payment gateway

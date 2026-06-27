@@ -14,6 +14,7 @@ import (
 
 type RoleHandler struct {
 	repo *repository.RoleRepository
+	db   *gorm.DB
 }
 
 type CreateRoleRequest struct {
@@ -25,6 +26,7 @@ type CreateRoleRequest struct {
 func NewRoleHandler(db *gorm.DB) *RoleHandler {
 	return &RoleHandler{
 		repo: repository.NewRoleRepository(db),
+		db:   db,
 	}
 }
 
@@ -101,4 +103,99 @@ func (h *RoleHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sharederr.Success(roles).WithContext(c))
+}
+
+// GetRole handles GET /api/v1/admin/roles/:id
+func (h *RoleHandler) GetRole(c *gin.Context) {
+	id := c.Param("id")
+	var role domain.Role
+	if err := h.db.Where("id = ?", id).First(&role).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Role tidak ditemukan").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(role).WithContext(c))
+}
+
+// UpdateRole handles PUT /api/v1/admin/roles/:id
+func (h *RoleHandler) UpdateRole(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		Name      string `json:"name" binding:"required"`
+		ScopeType string `json:"scope_type" binding:"required,oneof=global study_program module self"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	var role domain.Role
+	if err := h.db.Where("id = ?", id).First(&role).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Role tidak ditemukan").WithContext(c))
+		return
+	}
+
+	role.Name = req.Name
+	role.ScopeType = req.ScopeType
+
+	if err := h.db.Save(&role).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal memperbarui role").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(role).WithContext(c))
+}
+
+// DeleteRole handles DELETE /api/v1/admin/roles/:id
+func (h *RoleHandler) DeleteRole(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.db.Delete(&domain.Role{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menghapus role").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "Role deleted"}).WithContext(c))
+}
+
+// AssignRole handles POST /api/v1/admin/roles/:id/assign
+func (h *RoleHandler) AssignRole(c *gin.Context) {
+	var req struct {
+		UserID         string  `json:"user_id" binding:"required"`
+		StudyProgramID *string `json:"study_program_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	roleID := c.Param("id")
+	userRole := domain.UserRole{
+		UserID:         req.UserID,
+		RoleID:         roleID,
+		StudyProgramID: req.StudyProgramID,
+	}
+
+	if err := h.db.Create(&userRole).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menugaskan role ke user").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(userRole).WithContext(c))
+}
+
+// RevokeRole handles POST /api/v1/admin/roles/:id/revoke
+func (h *RoleHandler) RevokeRole(c *gin.Context) {
+	var req struct {
+		UserID string `json:"user_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	roleID := c.Param("id")
+	if err := h.db.Where("user_id = ? AND role_id = ?", req.UserID, roleID).Delete(&domain.UserRole{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mencabut role dari user").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "Role revoked successfully"}).WithContext(c))
 }

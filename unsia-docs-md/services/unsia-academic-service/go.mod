@@ -9,6 +9,7 @@ require (
 	github.com/unsia-erp/shared-auth v0.0.0
 	github.com/unsia-erp/shared-errorenvelope v0.0.0
 	github.com/unsia-erp/shared-event v0.0.0
+	github.com/unsia-erp/shared-httpclient v0.0.0
 	github.com/unsia-erp/shared-idempotency v0.0.0
 	github.com/unsia-erp/shared-observability v0.0.0
 	github.com/unsia-erp/shared-rbac v0.0.0
@@ -21,6 +22,7 @@ replace (
 	github.com/unsia-erp/shared-auth => ../../packages/shared-auth
 	github.com/unsia-erp/shared-errorenvelope => ../../packages/shared-errorenvelope
 	github.com/unsia-erp/shared-event => ../../packages/shared-event
+	github.com/unsia-erp/shared-httpclient => ../../packages/shared-httpclient
 	github.com/unsia-erp/shared-idempotency => ../../packages/shared-idempotency
 	github.com/unsia-erp/shared-observability => ../../packages/shared-observability
 	github.com/unsia-erp/shared-rbac => ../../packages/shared-rbac

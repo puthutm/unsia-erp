@@ -73,6 +73,11 @@ func main() {
 	{
 		// Sessions
 		protected.POST("/v1/assessment/sessions", middleware.PermissionRequired("assessment.session.manage"), assessHandler.CreateSession)
+		protected.GET("/v1/assessment/sessions", assessHandler.ListSessions)
+
+		// Participants
+		protected.POST("/v1/assessment/participants", assessHandler.RegisterParticipant)
+		protected.GET("/v1/assessment/participants", assessHandler.ListParticipants)
 
 		// Question Bank & Questions
 		protected.POST("/v1/assessment/question-banks", middleware.PermissionRequired("assessment.question-bank.manage"), assessHandler.CreateQuestionBank)
@@ -81,6 +86,7 @@ func main() {
 
 		// Attempts & Exam taking
 		protected.POST("/v1/assessment/attempts", assessHandler.CreateAttempt)
+		protected.GET("/v1/assessment/attempts", assessHandler.ListAttempts)
 		protected.POST("/v1/assessment/attempts/:id/answers", assessHandler.SaveAnswer)
 		protected.POST("/v1/assessment/attempts/:id/submit", assessHandler.SubmitAttempt)
 

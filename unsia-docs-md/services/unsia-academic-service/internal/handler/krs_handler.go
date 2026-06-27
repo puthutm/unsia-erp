@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -433,14 +431,4 @@ func (h *KrsHandler) GetAvailableClasses(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sharederr.Success(classes).WithContext(c))
-}
-
-// Helper function
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

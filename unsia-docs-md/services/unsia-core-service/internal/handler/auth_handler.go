@@ -440,3 +440,5 @@ func (h *AuthHandler) OpenIDConfiguration(c *gin.Context) {
 		"token_endpoint_auth_methods_supported": []string{"client_secret_post", "client_secret_basic"},
 	})
 }
+
+

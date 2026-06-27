@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	. "github.com/unsia-erp/unsia-core-service/internal/domain"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -45,7 +46,7 @@ func (s *UserService) CreateUser(input CreateUserInput) (*User, error) {
 	}
 
 	// Check if email exists
-	if err := s.db.Where("email = ?", input.Email).First(&existing).Error; err == nil {
+	if err := s.db.Joins("JOIN persons ON persons.id = users.person_id").Where("persons.email = ?", input.Email).First(&existing).Error; err == nil {
 		return nil, errors.New("EMAIL_EXISTS: Email sudah digunakan")
 	}
 
@@ -59,7 +60,6 @@ func (s *UserService) CreateUser(input CreateUserInput) (*User, error) {
 		ID:           uuid.New().String(),
 		PersonID:     input.PersonID,
 		Username:     input.Username,
-		Email:        input.Email,
 		PasswordHash: string(hashedPassword),
 		Status:       "active",
 		CreatedAt:    time.Now(),
@@ -130,10 +130,11 @@ func (s *UserService) UpdateUser(id string, input UpdateUserInput) (*User, error
 	if input.Email != nil {
 		// Check if new email exists
 		var existing User
-		if err := s.db.Where("email = ? AND id != ?", *input.Email, id).First(&existing).Error; err == nil {
+		if err := s.db.Joins("JOIN persons ON persons.id = users.person_id").Where("persons.email = ? AND users.id != ?", *input.Email, id).First(&existing).Error; err == nil {
 			return nil, errors.New("EMAIL_EXISTS: Email sudah digunakan")
 		}
-		user.Email = *input.Email
+		user.Person.Email = *input.Email
+		s.db.Save(&user.Person)
 	}
 	if input.Status != nil {
 		user.Status = *input.Status

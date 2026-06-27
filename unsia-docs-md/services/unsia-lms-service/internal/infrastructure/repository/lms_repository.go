@@ -100,3 +100,62 @@ func (r *LMSRepository) CreateAssignmentSubmission(as *domain.AssignmentSubmissi
 func (r *LMSRepository) CreateAttendance(at *domain.Attendance) error {
 	return r.db.Create(at).Error
 }
+
+func (r *LMSRepository) GetClass(id string) (*domain.Class, error) {
+	var c domain.Class
+	err := r.db.First(&c, "id = ?", id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r *LMSRepository) ListClasses(limit, offset int) ([]domain.Class, int64, error) {
+	var list []domain.Class
+	var total int64
+	r.db.Model(&domain.Class{}).Count(&total)
+	err := r.db.Limit(limit).Offset(offset).Order("synced_at desc").Find(&list).Error
+	return list, total, err
+}
+
+func (r *LMSRepository) ListEnrollmentsByClassID(classID string, limit, offset int) ([]domain.Enrollment, int64, error) {
+	var list []domain.Enrollment
+	var total int64
+	r.db.Model(&domain.Enrollment{}).Where("lms_class_id = ?", classID).Count(&total)
+	err := r.db.Where("lms_class_id = ?", classID).Limit(limit).Offset(offset).Order("enrolled_at desc").Find(&list).Error
+	return list, total, err
+}
+
+func (r *LMSRepository) ListSessionsByClassID(classID string) ([]domain.Session, error) {
+	var list []domain.Session
+	err := r.db.Where("lms_class_id = ?", classID).Order("session_number asc").Find(&list).Error
+	return list, err
+}
+
+func (r *LMSRepository) ListMaterialsBySessionID(sessionID string) ([]domain.Material, error) {
+	var list []domain.Material
+	err := r.db.Where("session_id = ?", sessionID).Find(&list).Error
+	return list, err
+}
+
+func (r *LMSRepository) ListAssignmentsBySessionID(sessionID string) ([]domain.Assignment, error) {
+	var list []domain.Assignment
+	err := r.db.Where("session_id = ?", sessionID).Find(&list).Error
+	return list, err
+}
+
+func (r *LMSRepository) ListSubmissionsByAssignmentID(assignmentID string) ([]domain.AssignmentSubmission, error) {
+	var list []domain.AssignmentSubmission
+	err := r.db.Where("assignment_id = ?", assignmentID).Order("submitted_at desc").Find(&list).Error
+	return list, err
+}
+
+func (r *LMSRepository) ListAttendanceBySessionID(sessionID string) ([]domain.Attendance, error) {
+	var list []domain.Attendance
+	err := r.db.Where("session_id = ?", sessionID).Order("submitted_at desc").Find(&list).Error
+	return list, err
+}
+

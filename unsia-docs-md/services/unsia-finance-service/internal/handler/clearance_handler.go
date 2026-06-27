@@ -11,18 +11,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// ClearanceHandler handles clearance-related endpoints
-type ClearanceHandler struct {
-	*FinanceHandler
-}
 
-// NewClearanceHandler creates a new ClearanceHandler
-func NewClearanceHandler(fh *FinanceHandler) *ClearanceHandler {
-	return &ClearanceHandler{FinanceHandler: fh}
-}
 
 // CheckClearance handles GET /api/v1/finance/clearances/check
-func (h *ClearanceHandler) CheckClearance(c *gin.Context) {
+func (h *FinanceHandler) CheckClearance(c *gin.Context) {
 	studentID := c.Query("student_id")
 	periodID := c.Query("academic_period_id")
 	scope := c.Query("service_scope")
@@ -33,6 +25,9 @@ func (h *ClearanceHandler) CheckClearance(c *gin.Context) {
 	}
 	if scope == "" {
 		scope = "registration"
+	} else if scope != "registration" && scope != "krs" && scope != "graduation" {
+		c.JSON(http.StatusBadRequest, sharederr.Error("BAD_REQUEST", "invalid service_scope. Must be registration, krs, or graduation").WithContext(c))
+		return
 	}
 
 	cl, err := h.repo.GetStudentClearance(studentID, periodID, scope)
@@ -62,17 +57,17 @@ func (h *ClearanceHandler) CheckClearance(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, sharederr.Success(gin.H{
-		"student_id":         studentID,
-		"academic_period_id": periodID,
-		"service_code":       scope,
-		"clearance_status":   status,
-		"block_reasons":      reasons,
+	c.JSON(http.StatusOK, sharederr.Success(ClearanceStatusResponse{
+		StudentID:        studentID,
+		AcademicPeriodID: periodID,
+		ServiceCode:      scope,
+		ClearanceStatus:  status,
+		BlockReasons:     reasons,
 	}).WithContext(c))
 }
 
 // CreateClearancePolicy handles POST /api/v1/finance/clearance-policies
-func (h *ClearanceHandler) CreateClearancePolicy(c *gin.Context) {
+func (h *FinanceHandler) CreateClearancePolicy(c *gin.Context) {
 	var req ClearancePolicyCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -109,7 +104,7 @@ func (h *ClearanceHandler) CreateClearancePolicy(c *gin.Context) {
 }
 
 // UpdateClearancePolicy handles PUT /api/v1/finance/clearance-policies/:id
-func (h *ClearanceHandler) UpdateClearancePolicy(c *gin.Context) {
+func (h *FinanceHandler) UpdateClearancePolicy(c *gin.Context) {
 	id := c.Param("id")
 	var req ClearancePolicyUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -153,7 +148,7 @@ func (h *ClearanceHandler) UpdateClearancePolicy(c *gin.Context) {
 }
 
 // GetClearances handles GET /api/v1/finance/clearances
-func (h *ClearanceHandler) GetClearances(c *gin.Context) {
+func (h *FinanceHandler) GetClearances(c *gin.Context) {
 	filter := repository.ClearanceListFilter{
 		Status:           c.Query("status"),
 		StudentID:       c.Query("student_id"),

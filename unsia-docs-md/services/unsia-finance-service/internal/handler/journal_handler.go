@@ -9,18 +9,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// JournalHandler handles journal-related endpoints
-type JournalHandler struct {
-	*FinanceHandler
-}
 
-// NewJournalHandler creates a new JournalHandler
-func NewJournalHandler(fh *FinanceHandler) *JournalHandler {
-	return &JournalHandler{FinanceHandler: fh}
-}
 
 // GetJournals handles GET /api/v1/finance/journals
-func (h *JournalHandler) GetJournals(c *gin.Context) {
+func (h *FinanceHandler) GetJournals(c *gin.Context) {
 	filter := repository.JournalFilter{
 		SourceType: c.Query("source_type"),
 		DateFrom: c.Query("date_from"),
@@ -49,7 +41,7 @@ func (h *JournalHandler) GetJournals(c *gin.Context) {
 }
 
 // GetJournalDetail handles GET /api/v1/finance/journals/:id
-func (h *JournalHandler) GetJournalDetail(c *gin.Context) {
+func (h *FinanceHandler) GetJournalDetail(c *gin.Context) {
 	id := c.Param("id")
 
 	journal, err := h.repo.GetJournalByID(id)
@@ -67,5 +59,5 @@ func (h *JournalHandler) GetJournalDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, sharederr.Success(gin.H{
 		"journal": journal,
 		"entries": entries,
-	})).WithContext(c))
+	}).WithContext(c))
 }

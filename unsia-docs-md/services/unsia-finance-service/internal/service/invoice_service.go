@@ -11,7 +11,6 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/state_machine"
 	sharedaudit "github.com/unsia-erp/shared-audit"
 	sharedevent "github.com/unsia-erp/shared-event"
-	sharederr "github.com/unsia-erp/shared-errorenvelope"
 	"gorm.io/gorm"
 )
 
@@ -154,7 +153,7 @@ func (s *InvoiceService) UpdateInvoiceStatus(invoiceID, newStatus string, actor 
 		ResourceID:  invoiceID,
 		OldValue:    oldStatus,
 		NewValue:    newStatus,
-		UserID:      actor,
+		Actor:       actor,
 	})
 
 	// Write outbox event if status changed to ISSUED

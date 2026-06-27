@@ -40,17 +40,17 @@ func (t *Task) TableName() string {
 // TaskService handles task management
 type TaskService struct {
 	asynqScheduler *asynq.Scheduler
-	asynqQueue     *asynq.Queue
+	asynqClient    *asynq.Client
 }
 
 func NewTaskService(redisAddr string) (*TaskService, error) {
 	r := asynq.RedisClientOpt{Addr: redisAddr}
 	scheduler := asynq.NewScheduler(r, nil)
-	queue := asynq.NewQueue(r)
+	client := asynq.NewClient(r)
 
 	return &TaskService{
 		asynqScheduler: scheduler,
-		asynqQueue:    queue,
+		asynqClient:    client,
 	}, nil
 }
 
@@ -70,17 +70,19 @@ func (s *TaskService) EnqueueTask(taskType string, payload interface{}, queue st
 
 	// Enqueue with options
 	if options.Delay > 0 {
-		return s.asynqScheduler.Enqueue(task,
+		_, err = s.asynqClient.Enqueue(task,
 			asynq.ProcessIn(options.Delay),
 			asynq.Queue(queue),
 			asynq.MaxRetry(options.Retry),
 		)
+		return err
 	}
 
-	return s.asynqQueue.Enqueue(task,
+	_, err = s.asynqClient.Enqueue(task,
 		asynq.Queue(queue),
 		asynq.MaxRetry(options.Retry),
 	)
+	return err
 }
 
 // TaskOption is a functional option

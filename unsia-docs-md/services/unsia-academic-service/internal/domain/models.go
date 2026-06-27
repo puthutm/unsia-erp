@@ -21,6 +21,11 @@ type Student struct {
 	GraduationDate      *time.Time `gorm:"column:graduation_date"`
 	CreatedAt           time.Time  `gorm:"column:created_at"`
 	UpdatedAt           time.Time  `gorm:"column:updated_at"`
+
+	// Unmapped fields for helper/display purposes
+	Name      string `gorm:"-" json:"name"`
+	EntryYear string `gorm:"-" json:"entry_year"`
+	Status    string `gorm:"-" json:"status"`
 }
 
 func (Student) TableName() string {
@@ -456,3 +461,21 @@ type Lecturer struct {
 func (Lecturer) TableName() string {
 	return "lecturers"
 }
+
+type DocumentRequest struct {
+	ID            string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	StudentID     string     `gorm:"column:student_id;not null"`
+	DocumentType  string     `gorm:"column:document_type;not null"`
+	Purpose       string     `gorm:"column:purpose"`
+	Notes         string     `gorm:"column:notes"`
+	Quantity      int        `gorm:"column:quantity;default:1;not null"`
+	Status        string     `gorm:"column:status;default:'pending';not null"`
+	RequestDate   time.Time  `gorm:"column:request_date;not null"`
+	ProcessedDate *time.Time `gorm:"column:processed_date"`
+	AdminNote     string     `gorm:"column:admin_note"`
+}
+
+func (DocumentRequest) TableName() string {
+	return "document_requests"
+}
+

@@ -53,12 +53,12 @@ func (h *TranscriptHandler) GetStudentTranscript(c *gin.Context) {
 	var totalPoints float64
 	var totalSKS int
 	for _, grade := range grades {
-		if grade.FinalGrade != "" {
-			gradePoints := getGradePoints(grade.FinalGrade)
-			course, _ := h.repo.GetCourseByID(grade.CourseID)
+		if grade.LetterGrade != "" {
+			gradePoints := getGradePoints(grade.LetterGrade)
+			course, _ := h.repo.GetCourseByKrsItemID(grade.KrsItemID)
 			if course != nil {
-				totalPoints += float64(gradePoints * course.SKS)
-				totalSKS += course.SKS
+				totalPoints += gradePoints * float64(course.Sks)
+				totalSKS += course.Sks
 			}
 		}
 	}
@@ -71,8 +71,9 @@ func (h *TranscriptHandler) GetStudentTranscript(c *gin.Context) {
 	// Group by semester
 	semesterData := make(map[string][]domain.Grade)
 	for _, grade := range grades {
-		if grade.Semester != "" {
-			semesterData[grade.Semester] = append(semesterData[grade.Semester], grade)
+		periodName, _ := h.repo.GetPeriodNameByKrsItemID(grade.KrsItemID)
+		if periodName != "" {
+			semesterData[periodName] = append(semesterData[periodName], grade)
 		}
 	}
 
@@ -80,7 +81,7 @@ func (h *TranscriptHandler) GetStudentTranscript(c *gin.Context) {
 		"student": gin.H{
 			"id":            student.ID,
 			"name":          student.Name,
-			"nim":           student.NIM,
+			"nim":           student.Nim,
 			"study_program": student.StudyProgramID,
 			"entry_year":    student.EntryYear,
 		},
@@ -106,6 +107,7 @@ func (h *TranscriptHandler) GetStudentTranscriptPDF(c *gin.Context) {
 
 	// Get grades
 	grades, _ := h.repo.GetGradesByStudent(studentID)
+	_ = grades
 
 	// In production, generate PDF here
 	// For now, return JSON with PDF flag
@@ -132,17 +134,17 @@ func (h *TranscriptHandler) VerifyTranscript(c *gin.Context) {
 
 	// Verify by verification code or student NIM
 	if verificationCode == "" {
-		verificationCode = student.NIM
+		verificationCode = student.Nim
 	}
 
 	// Get stats
 	grades, _ := h.repo.GetGradesByStudent(studentID)
 	var totalSKS int
 	for _, grade := range grades {
-		if grade.FinalGrade != "" {
-			course, _ := h.repo.GetCourseByID(grade.CourseID)
+		if grade.LetterGrade != "" {
+			course, _ := h.repo.GetCourseByKrsItemID(grade.KrsItemID)
 			if course != nil {
-				totalSKS += course.SKS
+				totalSKS += course.Sks
 			}
 		}
 	}
@@ -151,7 +153,7 @@ func (h *TranscriptHandler) VerifyTranscript(c *gin.Context) {
 		"verified":        true,
 		"student_id":      studentID,
 		"student_name":   student.Name,
-		"nim":           student.NIM,
+		"nim":           student.Nim,
 		"total_courses":  len(grades),
 		"total_sks":     totalSKS,
 		"verification_code": verificationCode,
@@ -179,24 +181,24 @@ func (h *TranscriptHandler) GetStudentStudySummary(c *gin.Context) {
 	var totalPoints float64
 
 	for _, grade := range grades {
-		if grade.FinalGrade == "" {
+		if grade.LetterGrade == "" {
 			inProgress++
 			continue
 		}
 
-		gradePoints := getGradePoints(grade.FinalGrade)
-		course, _ := h.repo.GetCourseByID(grade.CourseID)
+		gradePoints := getGradePoints(grade.LetterGrade)
+		course, _ := h.repo.GetCourseByKrsItemID(grade.KrsItemID)
 		if course == nil {
 			continue
 		}
 
-		if isPassingGrade(grade.FinalGrade) {
+		if isPassingGrade(grade.LetterGrade) {
 			passed++
-			totalSKSPassed += course.SKS
-			totalPoints += float64(gradePoints * course.SKS)
+			totalSKSPassed += course.Sks
+			totalPoints += gradePoints * float64(course.Sks)
 		} else {
 			failed++
-			totalSKSFailed += course.SKS
+			totalSKSFailed += course.Sks
 		}
 	}
 
@@ -250,10 +252,10 @@ func (h *TranscriptHandler) GetCourseDistribution(c *gin.Context) {
 	var totalSKS int
 
 	for _, grade := range grades {
-		if grade.FinalGrade != "" {
-			distribution[grade.FinalGrade]++
-			gradePoints := getGradePoints(grade.FinalGrade)
-			totalPoints += float64(gradePoints)
+		if grade.LetterGrade != "" {
+			distribution[grade.LetterGrade]++
+			gradePoints := getGradePoints(grade.LetterGrade)
+			totalPoints += gradePoints
 			totalSKS++
 		}
 	}
@@ -274,24 +276,24 @@ func (h *TranscriptHandler) GetCourseDistribution(c *gin.Context) {
 
 // ============ Helper Functions ============
 
-func getGradePoints(grade string) int {
+func getGradePoints(grade string) float64 {
 	switch grade {
 	case "A", "A-":
-		return 4
+		return 4.0
 	case "B+":
 		return 3.5
 	case "B", "B-":
-		return 3
+		return 3.0
 	case "C+":
 		return 2.5
 	case "C", "C-":
-		return 2
+		return 2.0
 	case "D":
-		return 1
+		return 1.0
 	case "E":
-		return 0
+		return 0.0
 	default:
-		return 0
+		return 0.0
 	}
 }
 

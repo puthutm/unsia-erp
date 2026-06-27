@@ -60,3 +60,55 @@ func (r *HRISRepository) UpdateEmployeePosition(id string, positionID string) er
 func (r *HRISRepository) CreateBkdRecord(br *domain.BkdRecord) error {
 	return r.db.Create(br).Error
 }
+
+func (r *HRISRepository) ListEmployees(limit, offset int) ([]domain.Employee, int64, error) {
+	var list []domain.Employee
+	var total int64
+	r.db.Model(&domain.Employee{}).Count(&total)
+	err := r.db.Limit(limit).Offset(offset).Order("created_at desc").Find(&list).Error
+	return list, total, err
+}
+
+func (r *HRISRepository) UpdateEmployee(e *domain.Employee) error {
+	return r.db.Save(e).Error
+}
+
+func (r *HRISRepository) ListAttendances(limit, offset int) ([]domain.Attendance, int64, error) {
+	var list []domain.Attendance
+	var total int64
+	r.db.Model(&domain.Attendance{}).Count(&total)
+	err := r.db.Limit(limit).Offset(offset).Order("attendance_date desc").Find(&list).Error
+	return list, total, err
+}
+
+func (r *HRISRepository) RecordAttendance(a *domain.Attendance) error {
+	// Check if already checked in for today
+	var existing domain.Attendance
+	err := r.db.Where("employee_id = ? AND attendance_date = ?", a.EmployeeID, a.AttendanceDate.Format("2006-01-02")).First(&existing).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return r.db.Create(a).Error
+		}
+		return err
+	}
+
+	// Update check out if check in exists
+	if a.CheckOut != nil {
+		existing.CheckOut = a.CheckOut
+	}
+	existing.Status = a.Status
+	return r.db.Save(&existing).Error
+}
+
+func (r *HRISRepository) ListLeaveRequests(limit, offset int) ([]domain.LeaveRequest, int64, error) {
+	var list []domain.LeaveRequest
+	var total int64
+	r.db.Model(&domain.LeaveRequest{}).Count(&total)
+	err := r.db.Limit(limit).Offset(offset).Order("created_at desc").Find(&list).Error
+	return list, total, err
+}
+
+func (r *HRISRepository) CreateLeaveRequest(l *domain.LeaveRequest) error {
+	return r.db.Create(l).Error
+}
+

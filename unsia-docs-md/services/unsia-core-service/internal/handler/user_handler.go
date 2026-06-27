@@ -305,3 +305,107 @@ func (h *UserHandler) AssignScope(c *gin.Context) {
 
 	c.JSON(http.StatusOK, sharederr.Success(userRole).WithContext(c))
 }
+
+// List handles GET /api/v1/users
+func (h *UserHandler) List(c *gin.Context) {
+	var users []domain.User
+	if err := h.db.Preload("Person").Find(&users).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil daftar user").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(users).WithContext(c))
+}
+
+// Get handles GET /api/v1/users/:id
+func (h *UserHandler) Get(c *gin.Context) {
+	id := c.Param("id")
+	var user domain.User
+	if err := h.db.Preload("Person").Where("id = ?", id).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "User tidak ditemukan").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(user).WithContext(c))
+}
+
+// Delete handles DELETE /api/v1/users/:id
+func (h *UserHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.db.Delete(&domain.User{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menghapus user").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "User deleted"}).WithContext(c))
+}
+
+// Logout handles POST /api/v1/auth/logout
+func (h *UserHandler) Logout(c *gin.Context) {
+	claimsVal, exists := c.Get("claims")
+	if exists {
+		claims := claimsVal.(*sharedauth.Claims)
+		h.db.Model(&domain.Session{}).Where("user_id = ?", claims.Subject).Update("is_revoked", true)
+	}
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "Logout successful"}).WithContext(c))
+}
+
+// ChangePassword handles POST /api/v1/auth/change-password
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	claimsVal, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, sharederr.Error("UNAUTHORIZED", "Missing authentication context").WithContext(c))
+		return
+	}
+	claims := claimsVal.(*sharedauth.Claims)
+
+	var req struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required,min=6"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	var user domain.User
+	if err := h.db.Where("id = ?", claims.Subject).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("USER_NOT_FOUND", "User tidak ditemukan").WithContext(c))
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.OldPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, sharederr.Error("INVALID_OLD_PASSWORD", "Password lama salah").WithContext(c))
+		return
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("SERVER_ERROR", "Gagal mengenkripsi password baru").WithContext(c))
+		return
+	}
+
+	if err := h.db.Model(&user).Update("password_hash", string(newHash)).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal memperbarui password").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "Password updated successfully"}).WithContext(c))
+}
+
+// ActivateUser handles POST /api/v1/users/:id/activate
+func (h *UserHandler) ActivateUser(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.db.Model(&domain.User{}).Where("id = ?", id).Update("status", "active").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengaktifkan user").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "User activated"}).WithContext(c))
+}
+
+// DeactivateUser handles POST /api/v1/users/:id/deactivate
+func (h *UserHandler) DeactivateUser(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.db.Model(&domain.User{}).Where("id = ?", id).Update("status", "inactive").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menonaktifkan user").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{"message": "User deactivated"}).WithContext(c))
+}

@@ -12,18 +12,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// BudgetHandler handles budget-related endpoints
-type BudgetHandler struct {
-	*FinanceHandler
-}
 
-// NewBudgetHandler creates a new BudgetHandler
-func NewBudgetHandler(fh *FinanceHandler) *BudgetHandler {
-	return &BudgetHandler{FinanceHandler: fh}
-}
 
 // GetBudgets handles GET /api/v1/finance/budgets
-func (h *BudgetHandler) GetBudgets(c *gin.Context) {
+func (h *FinanceHandler) GetBudgets(c *gin.Context) {
 	filter := repository.BudgetFilter{
 		FiscalYear:  0,
 		BudgetType: c.Query("budget_type"),
@@ -56,7 +48,7 @@ func (h *BudgetHandler) GetBudgets(c *gin.Context) {
 }
 
 // CreateBudget handles POST /api/v1/finance/budgets
-func (h *BudgetHandler) CreateBudget(c *gin.Context) {
+func (h *FinanceHandler) CreateBudget(c *gin.Context) {
 	var req BudgetCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -91,7 +83,7 @@ func (h *BudgetHandler) CreateBudget(c *gin.Context) {
 }
 
 // GetBudgetDetail handles GET /api/v1/finance/budgets/:id
-func (h *BudgetHandler) GetBudgetDetail(c *gin.Context) {
+func (h *FinanceHandler) GetBudgetDetail(c *gin.Context) {
 	id := c.Param("id")
 
 	budget, err := h.repo.GetBudgetByID(id)
@@ -109,5 +101,5 @@ func (h *BudgetHandler) GetBudgetDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, sharederr.Success(gin.H{
 		"budget": budget,
 		"items":  items,
-	})).WithContext(c))
+	}).WithContext(c))
 }

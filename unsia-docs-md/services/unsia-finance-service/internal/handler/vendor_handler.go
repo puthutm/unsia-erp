@@ -12,18 +12,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// VendorHandler handles vendor-related endpoints
-type VendorHandler struct {
-	*FinanceHandler
-}
 
-// NewVendorHandler creates a new VendorHandler
-func NewVendorHandler(fh *FinanceHandler) *VendorHandler {
-	return &VendorHandler{FinanceHandler: fh}
-}
 
 // GetVendors handles GET /api/v1/finance/vendors
-func (h *VendorHandler) GetVendors(c *gin.Context) {
+func (h *FinanceHandler) GetVendors(c *gin.Context) {
 	filter := repository.VendorFilter{
 		IsActive: c.Query("is_active") == "true",
 		Search:  c.Query("search"),
@@ -50,7 +42,7 @@ func (h *VendorHandler) GetVendors(c *gin.Context) {
 }
 
 // CreateVendor handles POST /api/v1/finance/vendors
-func (h *VendorHandler) CreateVendor(c *gin.Context) {
+func (h *FinanceHandler) CreateVendor(c *gin.Context) {
 	var req VendorCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))

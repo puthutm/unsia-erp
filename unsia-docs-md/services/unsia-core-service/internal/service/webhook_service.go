@@ -173,10 +173,3 @@ func generateHMAC(data interface{}, secret string) string {
 	return hash
 }
 
-func simpleHash(s string) int {
-	h := 0
-	for _, c := range s {
-		h = h*31 + int(c)
-	}
-	return h
-}

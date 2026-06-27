@@ -12,18 +12,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// CashHandler handles cash account-related endpoints
-type CashHandler struct {
-	*FinanceHandler
-}
 
-// NewCashHandler creates a new CashHandler
-func NewCashHandler(fh *FinanceHandler) *CashHandler {
-	return &CashHandler{FinanceHandler: fh}
-}
 
 // GetCashAccounts handles GET /api/v1/finance/cash-accounts
-func (h *CashHandler) GetCashAccounts(c *gin.Context) {
+func (h *FinanceHandler) GetCashAccounts(c *gin.Context) {
 	filter := repository.CashAccountFilter{
 		AccountType: c.Query("account_type"),
 		IsActive:    c.Query("is_active") == "true",
@@ -51,7 +43,7 @@ func (h *CashHandler) GetCashAccounts(c *gin.Context) {
 }
 
 // CreateCashAccount handles POST /api/v1/finance/cash-accounts
-func (h *CashHandler) CreateCashAccount(c *gin.Context) {
+func (h *FinanceHandler) CreateCashAccount(c *gin.Context) {
 	var req CashAccountCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -89,7 +81,7 @@ func (h *CashHandler) CreateCashAccount(c *gin.Context) {
 }
 
 // GetCashMutations handles GET /api/v1/finance/cash-accounts/:id/mutations
-func (h *CashHandler) GetCashMutations(c *gin.Context) {
+func (h *FinanceHandler) GetCashMutations(c *gin.Context) {
 	id := c.Param("id")
 
 	// Verify cash account exists
@@ -122,7 +114,7 @@ func (h *CashHandler) GetCashMutations(c *gin.Context) {
 }
 
 // CreateCashMutation handles POST /api/v1/finance/cash-accounts/:id/mutations
-func (h *CashHandler) CreateCashMutation(c *gin.Context) {
+func (h *FinanceHandler) CreateCashMutation(c *gin.Context) {
 	id := c.Param("id")
 	var req CashMutationCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

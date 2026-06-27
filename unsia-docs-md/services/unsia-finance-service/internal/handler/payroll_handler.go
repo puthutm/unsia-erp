@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	sharedaudit "github.com/unsia-erp/shared-audit"
@@ -11,18 +10,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// PayrollHandler handles payroll-related endpoints
-type PayrollHandler struct {
-	*FinanceHandler
-}
 
-// NewPayrollHandler creates a new PayrollHandler
-func NewPayrollHandler(fh *FinanceHandler) *PayrollHandler {
-	return &PayrollHandler{FinanceHandler: fh}
-}
 
 // GetPayrollRuns handles GET /api/v1/finance/payroll-runs
-func (h *PayrollHandler) GetPayrollRuns(c *gin.Context) {
+func (h *FinanceHandler) GetPayrollRuns(c *gin.Context) {
 	filter := repository.PayrollFilter{
 		Status:      c.Query("status"),
 		PeriodMonth: 0,
@@ -57,7 +48,7 @@ func (h *PayrollHandler) GetPayrollRuns(c *gin.Context) {
 }
 
 // ApprovePayrollRun handles POST /api/v1/finance/payroll-runs/:id/approve
-func (h *PayrollHandler) ApprovePayrollRun(c *gin.Context) {
+func (h *FinanceHandler) ApprovePayrollRun(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := h.repo.UpdatePayrollRunStatus(id, "approved"); err != nil {

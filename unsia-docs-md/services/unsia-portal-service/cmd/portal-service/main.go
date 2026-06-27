@@ -67,6 +67,7 @@ func main() {
 	r.GET("/metrics", sharedobservability.MetricsHandler())
 
 	portalHandler := handler.NewPortalHandler(db)
+	portalContentHandler := handler.NewPortalContentHandler(db)
 
 	// Protected routes
 	protected := r.Group("/api", middleware.AuthRequired())
@@ -83,6 +84,15 @@ func main() {
 
 		// Dashboard
 		protected.GET("/v1/portal/dashboard", portalHandler.GetDashboard)
+		protected.GET("/v1/portal/menus", portalHandler.GetRoleMenus)
+
+		// Portal Content (News, Announcements, Events)
+		protected.GET("/v1/portal/news", portalContentHandler.ListNews)
+		protected.POST("/v1/portal/news", portalContentHandler.CreateNews)
+		protected.GET("/v1/portal/announcements", portalContentHandler.ListAnnouncements)
+		protected.POST("/v1/portal/announcements", portalContentHandler.CreateAnnouncement)
+		protected.GET("/v1/portal/events", portalContentHandler.ListEvents)
+		protected.POST("/v1/portal/events", portalContentHandler.CreateEvent)
 	}
 
 	port := os.Getenv("PORT")

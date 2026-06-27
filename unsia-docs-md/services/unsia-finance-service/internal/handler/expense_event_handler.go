@@ -12,18 +12,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// ExpenseEventHandler handles expense event-related endpoints
-type ExpenseEventHandler struct {
-	*FinanceHandler
-}
 
-// NewExpenseEventHandler creates a new ExpenseEventHandler
-func NewExpenseEventHandler(fh *FinanceHandler) *ExpenseEventHandler {
-	return &ExpenseEventHandler{FinanceHandler: fh}
-}
 
 // GetExpenseEvents handles GET /api/v1/finance/events
-func (h *ExpenseEventHandler) GetExpenseEvents(c *gin.Context) {
+func (h *FinanceHandler) GetExpenseEvents(c *gin.Context) {
 	filter := repository.EventFilter{
 		EventType: c.Query("event_type"),
 		Status:    c.Query("status"),
@@ -50,7 +42,7 @@ func (h *ExpenseEventHandler) GetExpenseEvents(c *gin.Context) {
 }
 
 // CreateExpenseEvent handles POST /api/v1/finance/events
-func (h *ExpenseEventHandler) CreateExpenseEvent(c *gin.Context) {
+func (h *FinanceHandler) CreateExpenseEvent(c *gin.Context) {
 	var req EventCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))

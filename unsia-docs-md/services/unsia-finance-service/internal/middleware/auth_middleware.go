@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	sharedauth "github.com/unsia-erp/shared-auth"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
 )
 
@@ -109,6 +110,22 @@ func (m *AuthMiddleware) JWTAuth() gin.HandlerFunc {
 		}
 		tokenString := parts[1]
 
+		if isValid, _ := sharedauth.ValidateServiceToken(tokenString); isValid {
+			serviceClaims := &Claims{
+				ActiveRole:  "service",
+				Permissions: []string{"*"},
+				Scope:       "global",
+				Subject:     "service-call",
+			}
+			c.Set("claims", serviceClaims)
+			c.Set("user_id", serviceClaims.Subject)
+			c.Set("active_role", serviceClaims.ActiveRole)
+			c.Set("application_code", "finance")
+			c.Set("permissions", serviceClaims.Permissions)
+			c.Next()
+			return
+		}
+
 		// Validate required headers
 		requiredHeaders := []string{"X-Application-Code", "X-Active-Role", "X-Correlation-Id"}
 		missingHeaders := []string{}
@@ -133,12 +150,20 @@ func (m *AuthMiddleware) JWTAuth() gin.HandlerFunc {
 				return
 			}
 			// Use cached JWKS
-			pubKey, kid, _ = m.jwksCache.getLatest()
-			if pubKey == nil {
+			key, cachedKid := m.jwksCache.getLatest()
+			if key == nil {
 				c.JSON(http.StatusServiceUnavailable, sharederr.Error("AUTH_SERVICE_UNAVAILABLE", "Authentication service unavailable").WithContext(c))
 				c.Abort()
 				return
 			}
+			parsedKey, parseErr := m.parseRSAPublicKey(key)
+			if parseErr != nil {
+				c.JSON(http.StatusServiceUnavailable, sharederr.Error("AUTH_SERVICE_UNAVAILABLE", "Authentication service unavailable").WithContext(c))
+				c.Abort()
+				return
+			}
+			pubKey = parsedKey
+			kid = cachedKid
 		}
 
 		// Validate JWT token

@@ -193,7 +193,7 @@ func (h *AdvisorHandler) GetPendingKrsForAdvisor(c *gin.Context) {
 			"krs_id":              krs.ID,
 			"student_id":         krs.StudentID,
 			"student_name":       student.Name,
-			"student_nim":        student.NIM,
+			"student_nim":        student.Nim,
 			"academic_period_id": krs.AcademicPeriodID,
 			"status":             krs.Status,
 			"submitted_at":       krs.SubmittedAt,

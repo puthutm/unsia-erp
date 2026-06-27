@@ -13,18 +13,10 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 )
 
-// PurchaseOrderHandler handles purchase order-related endpoints
-type PurchaseOrderHandler struct {
-	*FinanceHandler
-}
 
-// NewPurchaseOrderHandler creates a new PurchaseOrderHandler
-func NewPurchaseOrderHandler(fh *FinanceHandler) *PurchaseOrderHandler {
-	return &PurchaseOrderHandler{FinanceHandler: fh}
-}
 
 // GetPurchaseOrders handles GET /api/v1/finance/purchase-orders
-func (h *PurchaseOrderHandler) GetPurchaseOrders(c *gin.Context) {
+func (h *FinanceHandler) GetPurchaseOrders(c *gin.Context) {
 	filter := repository.POFilter{
 		Status:   c.Query("status"),
 		VendorID: c.Query("vendor_id"),
@@ -52,7 +44,7 @@ func (h *PurchaseOrderHandler) GetPurchaseOrders(c *gin.Context) {
 }
 
 // CreatePurchaseOrder handles POST /api/v1/finance/purchase-orders
-func (h *PurchaseOrderHandler) CreatePurchaseOrder(c *gin.Context) {
+func (h *FinanceHandler) CreatePurchaseOrder(c *gin.Context) {
 	var req POCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -97,7 +89,7 @@ func (h *PurchaseOrderHandler) CreatePurchaseOrder(c *gin.Context) {
 }
 
 // ApprovePurchaseOrder handles POST /api/v1/finance/purchase-orders/:id/approve
-func (h *PurchaseOrderHandler) ApprovePurchaseOrder(c *gin.Context) {
+func (h *FinanceHandler) ApprovePurchaseOrder(c *gin.Context) {
 	id := c.Param("id")
 
 	claimsVal, _ := c.Get("claims")

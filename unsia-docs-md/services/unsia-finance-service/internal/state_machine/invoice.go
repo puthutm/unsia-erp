@@ -150,7 +150,7 @@ func (sm *PaymentStateMachine) CanTransition(from, to PaymentStatus) bool {
 		}
 	}
 
-	return nil
+	return false
 }
 
 // ValidateTransition returns an error if the transition is invalid
@@ -213,7 +213,7 @@ func (sm *ClearanceStateMachine) CanTransition(from, to ClearanceStatus) bool {
 		}
 	}
 
-	return nil
+	return false
 }
 
 // ValidateTransition returns an error if the transition is invalid

@@ -10,23 +10,22 @@
 
 ## Task Breakdown
 
-### Phase 1: SSO & Portal (Week 1-2) - IN PROGRESS
+### Phase 1: SSO & Portal - COMPLETED
 - [x] Set up Next.js 14 project structure
 - [x] Configure Tailwind CSS with UNSIA design tokens
-- [x] Implement shared component library (Button component with variants)
+- [x] Implement shared component library (Button, Input, Select, Card, Badge, DataTable)
 - [x] Create utility functions (cn, formatCurrency, etc.)
 - [x] Build login page with UNSIA branding
 - [x] Create auth context and hooks
-- [x] Create main layout with sidebar navigation
-- [ ] Complete npm install in container
-- [ ] Set up protected routes (middleware)
-- [ ] Verify full application runs
+- [x] Create main layout with dynamic sidebar navigation (per-module)
+- [x] Implement reference context and hooks
+- [x] Create module hooks (use-pmb, use-finance, use-academic, use-lms)
+- [x] Set up protected routes (middleware)
 
-### Phase 2: Reference Integration (Week 2-3)
-- [ ] API client configuration
-- [ ] Reference data fetching hooks
+### Phase 2: Reference Data - IN PROGRESS
+- [x] API client configuration
+- [ ] Create reference data management pages
 - [ ] Dropdown/selector components for prodi, fakultas
-- [ ] Reference management CRUD pages
 
 ### Phase 3: PMB Module (Week 3-5)
 - [ ] Dashboard with analytics widgets

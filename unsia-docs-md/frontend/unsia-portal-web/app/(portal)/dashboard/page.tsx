@@ -106,7 +106,7 @@ export default function DashboardPage() {
             </div>
             <span className="text-sm font-medium text-gray-700">Tambah Pendaftar</span>
           </button>
-rounded-xl border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors">
+          <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors">
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

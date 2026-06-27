@@ -39,6 +39,21 @@ const navigation = {
     { name: "Tugas", href: "/lms/assignment", icon: "file-text" },
     { name: "Kehadiran", href: "/lms/attendance", icon: "check-circle" },
   ],
+  crm: [
+    { name: "Beranda", href: "/crm", icon: "home" },
+    { name: "Leads", href: "/crm/leads", icon: "users" },
+  ],
+  hris: [
+    { name: "Beranda", href: "/hris", icon: "home" },
+    { name: "Absensi", href: "/hris/attendance", icon: "check-circle" },
+    { name: "Cuti", href: "/hris/leave", icon: "calendar" },
+  ],
+  assessment: [
+    { name: "Ujian CBT", href: "/assessment", icon: "file-text" },
+  ],
+  reference: [
+    { name: "Data Master", href: "/reference", icon: "database" },
+  ],
 };
 
 const moduleColors = {
@@ -46,8 +61,10 @@ const moduleColors = {
   finance: { bg: "bg-emerald-600", light: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" },
   academic: { bg: "bg-blue-600", light: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" },
   lms: { bg: "bg-orange-600", light: "bg-orange-50", text: "text-orange-600", border: "border-orange-200" },
-  reference: { bg: "bg-slate-600", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-200" },
+  crm: { bg: "bg-violet-600", light: "bg-violet-50", text: "text-violet-600", border: "border-violet-200" },
   hris: { bg: "bg-rose-600", light: "bg-rose-50", text: "text-rose-600", border: "border-rose-200" },
+  assessment: { bg: "bg-amber-600", light: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" },
+  reference: { bg: "bg-slate-600", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-200" },
 };
 
 const modules = [
@@ -55,6 +72,10 @@ const modules = [
   { id: "finance", name: "Keuangan", href: "/finance", icon: "wallet" },
   { id: "academic", name: "Akademik", href: "/academic", icon: "book" },
   { id: "lms", name: "LMS", href: "/lms", icon: "monitor" },
+  { id: "crm", name: "CRM", href: "/crm", icon: "users" },
+  { id: "hris", name: "HRIS", href: "/hris", icon: "briefcase" },
+  { id: "assessment", name: "CBT", href: "/assessment", icon: "file-text" },
+  { id: "reference", name: "Referensi", href: "/reference", icon: "database" },
 ];
 
 // Icon components
@@ -201,12 +222,40 @@ menu: ({ className }) => (
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
+  briefcase: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+    </svg>
+  ),
+  database: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+    </svg>
+  ),
+};
+
+// Get current module based on pathname
+const getCurrentModule = (pathname: string) => {
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/pmb")) return "pmb";
+  if (pathname.startsWith("/finance")) return "finance";
+  if (pathname.startsWith("/academic")) return "academic";
+  if (pathname.startsWith("/lms")) return "lms";
+  if (pathname.startsWith("/crm")) return "crm";
+  if (pathname.startsWith("/hris")) return "hris";
+  if (pathname.startsWith("/assessment")) return "assessment";
+  if (pathname.startsWith("/reference")) return "reference";
+  return "pmb";
 };
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const currentModule = getCurrentModule(pathname);
+  const moduleNav = navigation[currentModule as keyof typeof navigation] || navigation.pmb;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -230,8 +279,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           
           <div className="flex items-center gap-4">
             {/* Module Selector */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-              {modules.slice(0, 4).map((mod) => (
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 overflow-x-auto max-w-[200px] sm:max-w-[400px] md:max-w-none whitespace-nowrap scrollbar-none">
+              {modules.map((mod) => (
                 <Link
                   key={mod.id}
                   href={mod.href}
@@ -271,7 +320,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         }`}
       >
         <nav className="p-4 space-y-1">
-          {navigation.pmb.map((item) => {
+          {moduleNav.map((item) => {
             const Icon = icons[item.icon as keyof typeof icons];
             return (
               <Link

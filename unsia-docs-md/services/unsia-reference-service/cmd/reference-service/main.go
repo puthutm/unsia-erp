@@ -102,6 +102,12 @@ func main() {
 		protected.GET("/v1/ref/districts", refHandler.ListDistricts)
 		protected.GET("/v1/ref/villages", refHandler.ListVillages)
 
+		// Prefix-free Aliases
+		protected.GET("/v1/provinces", refHandler.ListProvinces)
+		protected.GET("/v1/cities", refHandler.ListCities)
+		protected.GET("/v1/districts", refHandler.ListDistricts)
+		protected.GET("/v1/villages", refHandler.ListVillages)
+
 		// Administrative creation routes (restricted to administrative/biro roles)
 		// Role check is performed at application/scope checking logic or via permissions
 		academicAdmin := protected.Group("", middleware.PermissionRequired("reference.master_data.manage"))

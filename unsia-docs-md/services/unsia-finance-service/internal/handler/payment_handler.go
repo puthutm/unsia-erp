@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	sharedaudit "github.com/unsia-erp/shared-audit"
 	sharedauth "github.com/unsia-erp/shared-auth"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
 	sharedevent "github.com/unsia-erp/shared-event"
@@ -16,18 +15,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// PaymentHandler handles payment-related endpoints
-type PaymentHandler struct {
-	*FinanceHandler
-}
 
-// NewPaymentHandler creates a new PaymentHandler
-func NewPaymentHandler(fh *FinanceHandler) *PaymentHandler {
-	return &PaymentHandler{FinanceHandler: fh}
-}
 
 // ReceivePaymentCallback handles POST /api/v1/finance/payments/callback/:provider
-func (h *PaymentHandler) ReceivePaymentCallback(c *gin.Context) {
+func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 	provider := c.Param("provider")
 	var req CallbackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -171,7 +162,7 @@ func (h *PaymentHandler) ReceivePaymentCallback(c *gin.Context) {
 }
 
 // VerifyManualPayment handles POST /api/v1/finance/payments/verify
-func (h *PaymentHandler) VerifyManualPayment(c *gin.Context) {
+func (h *FinanceHandler) VerifyManualPayment(c *gin.Context) {
 	var req VerificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -284,7 +275,7 @@ func (h *PaymentHandler) VerifyManualPayment(c *gin.Context) {
 }
 
 // GetPayments handles GET /api/v1/finance/payments
-func (h *PaymentHandler) GetPayments(c *gin.Context) {
+func (h *FinanceHandler) GetPayments(c *gin.Context) {
 	filter := repository.PaymentListFilter{
 		PaymentStatus:  c.Query("payment_status"),
 		PaymentMethod: c.Query("payment_method"),

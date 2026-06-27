@@ -16,6 +16,10 @@ require (
 	golang.org/x/crypto v0.24.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
+	github.com/google/uuid v1.6.0
+	github.com/go-redis/redis/v8 v8.11.5
+	github.com/hibiken/asynq v0.24.1
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
 replace (

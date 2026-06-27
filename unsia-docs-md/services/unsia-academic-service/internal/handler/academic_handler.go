@@ -20,29 +20,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type StudentGenerateRequest struct {
-	ApplicantID         string  `json:"applicant_id" binding:"required"`
-	CurriculumID        *string `json:"curriculum_id"`
-	EntryAcademicYearID *string `json:"entry_academic_year_id"`
-	EntryPeriodID       *string `json:"entry_period_id"`
-	StudyProgramID      string  `json:"study_program_id" binding:"required"`
-	Reason              string  `json:"reason"`
-}
+
 
 type ClassCreateRequest struct {
 	CourseOfferingID string `json:"course_offering_id" binding:"required"`
 	ClassCode        string `json:"class_code" binding:"required"`
 	Quota            int    `json:"quota"`
-}
-
-type KrsItemRequest struct {
-	ClassID string `json:"class_id" binding:"required"`
-}
-
-type KrsCreateRequest struct {
-	StudentID        string           `json:"student_id" binding:"required"`
-	AcademicPeriodID string           `json:"academic_period_id" binding:"required"`
-	Items            []KrsItemRequest `json:"items" binding:"required,gt=0"`
 }
 
 type GradeImportRequest struct {
@@ -327,7 +310,7 @@ func (h *AcademicHandler) SubmitKrs(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "x-correlation-id", cid)
 
 	// Call Finance Service to check clearance status
-	clearanceURL := fmt.Sprintf("/api/v1/finance/clearances?student_id=%s&academic_period_id=%s", krs.StudentID, krs.AcademicPeriodID)
+	clearanceURL := fmt.Sprintf("/api/v1/finance/clearances/check?student_id=%s&academic_period_id=%s", krs.StudentID, krs.AcademicPeriodID)
 	resp, err := h.financeClient.Get(ctx, clearanceURL)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, sharederr.Error("FINANCE_SERVICE_UNAVAILABLE", "Layanan Finance tidak dapat diakses untuk pengecekan clearance").WithContext(c))

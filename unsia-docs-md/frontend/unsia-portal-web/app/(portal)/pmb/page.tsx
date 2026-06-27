@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useReference } from "@/contexts/reference-context";
 import { useAuth } from "@/contexts/auth-context";
 import { API_BASE_URLS, PMB_ENDPOINTS, STORAGE_KEYS } from "@/lib/constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PmbStats {
   totalApplicants: number;
@@ -103,19 +104,35 @@ export default function PmbPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-6 border border-surface-border">
           <h3 className="text-sm font-medium text-dark-500">Total Pendaftaran</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.totalApplicants || 0}</p>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.totalApplicants || 0}</p>
+          )}
         </div>
         <div className="bg-white rounded-xl p-6 border border-surface-border">
           <h3 className="text-sm font-medium text-dark-500">Gelombang Aktif</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.activeWave || 0}</p>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.activeWave || 0}</p>
+          )}
         </div>
         <div className="bg-white rounded-xl p-6 border border-surface-border">
           <h3 className="text-sm font-medium text-dark-500">Menunggu Pembayaran</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.pendingPayment || 0}</p>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.pendingPayment || 0}</p>
+          )}
         </div>
         <div className="bg-white rounded-xl p-6 border border-surface-border">
           <h3 className="text-sm font-medium text-dark-500">Diterima</h3>
-          <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.admitted || 0}</p>
+          {loading ? (
+            <Skeleton className="h-9 w-20 mt-2" />
+          ) : (
+            <p className="text-3xl font-bold text-dark-900 mt-2">{stats?.admitted || 0}</p>
+          )}
         </div>
       </div>
 
@@ -148,7 +165,7 @@ export default function PmbPage() {
           <h2 className="text-lg font-semibold text-dark-900">Daftar Pendaftar</h2>
         </div>
         {loading ? (
-          <div className="p-8 text-center text-dark-500">Memuat data...</div>
+          <Skeleton variant="table" rows={5} />
         ) : applicants.length === 0 ? (
           <div className="p-8 text-center text-dark-500">Belum ada pendaftar</div>
         ) : (

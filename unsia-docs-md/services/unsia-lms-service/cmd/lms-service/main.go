@@ -78,14 +78,24 @@ func main() {
 		// Grade Sync trigger
 		protected.POST("/v1/lms/grade-syncs", lmsHandler.SyncLmsGrade)
 
+		// Courses & Classes
+		protected.GET("/v1/lms/courses", lmsHandler.ListCourses)
+		protected.GET("/v1/lms/classes", lmsHandler.ListClasses)
+		protected.GET("/v1/lms/enrollments", lmsHandler.ListEnrollments)
+
 		// Sessions & Materials
 		protected.POST("/v1/lms/classes/:id/sessions", lmsHandler.CreateSession)
+		protected.GET("/v1/lms/classes/:id/sessions", lmsHandler.ListSessions)
 		protected.POST("/v1/lms/sessions/:id/materials", lmsHandler.CreateMaterial)
+		protected.GET("/v1/lms/sessions/:id/materials", lmsHandler.ListMaterials)
 		protected.POST("/v1/lms/sessions/:id/attendance", lmsHandler.CreateAttendance)
+		protected.GET("/v1/lms/sessions/:id/attendance", lmsHandler.ListAttendance)
 
 		// Assignments & Submissions
 		protected.POST("/v1/lms/assignments", lmsHandler.CreateAssignment)
+		protected.GET("/v1/lms/sessions/:id/assignments", lmsHandler.ListAssignments)
 		protected.POST("/v1/lms/assignments/:id/submissions", lmsHandler.CreateSubmission)
+		protected.GET("/v1/lms/assignments/:id/submissions", lmsHandler.ListSubmissions)
 	}
 
 	port := os.Getenv("PORT")

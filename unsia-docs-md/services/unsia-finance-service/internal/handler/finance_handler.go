@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
+	"github.com/unsia-erp/unsia-finance-service/internal/service"
 	"gorm.io/gorm"
 )
 
@@ -43,17 +44,17 @@ type VerificationRequest struct {
 }
 
 type ClearancePolicyCreateRequest struct {
-	Code         string `json:"code" binding:"required"`
+	Code         string `json:"code" binding:"required,alphanum"`
 	Name         string `json:"name" binding:"required"`
-	ServiceScope string `json:"service_scope" binding:"required"`
-	RuleJson     string `json:"rule_json" binding:"required"`
+	ServiceScope string `json:"service_scope" binding:"required,oneof=registration krs graduation"`
+	RuleJson     string `json:"rule_json" binding:"required,json"`
 	IsActive     *bool  `json:"is_active"`
 }
 
 type ClearancePolicyUpdateRequest struct {
 	Name         string `json:"name"`
-	ServiceScope string `json:"service_scope"`
-	RuleJson     string `json:"rule_json"`
+	ServiceScope string `json:"service_scope" binding:"omitempty,oneof=registration krs graduation"`
+	RuleJson     string `json:"rule_json" binding:"omitempty,json"`
 	IsActive     *bool  `json:"is_active"`
 }
 
@@ -148,8 +149,9 @@ type ScholarshipUpdateRequest struct {
 // ============ FinanceHandler Struct ============
 
 type FinanceHandler struct {
-	repo *repository.FinanceRepository
-	db   *gorm.DB
+	repo           *repository.FinanceRepository
+	db             *gorm.DB
+	InvoiceService *service.InvoiceService
 }
 
 func NewFinanceHandler(db *gorm.DB) *FinanceHandler {
@@ -175,6 +177,4 @@ func generateJournalNumber() string {
 	return fmt.Sprintf("JV-%s%d", now.Format("20060102"), num)
 }
 
-func generateID(prefix string) string {
-	return fmt.Sprintf("%s-%s", prefix, time.Now().Format("20060102150405"))
-}
+

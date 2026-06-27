@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -170,5 +171,5 @@ func toJSONArray(arr []string) string {
 }
 
 func getTimestamp() string {
-	return now().Format("2006-01-02T15:04:05Z07:00")
+	return time.Now().Format("2006-01-02T15:04:05Z07:00")
 }

@@ -222,3 +222,19 @@ func ValidateServiceToken(token string) (bool, error) {
 
 	return false, fmt.Errorf("invalid service token")
 }
+
+// ValidateJWTOrServiceToken checks if a token is a valid service token first. If it is, it returns a service-level claims. Otherwise, it falls back to standard ValidateJWT.
+func ValidateJWTOrServiceToken(tokenStr string) (*Claims, error) {
+	if isValid, _ := ValidateServiceToken(tokenStr); isValid {
+		return &Claims{
+			ActiveRole: "service",
+			Permissions: []string{"*"},
+			Scope: "global",
+			RegisteredClaims: jwt.RegisteredClaims{
+				Subject: "service-call",
+			},
+		}, nil
+	}
+	return ValidateJWT(tokenStr)
+}
+

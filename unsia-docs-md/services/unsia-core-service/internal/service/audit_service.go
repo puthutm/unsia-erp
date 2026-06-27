@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	. "github.com/unsia-erp/unsia-core-service/internal/domain"
 	"gorm.io/gorm"
 )
 

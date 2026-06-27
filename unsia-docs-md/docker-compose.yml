@@ -49,12 +49,12 @@ services:
       - unsia-network
 
   # ==========================================
-  # CORE SERVICE (Auth/SSO) - Port 8001
+  # CORE SERVICE - Port 8001
   # ==========================================
   unsia-core-service:
     build:
-      context: ./services/unsia-core-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-core-service/Dockerfile
     container_name: unsia-core-service
     restart: always
     environment:
@@ -77,7 +77,6 @@ services:
       - redis
       - rabbitmq
     volumes:
-      - ./services/unsia-core-service:/app
       - core-keys:/app/keys
     networks:
       - unsia-network
@@ -87,8 +86,8 @@ services:
   # ==========================================
   unsia-reference-service:
     build:
-      context: ./services/unsia-reference-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-reference-service/Dockerfile
     container_name: unsia-reference-service
     restart: always
     environment:
@@ -114,8 +113,8 @@ services:
   # ==========================================
   unsia-pmb-service:
     build:
-      context: ./services/unsia-pmb-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-pmb-service/Dockerfile
     container_name: unsia-pmb-service
     restart: always
     environment:
@@ -140,12 +139,43 @@ services:
       - unsia-network
 
   # ==========================================
+  # ACADEMIC SERVICE - Port 8004
+  # ==========================================
+  unsia-academic-service:
+    build:
+      context: .
+      dockerfile: services/unsia-academic-service/Dockerfile
+    container_name: unsia-academic-service
+    restart: always
+    environment:
+      PORT: "8004"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/academic_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "academic_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
+      FINANCE_SERVICE_URL: "http://unsia-finance-service:8005"
+    ports:
+      - "8004:8004"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
   # FINANCE SERVICE - Port 8005
   # ==========================================
   unsia-finance-service:
     build:
-      context: ./services/unsia-finance-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-finance-service/Dockerfile
     container_name: unsia-finance-service
     restart: always
     environment:
@@ -173,43 +203,12 @@ services:
       - unsia-network
 
   # ==========================================
-  # ACADEMIC SERVICE - Port 8004
-  # ==========================================
-  unsia-academic-service:
-    build:
-      context: ./services/unsia-academic-service
-      dockerfile: Dockerfile
-    container_name: unsia-academic-service
-    restart: always
-    environment:
-      PORT: "8004"
-      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/academic_db?charset=utf8mb4&parseTime=True&loc=local"
-      DB_HOST: "unsia-postgres"
-      DB_PORT: "5432"
-      DB_USER: "postgres"
-      DB_PASSWORD: "postgres"
-      DB_NAME: "academic_db"
-      REDIS_URL: "redis://unsia-redis:6379"
-      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
-      CORE_SERVICE_URL: "http://unsia-core-service:8001"
-      REFERENCE_SERVICE_URL: "http://unsia-reference-service:8002"
-      FINANCE_SERVICE_URL: "http://unsia-finance-service:8005"
-    ports:
-      - "8004:8004"
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-    networks:
-      - unsia-network
-
-  # ==========================================
   # LMS SERVICE - Port 8006
   # ==========================================
   unsia-lms-service:
     build:
-      context: ./services/unsia-lms-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-lms-service/Dockerfile
     container_name: unsia-lms-service
     restart: always
     environment:
@@ -235,12 +234,42 @@ services:
       - unsia-network
 
   # ==========================================
+  # ASSESSMENT SERVICE - Port 8007
+  # ==========================================
+  unsia-assessment-service:
+    build:
+      context: .
+      dockerfile: services/unsia-assessment-service/Dockerfile
+    container_name: unsia-assessment-service
+    restart: always
+    environment:
+      PORT: "8007"
+      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/assessment_db?charset=utf8mb4&parseTime=True&loc=local"
+      DB_HOST: "unsia-postgres"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "assessment_db"
+      REDIS_URL: "redis://unsia-redis:6379"
+      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
+      CORE_SERVICE_URL: "http://unsia-core-service:8001"
+      LMS_SERVICE_URL: "http://unsia-lms-service:8006"
+    ports:
+      - "8007:8007"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - unsia-network
+
+  # ==========================================
   # HRIS SERVICE - Port 8008
   # ==========================================
   unsia-hris-service:
     build:
-      context: ./services/unsia-hris-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-hris-service/Dockerfile
     container_name: unsia-hris-service
     restart: always
     environment:
@@ -266,42 +295,12 @@ services:
       - unsia-network
 
   # ==========================================
-  # ASSESSMENT SERVICE - Port 8007
-  # ==========================================
-  unsia-assessment-service:
-    build:
-      context: ./services/unsia-assessment-service
-      dockerfile: Dockerfile
-    container_name: unsia-assessment-service
-    restart: always
-    environment:
-      PORT: "8007"
-      DATABASE_URL: "postgres://postgres:postgres@tcp(unsia-postgres:5432)/assessment_db?charset=utf8mb4&parseTime=True&loc=local"
-      DB_HOST: "unsia-postgres"
-      DB_PORT: "5432"
-      DB_USER: "postgres"
-      DB_PASSWORD: "postgres"
-      DB_NAME: "assessment_db"
-      REDIS_URL: "redis://unsia-redis:6379"
-      RABBITMQ_URL: "amqp://unsia:unsia@unsia-rabbitmq:5672"
-      CORE_SERVICE_URL: "http://unsia-core-service:8001"
-      LMS_SERVICE_URL: "http://unsia-lms-service:8006"
-    ports:
-      - "8007:8007"
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-    networks:
-      - unsia-network
-
-  # ==========================================
   # CRM SERVICE - Port 8009
   # ==========================================
   unsia-crm-service:
     build:
-      context: ./services/unsia-crm-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-crm-service/Dockerfile
     container_name: unsia-crm-service
     restart: always
     environment:
@@ -330,8 +329,8 @@ services:
   # ==========================================
   unsia-portal-service:
     build:
-      context: ./services/unsia-portal-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/unsia-portal-service/Dockerfile
     container_name: unsia-portal-service
     restart: always
     environment:
@@ -356,7 +355,7 @@ services:
       - unsia-network
 
   # ==========================================
-  # FRONTEND WEB - Port 3000
+  # FRONTEND PORTAL WEB - Port 3000
   # ==========================================
   unsia-portal-web:
     build:
@@ -365,21 +364,192 @@ services:
     container_name: unsia-portal-web
     restart: always
     environment:
-      NEXT_PUBLIC_API_CORE_URL: "http://unsia-core-service:8001"
-      NEXT_PUBLIC_API_REFERENCE_URL: "http://unsia-reference-service:8002"
-      NEXT_PUBLIC_API_PMB_URL: "http://unsia-pmb-service:8003"
-      NEXT_PUBLIC_API_ACADEMIC_URL: "http://unsia-academic-service:8004"
-      NEXT_PUBLIC_API_FINANCE_URL: "http://unsia-finance-service:8005"
-      NEXT_PUBLIC_API_LMS_URL: "http://unsia-lms-service:8006"
-      NEXT_PUBLIC_API_ASSESSMENT_URL: "http://unsia-assessment-service:8007"
-      NEXT_PUBLIC_API_HRIS_URL: "http://unsia-hris-service:8008"
-      NEXT_PUBLIC_API_CRM_URL: "http://unsia-crm-service:8009"
-      NEXT_PUBLIC_API_PORTAL_URL: "http://unsia-portal-service:8010"
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_PMB_URL: "http://localhost:8003"
+      NEXT_PUBLIC_API_ACADEMIC_URL: "http://localhost:8004"
+      NEXT_PUBLIC_API_FINANCE_URL: "http://localhost:8005"
+      NEXT_PUBLIC_API_LMS_URL: "http://localhost:8006"
+      NEXT_PUBLIC_API_ASSESSMENT_URL: "http://localhost:8007"
+      NEXT_PUBLIC_API_HRIS_URL: "http://localhost:8008"
+      NEXT_PUBLIC_API_CRM_URL: "http://localhost:8009"
+      NEXT_PUBLIC_API_PORTAL_URL: "http://localhost:8010"
     ports:
       - "3000:3000"
     depends_on:
       - unsia-core-service
       - unsia-reference-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND PMB - Port 3001
+  # ==========================================
+  unsia-pmb-web:
+    build:
+      context: ./frontend/unsia-pmb
+      dockerfile: Dockerfile
+    container_name: unsia-pmb-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_PMB_URL: "http://localhost:8003"
+    ports:
+      - "3001:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-pmb-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND REFERENCE - Port 3002
+  # ==========================================
+  unsia-reference-web:
+    build:
+      context: ./frontend/unsia-reference
+      dockerfile: Dockerfile
+    container_name: unsia-reference-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+    ports:
+      - "3002:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-reference-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND ACADEMIC - Port 3003
+  # ==========================================
+  unsia-academic-web:
+    build:
+      context: ./frontend/unsia-academic
+      dockerfile: Dockerfile
+    container_name: unsia-academic-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_ACADEMIC_URL: "http://localhost:8004"
+      NEXT_PUBLIC_API_FINANCE_URL: "http://localhost:8005"
+    ports:
+      - "3003:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-academic-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND FINANCE - Port 3004
+  # ==========================================
+  unsia-finance-web:
+    build:
+      context: ./frontend/unsia-finance
+      dockerfile: Dockerfile
+    container_name: unsia-finance-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_FINANCE_URL: "http://localhost:8005"
+    ports:
+      - "3004:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-finance-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND LMS - Port 3005
+  # ==========================================
+  unsia-lms-web:
+    build:
+      context: ./frontend/unsia-lms
+      dockerfile: Dockerfile
+    container_name: unsia-lms-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_LMS_URL: "http://localhost:8006"
+      NEXT_PUBLIC_API_ACADEMIC_URL: "http://localhost:8004"
+    ports:
+      - "3005:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-lms-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND HRIS - Port 3006
+  # ==========================================
+  unsia-hris-web:
+    build:
+      context: ./frontend/unsia-hris
+      dockerfile: Dockerfile
+    container_name: unsia-hris-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_HRIS_URL: "http://localhost:8008"
+      NEXT_PUBLIC_API_FINANCE_URL: "http://localhost:8005"
+    ports:
+      - "3006:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-hris-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND ASSESSMENT - Port 3007
+  # ==========================================
+  unsia-assessment-web:
+    build:
+      context: ./frontend/unsia-assessment
+      dockerfile: Dockerfile
+    container_name: unsia-assessment-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_ASSESSMENT_URL: "http://localhost:8007"
+      NEXT_PUBLIC_API_LMS_URL: "http://localhost:8006"
+    ports:
+      - "3007:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-assessment-service
+    networks:
+      - unsia-network
+
+  # ==========================================
+  # FRONTEND CRM - Port 3008
+  # ==========================================
+  unsia-crm-web:
+    build:
+      context: ./frontend/unsia-crm
+      dockerfile: Dockerfile
+    container_name: unsia-crm-web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_CORE_URL: "http://localhost:8001"
+      NEXT_PUBLIC_API_REFERENCE_URL: "http://localhost:8002"
+      NEXT_PUBLIC_API_CRM_URL: "http://localhost:8009"
+    ports:
+      - "3008:3000"
+    depends_on:
+      - unsia-core-service
+      - unsia-crm-service
     networks:
       - unsia-network
 

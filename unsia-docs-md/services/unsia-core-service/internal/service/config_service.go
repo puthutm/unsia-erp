@@ -1,15 +1,27 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+type AppConfig struct {
+	ID       string `gorm:"primaryKey;column:id"`
+	Key      string `gorm:"uniqueIndex;column:key"`
+	Value    string `gorm:"type:jsonb;column:value"`
+	Type     string `gorm:"type:varchar(50);column:type"`
+	IsPublic bool   `gorm:"default:false;column:is_public"`
+}
+
+func (AppConfig) TableName() string {
+	return "app_configs"
+}
 
 // ConfigService manages application configuration
 type ConfigService struct {
@@ -33,13 +45,6 @@ func NewConfigService(db *gorm.DB) (*ConfigService, error) {
 }
 
 func (s *ConfigService) loadConfigs() error {
-	type AppConfig struct {
-		ID        string `gorm:"primaryKey"`
-		Key      string `gorm:"uniqueIndex"`
-		Value    string `gorm:"type:jsonb"`
-		Type     string `gorm:"type:varchar(50)"`
-		IsPublic bool   `gorm:"default:false"`
-	}
 
 	var configs []AppConfig
 	if err := s.db.Find(&configs).Error; err != nil {
@@ -67,7 +72,7 @@ func (s *ConfigService) Get(key string) (interface{}, bool) {
 func (s *ConfigService) GetString(key string, defaultValue string) string {
 	val, ok := s.configs[key]
 	if !ok {
-		return defaultValue"
+		return defaultValue
 	}
 	if str, ok := val.(string); ok {
 		return str
@@ -101,12 +106,6 @@ func (s *ConfigService) GetBool(key string, defaultValue bool) bool {
 
 // Set sets config value
 func (s *ConfigService) Set(key string, value interface{}) error {
-	type AppConfig struct {
-		ID    string `gorm:"primaryKey"`
-		Key   string `gorm:"uniqueIndex"`
-		Value string `gorm:"type:jsonb"`
-		Type  string `gorm:"type:varchar(50)"`
-	}
 
 	jsonValue, _ := json.Marshal(value)
 	config := AppConfig{

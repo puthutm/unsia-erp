@@ -129,7 +129,6 @@ func (h *SessionHandler) RefreshToken(c *gin.Context) {
 
 	// Generate new tokens
 	newToken := uuid.New().String()
-	newRefreshToken := uuid.New().String()
 
 	// Update session
 	updates := map[string]interface{}{
@@ -161,4 +160,8 @@ func (h *SessionHandler) SessionFromToken(token string) (*Session, error) {
 func (h *SessionHandler) CleanExpiredSessions() error {
 	now := getTimestamp()
 	return h.db.Where("expires_at < ?", now).Delete(&Session{}).Error
+}
+
+func getExpireTime(minutes int) string {
+	return time.Now().Add(time.Duration(minutes) * time.Minute).Format("2006-01-02T15:04:05Z07:00")
 }

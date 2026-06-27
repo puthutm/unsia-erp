@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	. "github.com/unsia-erp/unsia-core-service/internal/domain"
 	"gorm.io/gorm"
 )
 
@@ -162,12 +163,16 @@ func NewActiveRoleSessionService(db *gorm.DB) *ActiveRoleSessionService {
 
 // CreateActiveRoleSession creates a new active role session
 func (s *ActiveRoleSessionService) CreateActiveRoleSession(userID, roleID, sessionID string, applicationID *string, studyProgramID *string) (*ActiveRoleSession, error) {
+	appID := ""
+	if applicationID != nil {
+		appID = *applicationID
+	}
 	activeSession := ActiveRoleSession{
 		ID:             uuid.New().String(),
 		UserID:         userID,
 		RoleID:         roleID,
 		SessionID:      sessionID,
-		ApplicationID:  applicationID,
+		ApplicationID:  appID,
 		StudyProgramID: studyProgramID,
 		CreatedAt:      time.Now(),
 	}
@@ -199,7 +204,11 @@ func (s *ActiveRoleSessionService) UpdateActiveRoleSession(sessionID, roleID str
 	}
 
 	activeSession.RoleID = roleID
-	activeSession.ApplicationID = applicationID
+	if applicationID != nil {
+		activeSession.ApplicationID = *applicationID
+	} else {
+		activeSession.ApplicationID = ""
+	}
 	activeSession.StudyProgramID = studyProgramID
 
 	if err := s.db.Save(&activeSession).Error; err != nil {
@@ -367,7 +376,7 @@ func (s *ServiceTokenService) RotateServiceToken(id string) (*ServiceTokenRespon
 	input := CreateServiceTokenInput{
 		ApplicationID: st.ApplicationID,
 		Scopes:       fromJSONB(st.Scopes),
-		ExpiresAt:    st.ExpiresAt,
+		ExpiresAt:    &st.ExpiresAt,
 	}
 
 	return s.CreateServiceToken(input)

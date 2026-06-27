@@ -154,11 +154,11 @@ func (s *ExternalAppService) UpdateExternalApp(id string, input UpdateExternalAp
 		"updated_at": time.Now(),
 	}
 
-	if input.Name != "" {
-		updates["name"] = input.Name
+	if input.Name != nil && *input.Name != "" {
+		updates["name"] = *input.Name
 	}
-	if input.Description != "" {
-		updates["description"] = input.Description
+	if input.Description != nil && *input.Description != "" {
+		updates["description"] = *input.Description
 	}
 	if input.URL != nil {
 		updates["url"] = *input.URL
@@ -175,8 +175,8 @@ func (s *ExternalAppService) UpdateExternalApp(id string, input UpdateExternalAp
 	if input.IPWhitelist != nil {
 		updates["ip_whitelist"] = serializeIPs(input.IPWhitelist)
 	}
-	if input.RateLimit > 0 {
-		updates["rate_limit"] = input.RateLimit
+	if input.RateLimit != nil && *input.RateLimit > 0 {
+		updates["rate_limit"] = *input.RateLimit
 	}
 	if input.IsActive != nil {
 		updates["is_active"] = *input.IsActive

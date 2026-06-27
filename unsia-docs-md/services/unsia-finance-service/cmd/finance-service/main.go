@@ -90,7 +90,6 @@ func main() {
 
 	// Initialize services
 	invoiceService := service.NewInvoiceService(db)
-	paymentGatewayService := service.NewPaymentGatewayService(db)
 	financeHandler := handler.NewFinanceHandler(db)
 	financeHandler.InvoiceService = invoiceService
 

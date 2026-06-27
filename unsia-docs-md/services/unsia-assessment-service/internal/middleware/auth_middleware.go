@@ -27,7 +27,7 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := sharedauth.ValidateJWT(parts[1])
+		claims, err := sharedauth.ValidateJWTOrServiceToken(parts[1])
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, sharederr.Error("UNAUTHORIZED", "Invalid or expired access token").WithContext(c))
 			c.Abort()

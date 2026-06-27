@@ -10,11 +10,15 @@
 
 export const API_BASE_URLS = {
   auth: process.env.NEXT_PUBLIC_AUTH_API || "http://localhost:8001",
-  reference: process.env.NEXT_PUBLIC_REFERENCE_API || "http://localhost:8007",
+  reference: process.env.NEXT_PUBLIC_REFERENCE_API || "http://localhost:8002",
   pmb: process.env.NEXT_PUBLIC_PMB_API || "http://localhost:8003",
   finance: process.env.NEXT_PUBLIC_FINANCE_API || "http://localhost:8005",
   academic: process.env.NEXT_PUBLIC_ACADEMIC_API || "http://localhost:8004",
   lms: process.env.NEXT_PUBLIC_LMS_API || "http://localhost:8006",
+  assessment: process.env.NEXT_PUBLIC_ASSESSMENT_API || "http://localhost:8007",
+  hris: process.env.NEXT_PUBLIC_HRIS_API || "http://localhost:8008",
+  crm: process.env.NEXT_PUBLIC_CRM_API || "http://localhost:8009",
+  portal: process.env.NEXT_PUBLIC_PORTAL_API || "http://localhost:8010",
 } as const;
 
 // Auth API endpoints (from unsia-core-service)
@@ -87,6 +91,33 @@ export const LMS_ENDPOINTS = {
   materials: "/api/v1/lms/materials",
   assignments: "/api/v1/lms/assignments",
   attendance: "/api/v1/lms/attendance",
+} as const;
+
+// CRM API endpoints (from unsia-crm-service)
+export const CRM_ENDPOINTS = {
+  leads: "/api/v1/crm/leads",
+  campaigns: "/api/v1/crm/campaigns",
+  agents: "/api/v1/crm/agents",
+  referrals: "/api/v1/crm/referrals",
+  contacts: "/api/v1/crm/contacts",
+  opportunities: "/api/v1/crm/opportunities",
+} as const;
+
+// HRIS API endpoints (from unsia-hris-service)
+export const HRIS_ENDPOINTS = {
+  employees: "/api/v1/hris/employees",
+  lecturers: "/api/v1/hris/lecturers",
+  attendances: "/api/v1/hris/attendances",
+  leaveRequests: "/api/v1/hris/leave-requests",
+  bkdRecords: "/api/v1/hris/bkd-records",
+} as const;
+
+// Assessment API endpoints (from unsia-assessment-service)
+export const ASSESSMENT_ENDPOINTS = {
+  sessions: "/api/v1/assessment/sessions",
+  participants: "/api/v1/assessment/participants",
+  attempts: "/api/v1/assessment/attempts",
+  resultsPublish: "/api/v1/assessment/results/publish",
 } as const;
 
 // Token storage keys

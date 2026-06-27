@@ -49,8 +49,8 @@ var allowedDocumentTypes = map[string]bool{
 
 // Max file sizes (in bytes)
 const (
-	MaxImageSize    = 10 * 1024 * 1024  // 10MB
-	MaxDocumentSize = 50 * 1024 * 1024 // 50MB
+	MaxImageSize    int64 = 10 * 1024 * 1024  // 10MB
+	MaxDocumentSize int64 = 50 * 1024 * 1024 // 50MB
 )
 
 // ValidateFileType validates file type

@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
 	sharedhttpclient "github.com/unsia-erp/shared-httpclient"
+	"github.com/unsia-erp/unsia-lms-service/internal/domain"
 	"github.com/unsia-erp/unsia-lms-service/internal/infrastructure/repository"
 	"gorm.io/gorm"
 )
@@ -329,3 +331,139 @@ func (h *LMSHandler) CreateAttendance(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, sharederr.Success(attendance).WithContext(c))
 }
+
+func (h *LMSHandler) ListCourses(c *gin.Context) {
+	correlationID, _ := c.Get("x-correlation-id")
+	cid, _ := correlationID.(string)
+	ctx := context.WithValue(c.Request.Context(), "x-correlation-id", cid)
+
+	url := fmt.Sprintf("/api/v1/academic/courses?%s", c.Request.URL.RawQuery)
+	resp, err := h.academicClient.Get(ctx, url)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, sharederr.Error("ACADEMIC_SERVICE_UNAVAILABLE", fmt.Sprintf("Gagal menghubungi layanan Akademik: %v", err)).WithContext(c))
+		return
+	}
+	defer resp.Body.Close()
+
+	var academicResp interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&academicResp); err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("PARSE_ERROR", "Gagal membaca response Akademik").WithContext(c))
+		return
+	}
+
+	c.JSON(resp.StatusCode, academicResp)
+}
+
+func (h *LMSHandler) ListClasses(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListClasses(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data kelas").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"classes": list,
+		"total":   total,
+	}).WithContext(c))
+}
+
+func (h *LMSHandler) ListEnrollments(c *gin.Context) {
+	classID := c.Query("class_id")
+	if classID == "" {
+		c.JSON(http.StatusBadRequest, sharederr.Error("VALIDATION_ERROR", "class_id query parameter is required").WithContext(c))
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListEnrollmentsByClassID(classID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data pendaftaran").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"enrollments": list,
+		"total":       total,
+	}).WithContext(c))
+}
+
+func (h *LMSHandler) ListSessions(c *gin.Context) {
+	classID := c.Param("id")
+	list, err := h.repo.ListSessionsByClassID(classID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data sesi").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(list).WithContext(c))
+}
+
+func (h *LMSHandler) ListMaterials(c *gin.Context) {
+	sessionID := c.Param("id")
+	list, err := h.repo.ListMaterialsBySessionID(sessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data materi").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(list).WithContext(c))
+}
+
+func (h *LMSHandler) ListAssignments(c *gin.Context) {
+	sessionID := c.Param("id")
+	list, err := h.repo.ListAssignmentsBySessionID(sessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data tugas").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(list).WithContext(c))
+}
+
+func (h *LMSHandler) ListSubmissions(c *gin.Context) {
+	assignmentID := c.Param("id")
+	list, err := h.repo.ListSubmissionsByAssignmentID(assignmentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data submission").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(list).WithContext(c))
+}
+
+func (h *LMSHandler) ListAttendance(c *gin.Context) {
+	sessionID := c.Param("id")
+	list, err := h.repo.ListAttendanceBySessionID(sessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data kehadiran").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(list).WithContext(c))
+}
+

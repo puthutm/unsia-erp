@@ -141,7 +141,7 @@ func (AssessmentAnswer) TableName() string {
 // ===========================================
 
 // QuestionBank - Core entity for question bank
-type QuestionBank struct {
+type AssessmentQuestionBank struct {
 	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	CourseID    string    `gorm:"column:course_id;not null"` // external_ref: academic.courses.id
 	Subject     string    `gorm:"column:subject"`
@@ -158,7 +158,7 @@ func (AssessmentQuestionBank) TableName() string {
 }
 
 // Question - Main question entity
-type Question struct {
+type AssessmentQuestion struct {
 	ID            string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionBankID string   `gorm:"column:question_bank_id;not null"`
 	QuestionType  string    `gorm:"column:question_type;not null"` // multiple_choice, true_false, short_answer, essay, matching, fill_blank, ordering
@@ -176,7 +176,7 @@ func (AssessmentQuestion) TableName() string {
 }
 
 // QuestionOption - Options for multiple choice/true_false/matching questions
-type QuestionOption struct {
+type AssessmentQuestionOption struct {
 	ID         string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	OptionKey  string `gorm:"column:option_key;not null"` // A, B, C, D, E
@@ -191,7 +191,7 @@ func (AssessmentQuestionOption) TableName() string {
 }
 
 // MatchingPair - Pairs for matching question type
-type MatchingPair struct {
+type AssessmentMatchingPair struct {
 	ID            string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID    string `gorm:"column:question_id;not null"`
 	LeftItem      string `gorm:"column:left_item;not null"`
@@ -205,7 +205,7 @@ func (AssessmentMatchingPair) TableName() string {
 }
 
 // FillInBlank - Fill in the blank segments
-type FillInBlank struct {
+type AssessmentFillInBlank struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	BlankKey   string `gorm:"column:blank_key"` // __1__, __2__
@@ -220,7 +220,7 @@ func (AssessmentFillInBlank) TableName() string {
 }
 
 // OrderingItem - Items for ordering/sequence question
-type OrderingItem struct {
+type AssessmentOrderingItem struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	ItemText   string `gorm:"column:item_text;not null"`
@@ -233,7 +233,7 @@ func (AssessmentOrderingItem) TableName() string {
 }
 
 // EssayAnswer - Expected answer for short answer/essay questions
-type EssayAnswer struct {
+type AssessmentEssayAnswer struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	ModelAnswer string `gorm:"column:model_answer"`
@@ -248,7 +248,7 @@ func (AssessmentEssayAnswer) TableName() string {
 }
 
 // QuestionTag - Tags for categorizing questions
-type QuestionTag struct {
+type AssessmentQuestionTag struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	Tag        string `gorm:"column:tag;not null"`
@@ -259,7 +259,7 @@ func (AssessmentQuestionTag) TableName() string {
 }
 
 // QuestionHistory - Version history for questions
-type QuestionHistory struct {
+type AssessmentQuestionHistory struct {
 	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string    `gorm:"column:question_id;not null"`
 	ChangedBy  string    `gorm:"column:changed_by"`
@@ -273,7 +273,7 @@ func (AssessmentQuestionHistory) TableName() string {
 }
 
 // QuestionBlueprint - Templates for generating questions
-type QuestionBlueprint struct {
+type AssessmentQuestionBlueprint struct {
 	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionBankID string  `gorm:"column:question_bank_id;not null"`
 	Name        string    `gorm:"column:name;not null"`
@@ -287,7 +287,7 @@ func (AssessmentQuestionBlueprint) TableName() string {
 }
 
 // RandomQuestionConfig - Configuration for random question generation
-type RandomQuestionConfig struct {
+type AssessmentRandomQuestionConfig struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionBankID string `gorm:"column:question_bank_id;not null"`
 	TotalQuestions int    `gorm:"column:total_questions;not null"`
@@ -302,7 +302,7 @@ func (AssessmentRandomQuestionConfig) TableName() string {
 }
 
 // QuestionPool - Pool of questions for random selection
-type QuestionPool struct {
+type AssessmentQuestionPool struct {
 	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionBankID string  `gorm:"column:question_bank_id;not null"`
 	SessionID    *string  `gorm:"column:session_id"` // linked exam session
@@ -316,7 +316,7 @@ func (AssessmentQuestionPool) TableName() string {
 }
 
 // QuestionCategory - Categories for organizing questions
-type QuestionCategory struct {
+type AssessmentQuestionCategory struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionBankID string `gorm:"column:question_bank_id;not null"`
 	Name        string `gorm:"column:name;not null"`
@@ -329,7 +329,7 @@ func (AssessmentQuestionCategory) TableName() string {
 }
 
 // QuestionMetadata - Extended metadata for questions
-type QuestionMetadata struct {
+type AssessmentQuestionMetadata struct {
 	ID             string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID     string `gorm:"column:question_id;not null"`
 	BloomLevel     string `gorm:"column:bloom_level"` // remember, understand, apply, analyze, evaluate, create
@@ -347,7 +347,7 @@ func (AssessmentQuestionMetadata) TableName() string {
 }
 
 // QuestionAttachment - Attachments like images, files, audio
-type QuestionAttachment struct {
+type AssessmentQuestionAttachment struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	FileName   string `gorm:"column:file_name;not null"`
@@ -363,7 +363,7 @@ func (AssessmentQuestionAttachment) TableName() string {
 }
 
 // QuestionComment - Comments/feedback on questions
-type QuestionComment struct {
+type AssessmentQuestionComment struct {
 	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string    `gorm:"column:question_id;not null"`
 	UserID    string    `gorm:"column:user_id;not null"`
@@ -377,7 +377,7 @@ func (AssessmentQuestionComment) TableName() string {
 }
 
 // QuestionFlag - Flag questions for review
-type QuestionFlag struct {
+type AssessmentQuestionFlag struct {
 	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string    `gorm:"column:question_id;not null"`
 	UserID    string    `gorm:"column:user_id;not null"`
@@ -392,7 +392,7 @@ func (AssessmentQuestionFlag) TableName() string {
 }
 
 // QuestionTranslation - Multi-language question translations
-type QuestionTranslation struct {
+type AssessmentQuestionTranslation struct {
 	ID          string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID string `gorm:"column:question_id;not null"`
 	Language  string `gorm:"column:language;not null"` // en, zh, ar, etc
@@ -405,7 +405,7 @@ func (AssessmentQuestionTranslation) TableName() string {
 }
 
 // QuestionAnswerFeedback - Pre-defined feedback for answers
-type QuestionAnswerFeedback struct {
+type AssessmentQuestionAnswerFeedback struct {
 	ID           string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID  string `gorm:"column:question_id;not null"`
 	AnswerKey   string `gorm:"column:answer_key"` // A, B, C, D, E or __1__, __2__ for fill_blank
@@ -420,7 +420,7 @@ func (AssessmentQuestionAnswerFeedback) TableName() string {
 }
 
 // QuestionStatistics - Real-time statistics for questions
-type QuestionStatistics struct {
+type AssessmentQuestionStatistics struct {
 	ID              string `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
 	QuestionID      string `gorm:"column:question_id;not null;uniqueIndex"`
 	TotalAttempts  int    `gorm:"column:total_attempts;default:0"`

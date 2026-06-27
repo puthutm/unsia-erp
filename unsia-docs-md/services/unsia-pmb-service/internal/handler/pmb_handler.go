@@ -733,14 +733,28 @@ func (h *PMBHandler) UpdateAddresses(c *gin.Context) {
 		return
 	}
 
+	var provincePtr, cityPtr, districtPtr, villagePtr *string
+	if req.ProvinceID != "" {
+		provincePtr = &req.ProvinceID
+	}
+	if req.CityID != "" {
+		cityPtr = &req.CityID
+	}
+	if req.DistrictID != "" {
+		districtPtr = &req.DistrictID
+	}
+	if req.VillageID != "" {
+		villagePtr = &req.VillageID
+	}
+
 	addr := domain.ApplicantAddress{
 		ApplicantID:  id,
 		AddressType:  req.AddressType,
 		Street:       req.Street,
-		ProvinceID:  req.ProvinceID,
-		CityID:       req.CityID,
-		DistrictID:   req.DistrictID,
-		VillageID:    req.VillageID,
+		ProvinceID:  provincePtr,
+		CityID:       cityPtr,
+		DistrictID:   districtPtr,
+		VillageID:    villagePtr,
 		PostalCode:   req.PostalCode,
 		IsSameAsKtp:  req.IsSameAsKtp,
 	}
@@ -783,12 +797,22 @@ func (h *PMBHandler) UpdateEducation(c *gin.Context) {
 		return
 	}
 
+	var gpaVal float64
+	if req.Gpa != "" {
+		_, _ = fmt.Sscanf(req.Gpa, "%f", &gpaVal)
+	}
+
+	var gradYearStr string
+	if req.GraduationYear > 0 {
+		gradYearStr = fmt.Sprintf("%d", req.GraduationYear)
+	}
+
 	edu := domain.ApplicantEducationBackground{
 		ApplicantID:     id,
 		SchoolName:      req.SchoolName,
 		Major:           req.Major,
-		GraduationYear:  req.GraduationYear,
-		Gpa:             req.Gpa,
+		GraduationYear:  gradYearStr,
+		Gpa:             gpaVal,
 	}
 
 	if err := h.repo.UpsertEducationBackground(&edu); err != nil {
@@ -942,5 +966,5 @@ func (h *PMBHandler) GetDocuments(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, sharederr.Success(documents)).WithContext(c)
+	c.JSON(http.StatusOK, sharederr.Success(documents).WithContext(c))
 }

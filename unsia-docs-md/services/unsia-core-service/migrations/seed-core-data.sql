@@ -1,7 +1,16 @@
--- Seeding initial data for core_db
+-- ==========================================
+-- SUPER ADMIN SEEDER for UNSIA ERP
+-- ==========================================
 -- Run this after running migrations on core_db
+-- 
+-- Default login credentials:
+-- Username: admin
+-- Password: password123
+--
+-- To execute, run:
+-- psql -h localhost -U postgres -d core_db -f seed-super-admin.sql
 
--- 1. Insert Persons
+-- 1. Insert Persons (Super Admin)
 INSERT INTO persons (id, name, email, phone, created_at, updated_at)
 VALUES (
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',

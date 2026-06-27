@@ -404,3 +404,172 @@ type QuestionStatistics struct {
 func (QuestionStatistics) TableName() string {
 	return "question_statistics"
 }
+
+// ===========================================
+// VIDEO CONFERENCE MODELS (Vicon)
+// ===========================================
+
+// VideoSession - Video conference session
+type VideoSession struct {
+	ID          string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	SessionID   string     `gorm:"column:session_id;not null"` // link to domain.Session
+	HostID      string     `gorm:"column:host_id;not null"`
+	Status      string     `gorm:"column:status;default:'idle'"` // idle, starting, live, ended
+	MeetingURL  string     `gorm:"column:meeting_url"`
+	Recording   *string    `gorm:"column:recording"` // Recording URL
+	StartedAt   *time.Time `gorm:"column:started_at"`
+	EndedAt     *time.Time `gorm:"column:ended_at"`
+	Duration    int        `gorm:"column:duration;default:0"` // in seconds
+	CreatedAt   time.Time  `gorm:"column:created_at;default:now()"`
+}
+
+func (VideoSession) TableName() string {
+	return "video_sessions"
+}
+
+// VideoParticipant - Participants in video conference
+type VideoParticipant struct {
+	ID            string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	VideoSessionID string     `gorm:"column:video_session_id;not null"`
+	UserID        string     `gorm:"column:user_id;not null"`
+	Role         string     `gorm:"column:role;default:'participant'"` // host, participant
+	JoinedAt     time.Time  `gorm:"column:joined_at;default:now()"`
+	LeftAt       *time.Time `gorm:"column:left_at"`
+	IsMuted      bool      `gorm:"column:is_muted;default:false"`
+	IsVideoOn    bool      `gorm:"column:is_video_on;default:true"`
+}
+
+func (VideoParticipant) TableName() string {
+	return "video_participants"
+}
+
+// ===========================================
+// ANNOUNCEMENT MODELS (Pengumuman)
+// ===========================================
+
+// Announcement - Class announcements
+type Announcement struct {
+	ID         string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	LmsClassID  *string   `gorm:"column:lms_class_id"`
+	SessionID  *string   `gorm:"column:session_id"`
+	Title      string    `gorm:"column:title;not null"`
+	Content   string    `gorm:"column:content;not null"`
+	AuthorID   string    `gorm:"column:author_id;not null"`
+	IsPinned   bool      `gorm:"column:is_pinned;default:false"`
+	IsActive   bool      `gorm:"column:is_active;default:true"`
+	Priority  string    `gorm:"column:priority;default:'normal'"` // urgent, high, normal, low
+	StartDate *time.Time `gorm:"column:start_date"`
+	EndDate   *time.Time `gorm:"column:end_date"`
+	CreatedAt time.Time `gorm:"column:created_at;default:now()"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:now()"`
+}
+
+func (Announcement) TableName() string {
+	return "announcements"
+}
+
+// ===========================================
+// FORUM/DISKUSI MODELS
+// ===========================================
+
+// ForumPost - Forum discussion post
+type ForumPost struct {
+	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	SessionID  string    `gorm:"column:session_id;not null"`
+	AuthorID  string    `gorm:"column:author_id;not null"`
+	Title     string    `gorm:"column:title"`
+	Content   string    `gorm:"column:content;not null"`
+	IsPinned  bool      `gorm:"column:is_pinned;default:false"`
+	IsLocked  bool      `gorm:"column:is_locked;default:false"`
+	ViewCount int       `gorm:"column:view_count;default:0"`
+	ReplyCount int     `gorm:"column:reply_count;default:0"`
+	CreatedAt time.Time `gorm:"column:created_at;default:now()"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:now()"`
+}
+
+func (ForumPost) TableName() string {
+	return "forum_posts"
+}
+
+// ForumReply - Replies to forum posts
+type ForumReply struct {
+	ID        string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	PostID    string    `gorm:"column:post_id;not null"`
+	AuthorID  string    `gorm:"column:author_id;not null"`
+	Content   string    `gorm:"column:content;not null"`
+	IsAnswer  bool      `gorm:"column:is_answer;default:false"`
+	Upvotes   int       `gorm:"column:upvotes;default:0"`
+	CreatedAt time.Time `gorm:"column:created_at;default:now()"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:now()"`
+}
+
+func (ForumReply) TableName() string {
+	return "forum_replies"
+}
+
+// ===========================================
+// CHAT/OBROLAN MODELS
+// ===========================================
+
+// ChatRoom - Room for chat conversations
+type ChatRoom struct {
+	ID          string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	LmsClassID  *string   `gorm:"column:lms_class_id"`     // Optional: link to class
+	SessionID  *string   `gorm:"column:session_id"`   // Optional: link to session
+	RoomType  string    `gorm:"column:room_type"`   // class, session, group, private
+	Name      string    `gorm:"column:name"`
+	CreatedBy string    `gorm:"column:created_by"`
+	IsActive  bool     `gorm:"column:is_active;default:true"`
+	CreatedAt time.Time `gorm:"column:created_at;default:now()"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:now()"`
+}
+
+func (ChatRoom) TableName() string {
+	return "chat_rooms"
+}
+
+// ChatMessage - Chat messages
+type ChatMessage struct {
+	ID        string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	RoomID    string    `gorm:"column:room_id;not null"`
+	SenderID  string    `gorm:"column:sender_id;not null"` // user who sent
+	Message  string    `gorm:"column:message;not null"`
+	FileURL  *string   `gorm:"column:file_url"`      // Optional attachment
+	IsEdited bool     `gorm:"column:is_edited;default:false"`
+	ReplyTo  *string   `gorm:"column:reply_to"`       // Reply to message ID
+	CreatedAt time.Time `gorm:"column:created_at;default:now()"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:now()"`
+}
+
+func (ChatMessage) TableName() string {
+	return "chat_messages"
+}
+
+// ChatParticipant - Participants in chat room
+type ChatParticipant struct {
+	ID        string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	RoomID   string    `gorm:"column:room_id;not null"`
+	UserID   string    `gorm:"column:user_id;not null"`
+	Role    string    `gorm:"column:role;default:'member'"` // admin, member
+	JoinedAt time.Time `gorm:"column:joined_at;default:now()"`
+	LastReadAt time.Time `gorm:"column:last_read_at;default:now()"`
+	IsMuted  bool     `gorm:"column:is_muted;default:false"`
+}
+
+func (ChatParticipant) TableName() string {
+	return "chat_participants"
+}
+
+// ChatReadStatus - Read receipts
+type ChatReadStatus struct {
+	ID        string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	MessageID string    `gorm:"column:message_id;not null"`
+	UserID   string    `gorm:"column:user_id;not null"`
+	ReadAt   time.Time `gorm:"column:read_at;default:now()"`
+}
+
+func (ChatReadStatus) TableName() string {
+	return "chat_read_status"
+}
+
+

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -15,18 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// InvoiceHandler handles invoice-related endpoints
-type InvoiceHandler struct {
-	*FinanceHandler
-}
 
-// NewInvoiceHandler creates a new InvoiceHandler
-func NewInvoiceHandler(fh *FinanceHandler) *InvoiceHandler {
-	return &InvoiceHandler{FinanceHandler: fh}
-}
 
 // CreateInvoice handles POST /api/v1/finance/invoices
-func (h *InvoiceHandler) CreateInvoice(c *gin.Context) {
+func (h *FinanceHandler) CreateInvoice(c *gin.Context) {
 	var req InvoiceCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
@@ -129,11 +120,11 @@ func (h *InvoiceHandler) CreateInvoice(c *gin.Context) {
 		NewValue:     invoice,
 	})
 
-	c.JSON(http.StatusCreated, sharederr.Success(invoice).WithContext(c))
+	c.JSON(http.StatusCreated, sharederr.Success(mapInvoiceToDetailResponse(invoice)).WithContext(c))
 }
 
 // GetInvoice handles GET /api/v1/finance/invoices/:id
-func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
+func (h *FinanceHandler) GetInvoice(c *gin.Context) {
 	id := c.Param("id")
 	inv, err := h.repo.GetInvoiceByID(id)
 	if err != nil {
@@ -144,11 +135,11 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Invoice tidak ditemukan").WithContext(c))
 		return
 	}
-	c.JSON(http.StatusOK, sharederr.Success(inv).WithContext(c))
+	c.JSON(http.StatusOK, sharederr.Success(mapInvoiceToDetailResponse(*inv)).WithContext(c))
 }
 
 // GetInvoices handles GET /api/v1/finance/invoices
-func (h *InvoiceHandler) GetInvoices(c *gin.Context) {
+func (h *FinanceHandler) GetInvoices(c *gin.Context) {
 	filter := repository.InvoiceListFilter{
 		Status:           c.Query("status"),
 		TargetType:       c.Query("target_type"),
@@ -177,5 +168,77 @@ func (h *InvoiceHandler) GetInvoices(c *gin.Context) {
 		return
 	}
 
+	invoices, ok := result.Data.([]domain.Invoice)
+	var mapped []InvoiceBriefResponse
+	if ok {
+		mapped = make([]InvoiceBriefResponse, len(invoices))
+		for i, inv := range invoices {
+			mapped[i] = mapInvoiceToBriefResponse(inv)
+		}
+	} else {
+		mapped = []InvoiceBriefResponse{}
+	}
+	result.Data = mapped
+
 	c.JSON(http.StatusOK, sharederr.Success(result).WithContext(c))
+}
+
+// Helper mapping functions
+func mapInvoiceToBriefResponse(inv domain.Invoice) InvoiceBriefResponse {
+	return InvoiceBriefResponse{
+		ID:               inv.ID,
+		InvoiceNumber:    inv.InvoiceNumber,
+		TargetType:       inv.TargetType,
+		ApplicantID:      inv.ApplicantID,
+		StudentID:        inv.StudentID,
+		AcademicPeriodID: inv.AcademicPeriodID,
+		TotalAmount:      inv.TotalAmount,
+		PaidAmount:       inv.PaidAmount,
+		Status:           inv.Status,
+		DueDate:          inv.DueDate,
+		CreatedAt:        inv.CreatedAt,
+	}
+}
+
+func mapInvoiceToDetailResponse(inv domain.Invoice) InvoiceDetailResponse {
+	items := make([]InvoiceItemResponse, len(inv.Items))
+	for i, item := range inv.Items {
+		items[i] = InvoiceItemResponse{
+			ID:                 item.ID,
+			PaymentComponentID: item.PaymentComponentID,
+			Description:        item.Description,
+			Amount:             item.Amount,
+			DiscountAmount:     item.DiscountAmount,
+			FinalAmount:        item.FinalAmount,
+		}
+	}
+
+	payments := make([]PaymentResponse, len(inv.Payments))
+	for i, pay := range inv.Payments {
+		payments[i] = PaymentResponse{
+			ID:              pay.ID,
+			PaymentMethodID: pay.PaymentMethodID,
+			PaymentNumber:   pay.PaymentNumber,
+			Amount:          pay.Amount,
+			PaymentStatus:   pay.PaymentStatus,
+			PaidAt:          pay.PaidAt,
+		}
+	}
+
+	return InvoiceDetailResponse{
+		ID:               inv.ID,
+		InvoiceNumber:    inv.InvoiceNumber,
+		TargetType:       inv.TargetType,
+		ApplicantID:      inv.ApplicantID,
+		StudentID:        inv.StudentID,
+		AcademicPeriodID: inv.AcademicPeriodID,
+		TotalAmount:      inv.TotalAmount,
+		PaidAmount:       inv.PaidAmount,
+		Status:           inv.Status,
+		DueDate:          inv.DueDate,
+		CreatedAt:        inv.CreatedAt,
+		UpdatedAt:        inv.UpdatedAt,
+		Items:            items,
+		Payments:         payments,
+	}
 }

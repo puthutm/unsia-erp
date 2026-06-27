@@ -1,5 +1,7 @@
 import './globals.css';
 import React from 'react';
+import { AuthProvider } from '@/contexts/auth-context';
+import { ReferenceProvider } from '@/contexts/reference-context';
 
 export const metadata = {
   title: 'UNSIA ERP Portal',
@@ -14,8 +16,12 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body>
-        <div className="bg-gradient-mesh"></div>
-        {children}
+        <AuthProvider>
+          <ReferenceProvider>
+            <div className="bg-gradient-mesh"></div>
+            {children}
+          </ReferenceProvider>
+        </AuthProvider>
       </body>
     </html>
   );

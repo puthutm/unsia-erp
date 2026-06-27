@@ -1064,10 +1064,56 @@ r.db.Model(&domain.StudentAttendance{}).Where("student_id = ? AND status = 'excu
 // IsStudentEnrolledInClass checks if a student is enrolled in a class
 func (r *AcademicRepository) IsStudentEnrolledInClass(studentID, classID string) (bool, error) {
 	var count int64
-	err := r.db.Model(&domain.ClassEnrollment{}).
-		Joins("JOIN krs ON krs.id = class_enrollments.krs_id").
-		Where("krs.student_id = ? AND class_enrollments.class_id = ? AND krs.status = 'approved'", studentID, classID).
+	err := r.db.Model(&domain.KrsItem{}).
+		Joins("JOIN krs ON krs.id = krs_items.krs_id").
+		Where("krs.student_id = ? AND krs_items.class_id = ? AND krs.status = 'approved'", studentID, classID).
 		Count(&count).Error
 
 	return count > 0, err
+}
+
+func (r *AcademicRepository) UpdateStudent(id string, updates map[string]interface{}) error {
+	return r.db.Model(&domain.Student{}).Where("id = ?", id).Updates(updates).Error
+}
+
+func (r *AcademicRepository) GetKrsByStudentID(studentID string, academicPeriodID string, status string) ([]domain.KRS, error) {
+	var list []domain.KRS
+	query := r.db.Model(&domain.KRS{}).Where("student_id = ?", studentID)
+	if academicPeriodID != "" {
+		query = query.Where("academic_period_id = ?", academicPeriodID)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	err := query.Preload("Items").Find(&list).Error
+	return list, err
+}
+
+func (r *AcademicRepository) GetGradesByStudentID(studentID string, academicPeriodID string) ([]domain.Grade, error) {
+	return r.GetStudentGrades(studentID, academicPeriodID)
+}
+
+func (r *AcademicRepository) GetCourseByKrsItemID(krsItemID string) (*domain.Course, error) {
+	var course domain.Course
+	err := r.db.Table("courses").
+		Joins("JOIN course_offerings ON course_offerings.course_id = courses.id").
+		Joins("JOIN classes ON classes.course_offering_id = course_offerings.id").
+		Joins("JOIN krs_items ON krs_items.class_id = classes.id").
+		Where("krs_items.id = ?", krsItemID).
+		First(&course).Error
+	if err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
+
+func (r *AcademicRepository) GetPeriodNameByKrsItemID(krsItemID string) (string, error) {
+	var periodName string
+	err := r.db.Table("academic_periods").
+		Select("academic_periods.period_name").
+		Joins("JOIN krs ON krs.academic_period_id = academic_periods.id").
+		Joins("JOIN krs_items ON krs_items.krs_id = krs.id").
+		Where("krs_items.id = ?", krsItemID).
+		Row().Scan(&periodName)
+	return periodName, err
 }

@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	sharederr "github.com/unsia-erp/shared-errorenvelope"
 	"github.com/unsia-erp/unsia-core-service/internal/handler"
 	"github.com/unsia-erp/unsia-core-service/internal/middleware"
-	sharederr "github.com/unsia-erp/shared-errorenvelope"
+	"github.com/unsia-erp/unsia-core-service/internal/service"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +34,7 @@ func DefaultConfig() *Config {
 // Setup sets up the router with all routes
 func Setup(db *gorm.DB, cfg *Config) *gin.Engine {
 	r := gin.New()
+	serviceTokenService := service.NewServiceTokenService(db)
 	
 	// Middleware
 	r.Use(gin.Logger())
@@ -55,7 +57,6 @@ func Setup(db *gorm.DB, cfg *Config) *gin.Engine {
 	v1 := r.Group("/api/v1")
 	{
 		// Initialize handlers
-		healthHandler := handler.NewHealthHandler(db)
 		userHandler := handler.NewUserHandler(db)
 		roleHandler := handler.NewRoleHandler(db)
 		sessionHandler := handler.NewSessionHandler(db)
@@ -64,11 +65,12 @@ func Setup(db *gorm.DB, cfg *Config) *gin.Engine {
 		auditHandler := handler.NewAuditHandler(db)
 		webhookHandler := handler.NewWebhookHandler(db)
 		externalAppHandler := handler.NewExternalAppHandler(db)
+		authHandler := handler.NewAuthHandler(db)
 
 		// Public routes (no auth required)
 		public := v1.Group("")
 		{
-			public.POST("/auth/login", userHandler.Login)
+			public.POST("/auth/login", authHandler.Login)
 			public.POST("/auth/refresh", sessionHandler.RefreshToken)
 			
 			// External app validation
@@ -77,25 +79,25 @@ func Setup(db *gorm.DB, cfg *Config) *gin.Engine {
 
 		// Protected routes (JWT auth)
 		protected := v1.Group("")
-		protected.Use(middleware.AuthMiddleware())
+		protected.Use(middleware.AuthRequired())
 		{
 			// Auth
 			protected.POST("/auth/logout", userHandler.Logout)
 			protected.POST("/auth/change-password", userHandler.ChangePassword)
-			protected.GET("/auth/me", userHandler.GetCurrentUser)
+			protected.GET("/auth/me", authHandler.Me)
 
 			// Users
-			protected.GET("/users", userHandler.ListUsers)
-			protected.POST("/users", userHandler.CreateUser)
-			protected.GET("/users/:id", userHandler.GetUser)
-			protected.PUT("/users/:id", userHandler.UpdateUser)
-			protected.DELETE("/users/:id", userHandler.DeleteUser)
+			protected.GET("/users", userHandler.List)
+			protected.POST("/users", userHandler.Create)
+			protected.GET("/users/:id", userHandler.Get)
+			protected.PUT("/users/:id", userHandler.Update)
+			protected.DELETE("/users/:id", userHandler.Delete)
 			protected.POST("/users/:id/activate", userHandler.ActivateUser)
 			protected.POST("/users/:id/deactivate", userHandler.DeactivateUser)
 
 			// Roles
-			protected.GET("/roles", roleHandler.ListRoles)
-			protected.POST("/roles", roleHandler.CreateRole)
+			protected.GET("/roles", roleHandler.List)
+			protected.POST("/roles", roleHandler.Create)
 			protected.GET("/roles/:id", roleHandler.GetRole)
 			protected.PUT("/roles/:id", roleHandler.UpdateRole)
 			protected.DELETE("/roles/:id", roleHandler.DeleteRole)
@@ -146,7 +148,7 @@ func Setup(db *gorm.DB, cfg *Config) *gin.Engine {
 
 	// Service-to-service routes (internal)
 	internal := r.Group("/internal")
-	internal.Use(middleware.ServiceTokenMiddleware())
+	internal.Use(middleware.ServiceTokenRequired(serviceTokenService))
 	{
 		internal.POST("/validate-token", func(c *gin.Context) {
 			c.JSON(http.StatusOK, sharederr.Success(gin.H{

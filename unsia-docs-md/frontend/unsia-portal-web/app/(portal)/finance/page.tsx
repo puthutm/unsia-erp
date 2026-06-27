@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useReference } from "@/contexts/reference-context";
 import { useAuth } from "@/contexts/auth-context";
 import { API_BASE_URLS, FINANCE_ENDPOINTS, STORAGE_KEYS } from "@/lib/constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FinanceStats {
   totalReceivable: number;
@@ -54,7 +55,7 @@ export default function FinancePage() {
     if (!token) return;
 
     setLoading(true);
-    try {
+try {
       // Fetch invoices
       const invoicesRes = await fetch(`${API_BASE_URLS.finance}${FINANCE_ENDPOINTS.invoices}`, {
         headers: {
@@ -62,9 +63,11 @@ export default function FinancePage() {
           "Content-Type": "application/json",
         },
       });
+      let invoiceList: Invoice[] = [];
       if (invoicesRes.ok) {
-        const data = await invoicesRes.json();
-        setInvoices(data.data || []);
+        const invData = await invoicesRes.json();
+        invoiceList = invData.data || [];
+        setInvoices(invoiceList);
       }
 
       // Fetch payments
@@ -75,9 +78,27 @@ export default function FinancePage() {
         },
       });
       if (paymentsRes.ok) {
-        const data = await paymentsRes.json();
-        setPayments(data.data || []);
+        const payData = await paymentsRes.json();
+        setPayments(payData.data || []);
       }
+
+      // Calculate stats from fetched invoice data
+      const totalReceivable = invoiceList
+        .filter((inv) => inv.status !== "paid" && inv.status !== "cancelled")
+        .reduce((sum, inv) => sum + inv.amount, 0);
+      const collected = invoiceList
+        .filter((inv) => inv.status === "paid")
+        .reduce((sum, inv) => sum + inv.amount, 0);
+      const pendingPayment = invoiceList
+        .filter((inv) => inv.status === "pending" || inv.status === "partial")
+        .reduce((sum, inv) => sum + inv.amount, 0);
+      
+      setStats({
+        totalReceivable,
+        totalPayable: 0,
+        collected,
+        pendingPayment,
+      });
     } catch (error) {
       console.error("Error fetching finance data:", error);
     } finally {
@@ -93,7 +114,7 @@ export default function FinancePage() {
     }).format(amount);
 };
 
-  const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       pending: "bg-yellow-100 text-yellow-800",
       paid: "bg-green-100 text-green-800",
@@ -108,6 +129,8 @@ export default function FinancePage() {
       verified: "bg-green-100 text-green-800",
       received: "bg-yellow-100 text-yellow-800",
       failed: "bg-red-100 text-red-800",
+      completed: "bg-green-100 text-green-800",
+      processing: "bg-blue-100 text-blue-800",
     };
     return styles[status] || "bg-gray-100 text-gray-800";
   };
@@ -129,19 +152,35 @@ return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Piutang</h3>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{formatCurrency(stats?.totalReceivable || 0)}</p>
+          {loading ? (
+            <Skeleton className="h-8 w-32 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold text-slate-900 mt-2">{formatCurrency(stats?.totalReceivable || 0)}</p>
+          )}
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Hutang</h3>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{formatCurrency(stats?.totalPayable || 0)}</p>
+          {loading ? (
+            <Skeleton className="h-8 w-32 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold text-slate-900 mt-2">{formatCurrency(stats?.totalPayable || 0)}</p>
+          )}
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Terpilih</h3>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{formatCurrency(stats?.collected || 0)}</p>
+          {loading ? (
+            <Skeleton className="h-8 w-32 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold text-slate-900 mt-2">{formatCurrency(stats?.collected || 0)}</p>
+          )}
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Menunggu Pembayaran</h3>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{stats?.pendingPayment || 0}</p>
+          {loading ? (
+            <Skeleton className="h-8 w-20 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold text-slate-900 mt-2">{stats?.pendingPayment || 0}</p>
+          )}
         </div>
       </div>
 
@@ -183,7 +222,7 @@ return (
         {/* Tab Content */}
         <div className="p-6">
           {loading ? (
-            <div className="text-center text-slate-500 py-8">Memuat data...</div>
+            <Skeleton variant="table" rows={5} />
           ) : activeTab === "invoices" && invoices.length === 0 ? (
             <div className="text-center text-slate-500 py-8">Tidak ada invoice</div>
           ) : activeTab === "invoices" ? (

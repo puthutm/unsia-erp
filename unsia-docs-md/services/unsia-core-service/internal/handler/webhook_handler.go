@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
@@ -11,11 +12,13 @@ import (
 
 type WebhookHandler struct {
 	webhookService *service.WebhookService
+	db             *gorm.DB
 }
 
 func NewWebhookHandler(db *gorm.DB) *WebhookHandler {
 	return &WebhookHandler{
 		webhookService: service.NewWebhookService(db),
+		db:             db,
 	}
 }
 
@@ -63,11 +66,53 @@ func (h *WebhookHandler) DeleteWebhook(c *gin.Context) {
 	}).WithContext(c))
 }
 
+// GetWebhook handles GET /api/v1/webhooks/:id
+func (h *WebhookHandler) GetWebhook(c *gin.Context) {
+	id := c.Param("id")
+	var webhook service.Webhook
+	if err := h.db.Where("id = ?", id).First(&webhook).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Webhook not found").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(webhook).WithContext(c))
+}
+
+// UpdateWebhook handles PUT /api/v1/webhooks/:id
+func (h *WebhookHandler) UpdateWebhook(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		URL      string `json:"url" binding:"required,url"`
+		Event    string `json:"event" binding:"required"`
+		Secret   string `json:"secret"`
+		IsActive bool   `json:"is_active"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	var webhook service.Webhook
+	if err := h.db.Where("id = ?", id).First(&webhook).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Webhook not found").WithContext(c))
+		return
+	}
+
+	webhook.URL = req.URL
+	webhook.Event = req.Event
+	webhook.Secret = req.Secret
+	webhook.IsActive = req.IsActive
+	webhook.UpdatedAt = time.Now()
+
+	if err := h.db.Save(&webhook).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengupdate webhook").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(webhook).WithContext(c))
+}
+
 // TestWebhook handles POST /api/v1/webhooks/:id/test
 func (h *WebhookHandler) TestWebhook(c *gin.Context) {
-	id := c.Param("id")
-
-	// Get webhook by ID (need to add this method)
 	// For now, just return success
 	c.JSON(http.StatusOK, sharederr.Success(gin.H{
 		"message": "Test webhook triggered",

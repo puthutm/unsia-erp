@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,7 +32,7 @@ type StudentUpdateRequest struct {
 	CurriculumID      *string `json:"curriculum_id"`
 }
 
-type AssignAdvisorRequest struct {
+type AssignStudentAdvisorRequest struct {
 	LecturerID string `json:"lecturer_id" binding:"required"` // HRIS lecturer ID
 }
 
@@ -353,7 +352,7 @@ func (h *StudentHandler) GetStudentGrades(c *gin.Context) {
 // POST /api/v1/academic/students/:id/advisor
 func (h *StudentHandler) AssignAdvisor(c *gin.Context) {
 	studentID := c.Param("id")
-	var req AssignAdvisorRequest
+	var req AssignStudentAdvisorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
 		return

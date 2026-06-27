@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -29,8 +30,6 @@ type ReportRequest struct {
 
 // GenerateReport generates report based on filters
 func (s *ReportService) GenerateReport(req ReportRequest) ([]map[string]interface{}, error) {
-	results := []map[string]interface{}{}
-
 	// Based on module, generate different reports
 	switch req.Module {
 	case "user":
