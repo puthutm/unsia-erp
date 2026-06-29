@@ -8,15 +8,7 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-ARG NETRC_FILE=.netrc
-
-# Salin file netrc (sementaa untuk build)
-COPY ${NETRC_FILE} /root/.netrc
-
-# Amankan file
-RUN chmod 600 /root/.netrc
-
-# Copy the Go Modules and Sum files
+# Copy the Go Modules
 COPY services/unsia-crm-service/go.mod services/unsia-crm-service/go.sum* ./services/unsia-crm-service/
 COPY packages/ ./packages/
 
@@ -28,8 +20,6 @@ COPY services/unsia-crm-service/ ./
 
 # Build the Go app
 RUN CGO_ENABLED=1 go build -o /unsia-crm-service ./cmd/crm-service
-
-RUN rm -f /root/.netrc
 
 # ==============================
 # Stage 2: Runner

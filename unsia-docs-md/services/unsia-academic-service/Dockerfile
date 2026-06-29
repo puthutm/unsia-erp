@@ -8,15 +8,7 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-ARG NETRC_FILE=.netrc
-
-# Salin file netrc (sementaa untuk build)
-COPY ${NETRC_FILE} /root/.netrc
-
-# Amankan file
-RUN chmod 600 /root/.netrc
-
-# Copy the Go Modules and Sum files
+# Copy the Go Modules
 COPY services/unsia-academic-service/go.mod services/unsia-academic-service/go.sum* ./services/unsia-academic-service/
 COPY packages/ ./packages/
 
@@ -28,8 +20,6 @@ COPY services/unsia-academic-service/ ./
 
 # Build the Go app
 RUN CGO_ENABLED=1 go build -o /unsia-academic-service ./cmd/academic-service
-
-RUN rm -f /root/.netrc
 
 # ==============================
 # Stage 2: Runner
