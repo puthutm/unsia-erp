@@ -515,8 +515,8 @@ export default function PmbDashboardPage() {
                   </div>
                   
                   <div className="divide-y divide-slate-100">
-                    <div className="py-3 flex items-center gap-3">
-                      <img src="https://ui-avatars.com/api/?name=Aris+Wijaya&background=FED524&color=0f487b&rounded=true&bold=true" class="w-10 h-10 rounded-full" />
+<div className="py-3 flex items-center gap-3">
+                      <img src="https://ui-avatars.com/api/?name=Aris+Wijaya&background=FED524&color=0f487b&rounded=true&bold=true" className="w-10 h-10 rounded-full" />
                       <div>
                         <p className="font-bold text-sm text-slate-800">Aris Wijaya</p>
                         <p className="text-xs text-slate-400">Super Admin (aris.wijaya@unsia.ac.id)</p>
@@ -524,7 +524,7 @@ export default function PmbDashboardPage() {
                       <span className="ml-auto text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">Online</span>
                     </div>
                     <div className="py-3 flex items-center gap-3">
-                      <img src="https://ui-avatars.com/api/?name=Sari+Wulan&background=f0f4f8&color=0f487b&rounded=true&bold=true" class="w-10 h-10 rounded-full" />
+                      <img src="https://ui-avatars.com/api/?name=Sari+Wulan&background=f0f4f8&color=0f487b&rounded=true&bold=true" className="w-10 h-10 rounded-full" />
                       <div>
                         <p className="font-bold text-sm text-slate-800">Sari Wulan</p>
                         <p className="text-xs text-slate-400">Verifikator (sari.wulan@unsia.ac.id)</p>

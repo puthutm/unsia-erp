@@ -29,6 +29,7 @@ export interface Campaign {
   budget: number;
   status: string;
   createdAt: string;
+  channel: string;
 }
 
 export interface LeadActivity {
