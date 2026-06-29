@@ -64,7 +64,7 @@ export default function CRMLeadsPage() {
 
   const handleConvertLead = async (leadId: string) => {
     if (confirm("Apakah Anda yakin ingin mengonversi lead ini menjadi Calon Mahasiswa?")) {
-      const success = await convertLead(leadId, { admission_path_id: "mock-path-id" });
+      const success = await convertLead(leadId, { opportunityName: "PMB Pendaftaran", value: 0, admission_path_id: "mock-path-id" });
       if (success) {
         alert("Lead berhasil dikonversi ke PMB Pendaftar!");
       } else {

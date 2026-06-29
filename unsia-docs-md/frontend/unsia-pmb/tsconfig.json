@@ -20,11 +20,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@/contexts/*": ["../unsia-portal-web/contexts/*"],
-      "@/hooks/*": ["../unsia-portal-web/hooks/*"],
-      "@/lib/*": ["../unsia-portal-web/lib/*"],
-      "@/components/*": ["../unsia-portal-web/components/*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

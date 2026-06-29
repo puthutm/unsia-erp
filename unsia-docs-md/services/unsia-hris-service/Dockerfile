@@ -1,39 +1,52 @@
 # ==============================
 # Stage 1: Builder
 # ==============================
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23.0-alpine AS builder
 
-RUN apk add --no-cache git gcc musl-dev
-
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy go.mod/go.sum of the service and the shared packages
+RUN apk add --no-cache git
+
+ARG NETRC_FILE=.netrc
+
+# Salin file netrc (sementaa untuk build)
+COPY ${NETRC_FILE} /root/.netrc
+
+# Amankan file
+RUN chmod 600 /root/.netrc
+
+# Copy the Go Modules and Sum files
 COPY services/unsia-hris-service/go.mod services/unsia-hris-service/go.sum* ./services/unsia-hris-service/
 COPY packages/ ./packages/
 
-# Change working directory to the service directory
-WORKDIR /app/services/unsia-hris-service
-
-# Copy the service source code
-COPY services/unsia-hris-service/ ./
-
-# Download dependencies
+# Download all the dependencies. Dependencies will be cached if the go.mod and go.sum are not changed
 RUN go mod tidy
 
-# Build binary
+# Copy the entire source code
+COPY services/unsia-hris-service/ ./
+
+# Build the Go app
 RUN CGO_ENABLED=1 go build -o /unsia-hris-service ./cmd/hris-service
+
+RUN rm -f /root/.netrc
 
 # ==============================
 # Stage 2: Runner
 # ==============================
-FROM alpine:3.19 AS runner
+FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates tzdata
+# Set the Current Working Directory inside the container
+WORKDIR /root/
 
-WORKDIR /app
-
+# Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-hris-service /app/unsia-hris-service
+COPY services/unsia-hris-service/.env .
+COPY services/unsia-hris-service/*.pem .
 
+# Expose port 8008
 EXPOSE 8008
 
+# Command to run the executable
+CMD ["/bin/sh", "-c", "apk update && apk add bash"]
 CMD ["/app/unsia-hris-service"]

@@ -1,39 +1,52 @@
 # ==============================
 # Stage 1: Builder
 # ==============================
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23.0-alpine AS builder
 
-RUN apk add --no-cache git gcc musl-dev
-
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy go.mod/go.sum of the service and the shared packages
+RUN apk add --no-cache git
+
+ARG NETRC_FILE=.netrc
+
+# Salin file netrc (sementaa untuk build)
+COPY ${NETRC_FILE} /root/.netrc
+
+# Amankan file
+RUN chmod 600 /root/.netrc
+
+# Copy the Go Modules and Sum files
 COPY services/unsia-portal-service/go.mod services/unsia-portal-service/go.sum* ./services/unsia-portal-service/
 COPY packages/ ./packages/
 
-# Change working directory to the service directory
-WORKDIR /app/services/unsia-portal-service
-
-# Copy the service source code
-COPY services/unsia-portal-service/ ./
-
-# Download dependencies
+# Download all the dependencies. Dependencies will be cached if the go.mod and go.sum are not changed
 RUN go mod tidy
 
-# Build binary
+# Copy the entire source code
+COPY services/unsia-portal-service/ ./
+
+# Build the Go app
 RUN CGO_ENABLED=1 go build -o /unsia-portal-service ./cmd/portal-service
+
+RUN rm -f /root/.netrc
 
 # ==============================
 # Stage 2: Runner
 # ==============================
-FROM alpine:3.19 AS runner
+FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates tzdata
+# Set the Current Working Directory inside the container
+WORKDIR /root/
 
-WORKDIR /app
-
+# Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-portal-service /app/unsia-portal-service
+COPY services/unsia-portal-service/.env .
+COPY services/unsia-portal-service/*.pem .
 
+# Expose port 8010
 EXPOSE 8010
 
+# Command to run the executable
+CMD ["/bin/sh", "-c", "apk update && apk add bash"]
 CMD ["/app/unsia-portal-service"]
