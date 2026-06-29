@@ -22,8 +22,8 @@
     "tailwind-merge": "^2.3.0",
     "zustand": "^4.5.2"
   },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.1",
+"devDependencies": {
+    "@tailwindcss/postcss": "^3.4.1",
     "@types/node": "^20.12.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
