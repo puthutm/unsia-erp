@@ -2,11 +2,11 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy only package.json (NOT package-lock.json - avoid npm cache bug)
+COPY package.json ./
 
-# Install dependencies (force clean install to avoid npm cache bug)
-RUN rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
+# Install dependencies fresh without lock file
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
