@@ -3,7 +3,6 @@ package repository
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"time"
 
 	"github.com/unsia-erp/unsia-core-service/internal/domain"
 	"gorm.io/gorm"
