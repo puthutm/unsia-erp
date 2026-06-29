@@ -42,7 +42,6 @@ WORKDIR /root/
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-portal-service /app/unsia-portal-service
 COPY services/unsia-portal-service/.env .
-COPY services/unsia-portal-service/*.pem .
 
 # Expose port 8010
 EXPOSE 8010

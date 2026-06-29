@@ -42,7 +42,6 @@ WORKDIR /root/
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-crm-service /app/unsia-crm-service
 COPY services/unsia-crm-service/.env .
-COPY services/unsia-crm-service/*.pem .
 
 # Expose port 8009
 EXPOSE 8009

@@ -42,7 +42,6 @@ WORKDIR /root/
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-lms-service /app/unsia-lms-service
 COPY services/unsia-lms-service/.env .
-COPY services/unsia-lms-service/*.pem .
 
 # Expose port 8006
 EXPOSE 8006

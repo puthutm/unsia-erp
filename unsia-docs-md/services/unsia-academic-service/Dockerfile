@@ -42,7 +42,6 @@ WORKDIR /root/
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-academic-service /app/unsia-academic-service
 COPY services/unsia-academic-service/.env .
-COPY services/unsia-academic-service/*.pem .
 
 # Expose port 8004
 EXPOSE 8004

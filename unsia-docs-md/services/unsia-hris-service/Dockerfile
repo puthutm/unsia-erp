@@ -42,7 +42,6 @@ WORKDIR /root/
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-hris-service /app/unsia-hris-service
 COPY services/unsia-hris-service/.env .
-COPY services/unsia-hris-service/*.pem .
 
 # Expose port 8008
 EXPOSE 8008
