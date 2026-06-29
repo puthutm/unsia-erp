@@ -5,14 +5,14 @@ WORKDIR /app
 # Copy only package.json (NOT package-lock.json - avoid npm cache bug)
 COPY package.json ./
 
-# Install dependencies fresh without lock file
-RUN npm install --legacy-peer-deps
+# Install dependencies WITHOUT optional deps to avoid native binding bug
+RUN npm install --legacy-peer-deps --no-optional
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN npx next build
 
 # Stage 2: Runner (Production)
 FROM node:18-alpine AS runner
