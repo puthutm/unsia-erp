@@ -41,7 +41,6 @@ WORKDIR /root/
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-reference-service /app/unsia-reference-service
-COPY services/unsia-reference-service/.env .
 
 # Expose port 8002
 EXPOSE 8002

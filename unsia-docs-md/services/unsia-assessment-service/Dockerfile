@@ -41,7 +41,6 @@ WORKDIR /root/
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-assessment-service /app/unsia-assessment-service
-COPY services/unsia-assessment-service/.env .
 
 # Expose port 8007
 EXPOSE 8007

@@ -41,7 +41,6 @@ WORKDIR /root/
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-pmb-service /app/unsia-pmb-service
-COPY services/unsia-pmb-service/.env .
 
 # Expose port 8003
 EXPOSE 8003

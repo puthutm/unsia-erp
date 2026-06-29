@@ -41,7 +41,6 @@ WORKDIR /root/
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /unsia-finance-service /app/unsia-finance-service
-COPY services/unsia-finance-service/.env .
 
 # Expose port 8005
 EXPOSE 8005
