@@ -4,7 +4,8 @@ const nextConfig = {
   transpilePackages: ['@phosphor-icons/react'],
   experimental: {
     webpackBuildWorker: false
-  }
+  },
+  output: 'standalone',
 }
 
 module.exports = nextConfig

@@ -4,7 +4,8 @@ const nextConfig = {
   transpilePackages: [],
   experimental: {
     webpackBuildWorker: false
-  }
+  },
+  output: 'standalone',
 }
 
 module.exports = nextConfig
