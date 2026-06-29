@@ -40,6 +40,9 @@ export interface PmbStats {
   activeWave: number;
   pendingPayment: number;
   admitted: number;
+  verifikasi: number;
+  seleksi: number;
+  lulus: number;
 }
 
 export interface Wave {

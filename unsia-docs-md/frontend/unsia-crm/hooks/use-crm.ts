@@ -248,7 +248,7 @@ const convertLead = useCallback(async (leadId: string, data: ConvertLeadData) =>
     }
   }, []);
 
-  const registerAgent = useCallback(async (agent: { agentCode: string; organizationName: string; status: string; approvalStatus: string; personId?: string }) => {
+const registerAgent = useCallback(async (agent: { agentCode: string; organizationName: string; status: string; approvalStatus: string; personId?: string }) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -264,6 +264,24 @@ const convertLead = useCallback(async (leadId: string, data: ConvertLeadData) =>
       setIsLoading(false);
     }
   }, []);
+
+  const createCampaign = useCallback(async (campaign: { code: string; name: string; channel: string; status: string }) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await request(`${API_BASE_URL}/api/v1/crm/campaigns`, {
+        method: "POST",
+        body: JSON.stringify(campaign),
+      });
+      await fetchCampaigns();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create campaign");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchCampaigns]);
 
 return {
     leads,
@@ -282,5 +300,6 @@ return {
     convertLead,
     fetchAgents,
     registerAgent,
+    createCampaign,
   };
 }
