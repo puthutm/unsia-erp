@@ -26,27 +26,27 @@ export default function CommandCenterPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+{/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Total Pendaftar</h3>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{stats.totalApplicants}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">{stats?.totalApplicants || 0}</p>
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Verifikasi</h3>
-          <p className="text-3xl font-bold text-blue-600 mt-2">{stats.verifikasi}</p>
+          <p className="text-3xl font-bold text-blue-600 mt-2">{stats?.verifikasi || 0}</p>
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Seleksi</h3>
-          <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.seleksi}</p>
+          <p className="text-3xl font-bold text-yellow-600 mt-2">{stats?.seleksi || 0}</p>
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Lulus</h3>
-          <p className="text-3xl font-bold text-green-600 mt-2">{stats.lulus}</p>
+          <p className="text-3xl font-bold text-green-600 mt-2">{stats?.lulus || 0}</p>
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="text-sm font-medium text-slate-500">Gelombang Aktif</h3>
-          <p className="text-3xl font-bold text-purple-600 mt-2">{stats.activeWave || "-"}</p>
+          <p className="text-3xl font-bold text-purple-600 mt-2">{stats?.activeWave || "-"}</p>
         </div>
       </div>
 

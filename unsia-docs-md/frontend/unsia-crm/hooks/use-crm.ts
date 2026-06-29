@@ -60,6 +60,17 @@ export interface PipelineStage {
   color: string;
 }
 
+export interface Agent {
+  id: string;
+  agentCode: string;
+  organizationName: string;
+  status: string;
+  approvalStatus: string;
+  personId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_CRM_API || "http://localhost:8083";
 const STORAGE_KEY = "unsia_access_token";
 
@@ -67,6 +78,7 @@ export function useCRM() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -203,7 +215,7 @@ export function useCRM() {
     }
   }, []);
 
-  const convertLead = useCallback(async (leadId: string, data: ConvertLeadData) => {
+const convertLead = useCallback(async (leadId: string, data: ConvertLeadData) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -220,10 +232,44 @@ export function useCRM() {
     }
   }, []);
 
-  return {
+  const fetchAgents = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await request(`${API_BASE_URL}/api/v1/crm/agents`);
+      const data = res.data || [];
+      setAgents(data);
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch agents");
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const registerAgent = useCallback(async (agent: { agentCode: string; organizationName: string; status: string; approvalStatus: string; personId?: string }) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await request(`${API_BASE_URL}/api/v1/crm/agents`, {
+        method: "POST",
+        body: JSON.stringify(agent),
+      });
+      return res.data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to register agent");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+return {
     leads,
     pipelines,
     campaigns,
+    agents,
     isLoading,
     error,
     fetchLeads,
@@ -234,5 +280,7 @@ export function useCRM() {
     fetchCampaigns,
     logLeadActivity,
     convertLead,
+    fetchAgents,
+    registerAgent,
   };
 }
