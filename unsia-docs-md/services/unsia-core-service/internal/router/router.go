@@ -71,7 +71,7 @@ func Setup(db *gorm.DB, cfg *Config) *gin.Engine {
 		public := v1.Group("")
 		{
 			public.POST("/auth/login", authHandler.Login)
-			public.POST("/auth/refresh", sessionHandler.RefreshToken)
+			public.POST("/auth/refresh", authHandler.Refresh)
 			
 			// External app validation
 			public.POST("/external-apps/validate", externalAppHandler.ValidateCredentials)

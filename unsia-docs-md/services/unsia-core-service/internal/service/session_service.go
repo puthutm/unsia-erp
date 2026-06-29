@@ -32,14 +32,16 @@ type SessionResponse struct {
 
 // CreateSession creates a new session
 func (s *SessionService) CreateSession(userID, refreshToken string, expiresAt time.Time) (*Session, error) {
+	hashRefresh := sha256.Sum256([]byte(refreshToken))
+	refreshTokenHash := hex.EncodeToString(hashRefresh[:])
+
 	session := Session{
-		ID:           uuid.New().String(),
-		UserID:       userID,
-		RefreshToken: refreshToken,
-		IsRevoked:    false,
-		ExpiresAt:   expiresAt,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:               uuid.New().String(),
+		UserID:           userID,
+		TokenHash:        "dummy-" + uuid.New().String(),
+		RefreshTokenHash: refreshTokenHash,
+		ExpiredAt:        expiresAt,
+		CreatedAt:        time.Now(),
 	}
 
 	if err := s.db.Create(&session).Error; err != nil {
@@ -63,8 +65,11 @@ func (s *SessionService) GetSessionByID(id string) (*Session, error) {
 
 // GetSessionByRefreshToken retrieves session by refresh token
 func (s *SessionService) GetSessionByRefreshToken(refreshToken string) (*Session, error) {
+	hashRefresh := sha256.Sum256([]byte(refreshToken))
+	refreshTokenHash := hex.EncodeToString(hashRefresh[:])
+
 	var session Session
-	if err := s.db.Where("refresh_token = ?", refreshToken).First(&session).Error; err != nil {
+	if err := s.db.Where("refresh_token_hash = ?", refreshTokenHash).First(&session).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("SESSION_NOT_FOUND: Session tidak ditemukan")
 		}
@@ -80,11 +85,11 @@ func (s *SessionService) ValidateSession(refreshToken string) (*Session, error) 
 		return nil, err
 	}
 
-	if session.IsRevoked {
+	if session.RevokedAt != nil {
 		return nil, errors.New("SESSION_REVOKED: Session telah dicabut")
 	}
 
-	if session.ExpiresAt.Before(time.Now()) {
+	if session.ExpiredAt.Before(time.Now()) {
 		return nil, errors.New("SESSION_EXPIRED: Session telah kedaluwarsa")
 	}
 
@@ -98,8 +103,8 @@ func (s *SessionService) RevokeSession(id string) error {
 		return err
 	}
 
-	session.IsRevoked = true
-	session.UpdatedAt = time.Now()
+	now := time.Now()
+	session.RevokedAt = &now
 
 	if err := s.db.Save(session).Error; err != nil {
 		return errors.New("DB_ERROR: Gagal mencabut session")
@@ -110,11 +115,9 @@ func (s *SessionService) RevokeSession(id string) error {
 
 // RevokeUserSessions revokes all sessions for a user
 func (s *SessionService) RevokeUserSessions(userID string) error {
-	result := s.db.Model(&Session{}).Where("user_id = ? AND is_revoked = ?", userID, false).
-		Updates(map[string]interface{}{
-			"is_revoked": true,
-			"updated_at": time.Now(),
-		})
+	now := time.Now()
+	result := s.db.Model(&Session{}).Where("user_id = ? AND revoked_at IS NULL", userID).
+		Update("revoked_at", &now)
 	if result.Error != nil {
 		return errors.New("DB_ERROR: Gagal mencabut semua session")
 	}
@@ -125,7 +128,7 @@ func (s *SessionService) RevokeUserSessions(userID string) error {
 // ListUserSessions returns all active sessions for a user
 func (s *SessionService) ListUserSessions(userID string) ([]Session, error) {
 	var sessions []Session
-	if err := s.db.Where("user_id = ? AND is_revoked = ? AND expires_at > ?", userID, false, time.Now()).
+	if err := s.db.Where("user_id = ? AND revoked_at IS NULL AND expired_at > ?", userID, time.Now()).
 		Order("created_at DESC").
 		Find(&sessions).Error; err != nil {
 		return nil, errors.New("DB_ERROR: Gagal mengambil daftar session")
@@ -136,12 +139,10 @@ func (s *SessionService) ListUserSessions(userID string) ([]Session, error) {
 
 // CleanupExpiredSessions removes expired sessions
 func (s *SessionService) CleanupExpiredSessions() (int64, error) {
-	result := s.db.Where("expires_at < ? AND is_revoked = ?", time.Now(), false).
+	now := time.Now()
+	result := s.db.Where("expired_at < ? AND revoked_at IS NULL", now).
 		Model(&Session{}).
-		Updates(map[string]interface{}{
-			"is_revoked": true,
-			"updated_at": time.Now(),
-		})
+		Update("revoked_at", &now)
 	if result.Error != nil {
 		return 0, errors.New("DB_ERROR: Gagal membersihkan session expired")
 	}

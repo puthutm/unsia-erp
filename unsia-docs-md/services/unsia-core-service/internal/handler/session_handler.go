@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"time"
 
@@ -19,17 +21,14 @@ func NewSessionHandler(db *gorm.DB) *SessionHandler {
 }
 
 type Session struct {
-	ID           string `json:"id"`
-	UserID       string `json:"user_id"`
-	Token       string `json:"token,omitempty"`
-	IPAddress   string `json:"ip_address"`
-	UserAgent   string `json:"user_agent"`
-	Fingerprint string `json:"fingerprint"`
-	ExpiresAt   string `json:"expires_at"`
-	RevokedAt   *string `json:"revoked_at,omitempty"`
-	IsActive    bool   `json:"is_active"`
-	CreatedAt   string `json:"created_at"`
-	LastActivity string `json:"last_activity"`
+	ID               string     `gorm:"column:id;primaryKey" json:"id"`
+	UserID           string     `gorm:"column:user_id" json:"user_id"`
+	TokenHash        string     `gorm:"column:token_hash" json:"-"`
+	RefreshTokenHash string     `gorm:"column:refresh_token_hash" json:"-"`
+	ExpiredAt        time.Time  `gorm:"column:expired_at" json:"expires_at"`
+	RevokedAt        *time.Time `gorm:"column:revoked_at" json:"revoked_at,omitempty"`
+	CreatedAt        time.Time  `gorm:"column:created_at" json:"created_at"`
+	IsActive         bool       `gorm:"-" json:"is_active"`
 }
 
 // GetSession handles GET /api/v1/sessions/:id
@@ -42,7 +41,7 @@ func (h *SessionHandler) GetSession(c *gin.Context) {
 		return
 	}
 
-	session.Token = ""
+	session.IsActive = (session.RevokedAt == nil) && session.ExpiredAt.After(time.Now())
 	c.JSON(http.StatusOK, sharederr.Success(session).WithContext(c))
 }
 
@@ -58,9 +57,8 @@ func (h *SessionHandler) ListSessions(c *gin.Context) {
 		return
 	}
 
-	// Clear tokens
 	for i := range sessions {
-		sessions[i].Token = ""
+		sessions[i].IsActive = (sessions[i].RevokedAt == nil) && sessions[i].ExpiredAt.After(time.Now())
 	}
 
 	c.JSON(http.StatusOK, sharederr.Success(sessions).WithContext(c))
@@ -78,8 +76,8 @@ func (h *SessionHandler) DeleteSession(c *gin.Context) {
 		return
 	}
 
-	now := getTimestamp()
-	if err := h.db.Model(&session).Update("revoked_at", now).Error; err != nil {
+	now := time.Now()
+	if err := h.db.Model(&session).Update("revoked_at", &now).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SERVER_ERROR", err.Error()).WithContext(c))
 		return
 	}
@@ -93,8 +91,8 @@ func (h *SessionHandler) DeleteSession(c *gin.Context) {
 func (h *SessionHandler) RevokeAllSessions(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
-	now := getTimestamp()
-	if err := h.db.Model(&Session{}).Where("user_id = ?", userID).Update("revoked_at", now).Error; err != nil {
+	now := time.Now()
+	if err := h.db.Model(&Session{}).Where("user_id = ? AND revoked_at IS NULL", userID).Update("revoked_at", &now).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SERVER_ERROR", err.Error()).WithContext(c))
 		return
 	}
@@ -114,27 +112,31 @@ func (h *SessionHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// Find session by refresh token
+	hashRefresh := sha256.Sum256([]byte(req.RefreshToken))
+	refreshTokenHash := hex.EncodeToString(hashRefresh[:])
+
+	// Find session by refresh token hash
 	var session Session
-	if err := h.db.Where("token = ? AND is_active = ?", req.RefreshToken, true).First(&session).Error; err != nil {
+	if err := h.db.Where("refresh_token_hash = ? AND revoked_at IS NULL", refreshTokenHash).First(&session).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, sharederr.Error("INVALID_TOKEN", "Invalid refresh token").WithContext(c))
 		return
 	}
 
 	// Check if expired
-	if session.ExpiresAt < getTimestamp() {
+	if session.ExpiredAt.Before(time.Now()) {
 		c.JSON(http.StatusUnauthorized, sharederr.Error("TOKEN_EXPIRED", "Refresh token expired").WithContext(c))
 		return
 	}
 
 	// Generate new tokens
 	newToken := uuid.New().String()
+	hashAccess := sha256.Sum256([]byte(newToken))
+	accessTokenHash := hex.EncodeToString(hashAccess[:])
 
 	// Update session
 	updates := map[string]interface{}{
-		"token":          newToken,
-		"expires_at":    getExpireTime(24 * 60), // 24 hours
-		"last_activity": getTimestamp(),
+		"token_hash": accessTokenHash,
+		"expired_at": time.Now().Add(24 * time.Hour), // 24 hours
 	}
 
 	if err := h.db.Model(&session).Updates(updates).Error; err != nil {
@@ -151,17 +153,15 @@ func (h *SessionHandler) RefreshToken(c *gin.Context) {
 
 // SessionFromToken gets session from token
 func (h *SessionHandler) SessionFromToken(token string) (*Session, error) {
+	hashAccess := sha256.Sum256([]byte(token))
+	accessTokenHash := hex.EncodeToString(hashAccess[:])
+
 	var session Session
-	err := h.db.Where("token = ? AND is_active = ?", token, true).First(&session).Error
+	err := h.db.Where("token_hash = ? AND revoked_at IS NULL", accessTokenHash).First(&session).Error
 	return &session, err
 }
 
 // CleanExpiredSessions cleans expired sessions
 func (h *SessionHandler) CleanExpiredSessions() error {
-	now := getTimestamp()
-	return h.db.Where("expires_at < ?", now).Delete(&Session{}).Error
-}
-
-func getExpireTime(minutes int) string {
-	return time.Now().Add(time.Duration(minutes) * time.Minute).Format("2006-01-02T15:04:05Z07:00")
+	return h.db.Where("expired_at < ?", time.Now()).Delete(&Session{}).Error
 }

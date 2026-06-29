@@ -1,6 +1,10 @@
 package repository
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"time"
+
 	"github.com/unsia-erp/unsia-core-service/internal/domain"
 	"gorm.io/gorm"
 )
@@ -91,8 +95,11 @@ func (r *SessionRepository) CreateImpersonationSession(session *domain.Impersona
 }
 
 func (r *SessionRepository) GetByRefreshToken(token string) (*domain.Session, error) {
+	hash := sha256.Sum256([]byte(token))
+	tokenHash := hex.EncodeToString(hash[:])
+
 	var session domain.Session
-	err := r.db.Preload("User").Preload("User.Person").Where("refresh_token = ? AND is_revoked = false", token).First(&session).Error
+	err := r.db.Preload("User").Preload("User.Person").Where("refresh_token_hash = ? AND revoked_at IS NULL", tokenHash).First(&session).Error
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +107,8 @@ func (r *SessionRepository) GetByRefreshToken(token string) (*domain.Session, er
 }
 
 func (r *SessionRepository) RevokeSession(sessionID string) error {
-	return r.db.Model(&domain.Session{}).Where("id = ?", sessionID).Update("is_revoked", true).Error
+	now := time.Now()
+	return r.db.Model(&domain.Session{}).Where("id = ?", sessionID).Update("revoked_at", &now).Error
 }
 
 func (r *SessionRepository) SaveActiveRoleSession(active *domain.ActiveRoleSession) error {
