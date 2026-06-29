@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies (force clean install to avoid npm cache bug)
-RUN npm cache clean --force && rm -rf node_modules && npm install --legacy-peer-deps
+RUN rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
