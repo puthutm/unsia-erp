@@ -102,14 +102,14 @@ func (Application) TableName() string {
 }
 
 type Session struct {
-	ID               string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
-	UserID           string     `gorm:"column:user_id"`
-	User             User       `gorm:"foreignKey:UserID"`
-	TokenHash        string     `gorm:"column:token_hash;uniqueIndex"`
-	RefreshTokenHash string     `gorm:"column:refresh_token_hash"`
-	ExpiredAt        time.Time  `gorm:"column:expired_at"`
-	RevokedAt        *time.Time `gorm:"column:revoked_at"`
-	CreatedAt        time.Time  `gorm:"column:created_at"`
+	ID               string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	UserID           string    `gorm:"column:user_id"`
+	User             User      `gorm:"foreignKey:UserID"`
+	TokenHash        string    `gorm:"column:token_hash;uniqueIndex"`
+	RefreshTokenHash string    `gorm:"column:refresh_token_hash"`
+	IsRevoked        bool      `gorm:"column:is_revoked;default:false"`
+	ExpiresAt        time.Time `gorm:"column:expires_at"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
 }
 
 func (Session) TableName() string {

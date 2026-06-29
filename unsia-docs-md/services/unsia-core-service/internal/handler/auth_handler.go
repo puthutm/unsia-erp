@@ -181,7 +181,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		UserID:           user.ID,
 		TokenHash:        accessTokenHash,
 		RefreshTokenHash: refreshTokenHash,
-		ExpiredAt:        time.Now().AddDate(0, 0, expireDays),
+		ExpiresAt:        time.Now().AddDate(0, 0, expireDays),
 	}
 	if err := h.sessRepo.CreateSession(&session); err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SESSION_CREATION_FAILED", "Gagal menyimpan session").WithContext(c))
@@ -223,7 +223,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	if session.ExpiredAt.Before(time.Now()) {
+	if session.ExpiresAt.Before(time.Now()) {
 		c.JSON(http.StatusUnauthorized, sharederr.Error("EXPIRED_SESSION", "Sesi Anda telah kedaluwarsa").WithContext(c))
 		return
 	}

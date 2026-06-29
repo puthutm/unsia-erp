@@ -21,14 +21,14 @@ func NewSessionHandler(db *gorm.DB) *SessionHandler {
 }
 
 type Session struct {
-	ID               string     `gorm:"column:id;primaryKey" json:"id"`
-	UserID           string     `gorm:"column:user_id" json:"user_id"`
-	TokenHash        string     `gorm:"column:token_hash" json:"-"`
-	RefreshTokenHash string     `gorm:"column:refresh_token_hash" json:"-"`
-	ExpiredAt        time.Time  `gorm:"column:expired_at" json:"expires_at"`
-	RevokedAt        *time.Time `gorm:"column:revoked_at" json:"revoked_at,omitempty"`
-	CreatedAt        time.Time  `gorm:"column:created_at" json:"created_at"`
-	IsActive         bool       `gorm:"-" json:"is_active"`
+	ID               string    `gorm:"column:id;primaryKey" json:"id"`
+	UserID           string    `gorm:"column:user_id" json:"user_id"`
+	TokenHash        string    `gorm:"column:token_hash" json:"-"`
+	RefreshTokenHash string    `gorm:"column:refresh_token_hash" json:"-"`
+	IsRevoked        bool      `gorm:"column:is_revoked" json:"is_revoked"`
+	ExpiresAt        time.Time `gorm:"column:expires_at" json:"expires_at"`
+	CreatedAt        time.Time `gorm:"column:created_at" json:"created_at"`
+	IsActive         bool      `gorm:"-" json:"is_active"`
 }
 
 // GetSession handles GET /api/v1/sessions/:id
@@ -41,7 +41,7 @@ func (h *SessionHandler) GetSession(c *gin.Context) {
 		return
 	}
 
-	session.IsActive = (session.RevokedAt == nil) && session.ExpiredAt.After(time.Now())
+	session.IsActive = !session.IsRevoked && session.ExpiresAt.After(time.Now())
 	c.JSON(http.StatusOK, sharederr.Success(session).WithContext(c))
 }
 
@@ -51,14 +51,14 @@ func (h *SessionHandler) ListSessions(c *gin.Context) {
 
 	var sessions []Session
 	query := h.db.Where("user_id = ?", userID)
-	
+
 	if err := query.Order("created_at DESC").Find(&sessions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SERVER_ERROR", err.Error()).WithContext(c))
 		return
 	}
 
 	for i := range sessions {
-		sessions[i].IsActive = (sessions[i].RevokedAt == nil) && sessions[i].ExpiredAt.After(time.Now())
+		sessions[i].IsActive = !sessions[i].IsRevoked && sessions[i].ExpiresAt.After(time.Now())
 	}
 
 	c.JSON(http.StatusOK, sharederr.Success(sessions).WithContext(c))
@@ -76,8 +76,7 @@ func (h *SessionHandler) DeleteSession(c *gin.Context) {
 		return
 	}
 
-	now := time.Now()
-	if err := h.db.Model(&session).Update("revoked_at", &now).Error; err != nil {
+	if err := h.db.Model(&session).Update("is_revoked", true).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SERVER_ERROR", err.Error()).WithContext(c))
 		return
 	}
@@ -91,8 +90,7 @@ func (h *SessionHandler) DeleteSession(c *gin.Context) {
 func (h *SessionHandler) RevokeAllSessions(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
-	now := time.Now()
-	if err := h.db.Model(&Session{}).Where("user_id = ? AND revoked_at IS NULL", userID).Update("revoked_at", &now).Error; err != nil {
+	if err := h.db.Model(&Session{}).Where("user_id = ? AND is_revoked = false", userID).Update("is_revoked", true).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SERVER_ERROR", err.Error()).WithContext(c))
 		return
 	}
@@ -117,13 +115,13 @@ func (h *SessionHandler) RefreshToken(c *gin.Context) {
 
 	// Find session by refresh token hash
 	var session Session
-	if err := h.db.Where("refresh_token_hash = ? AND revoked_at IS NULL", refreshTokenHash).First(&session).Error; err != nil {
+	if err := h.db.Where("refresh_token_hash = ? AND is_revoked = false", refreshTokenHash).First(&session).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, sharederr.Error("INVALID_TOKEN", "Invalid refresh token").WithContext(c))
 		return
 	}
 
 	// Check if expired
-	if session.ExpiredAt.Before(time.Now()) {
+	if session.ExpiresAt.Before(time.Now()) {
 		c.JSON(http.StatusUnauthorized, sharederr.Error("TOKEN_EXPIRED", "Refresh token expired").WithContext(c))
 		return
 	}
@@ -136,7 +134,7 @@ func (h *SessionHandler) RefreshToken(c *gin.Context) {
 	// Update session
 	updates := map[string]interface{}{
 		"token_hash": accessTokenHash,
-		"expired_at": time.Now().Add(24 * time.Hour), // 24 hours
+		"expires_at": time.Now().Add(24 * time.Hour), // 24 hours
 	}
 
 	if err := h.db.Model(&session).Updates(updates).Error; err != nil {
@@ -145,9 +143,9 @@ func (h *SessionHandler) RefreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sharederr.Success(gin.H{
-		"access_token":  newToken,
-		"token_type":  "Bearer",
-		"expires_in": 86400,
+		"access_token": newToken,
+		"token_type":   "Bearer",
+		"expires_in":   86400,
 	}).WithContext(c))
 }
 
@@ -157,11 +155,11 @@ func (h *SessionHandler) SessionFromToken(token string) (*Session, error) {
 	accessTokenHash := hex.EncodeToString(hashAccess[:])
 
 	var session Session
-	err := h.db.Where("token_hash = ? AND revoked_at IS NULL", accessTokenHash).First(&session).Error
+	err := h.db.Where("token_hash = ? AND is_revoked = false", accessTokenHash).First(&session).Error
 	return &session, err
 }
 
 // CleanExpiredSessions cleans expired sessions
 func (h *SessionHandler) CleanExpiredSessions() error {
-	return h.db.Where("expired_at < ?", time.Now()).Delete(&Session{}).Error
+	return h.db.Where("expires_at < ?", time.Now()).Delete(&Session{}).Error
 }

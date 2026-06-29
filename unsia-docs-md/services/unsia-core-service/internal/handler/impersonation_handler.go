@@ -119,7 +119,7 @@ func (h *ImpersonationHandler) Start(c *gin.Context) {
 		UserID:           targetUser.ID,
 		TokenHash:        tokenHashPlaceholder,
 		RefreshTokenHash: refreshTokenHash,
-		ExpiredAt:        time.Now().Add(time.Duration(durationMinutes) * time.Minute),
+		ExpiresAt:        time.Now().Add(time.Duration(durationMinutes) * time.Minute),
 	}
 	if err := h.sessRepo.CreateSession(&session); err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SESSION_CREATION_FAILED", "Gagal membuat sesi target").WithContext(c))

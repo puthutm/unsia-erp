@@ -99,7 +99,7 @@ func (r *SessionRepository) GetByRefreshToken(token string) (*domain.Session, er
 	tokenHash := hex.EncodeToString(hash[:])
 
 	var session domain.Session
-	err := r.db.Preload("User").Preload("User.Person").Where("refresh_token_hash = ? AND revoked_at IS NULL", tokenHash).First(&session).Error
+	err := r.db.Preload("User").Preload("User.Person").Where("refresh_token_hash = ? AND is_revoked = false", tokenHash).First(&session).Error
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +107,7 @@ func (r *SessionRepository) GetByRefreshToken(token string) (*domain.Session, er
 }
 
 func (r *SessionRepository) RevokeSession(sessionID string) error {
-	now := time.Now()
-	return r.db.Model(&domain.Session{}).Where("id = ?", sessionID).Update("revoked_at", &now).Error
+	return r.db.Model(&domain.Session{}).Where("id = ?", sessionID).Update("is_revoked", true).Error
 }
 
 func (r *SessionRepository) SaveActiveRoleSession(active *domain.ActiveRoleSession) error {

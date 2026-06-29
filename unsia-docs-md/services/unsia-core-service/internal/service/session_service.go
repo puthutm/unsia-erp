@@ -40,7 +40,7 @@ func (s *SessionService) CreateSession(userID, refreshToken string, expiresAt ti
 		UserID:           userID,
 		TokenHash:        "dummy-" + uuid.New().String(),
 		RefreshTokenHash: refreshTokenHash,
-		ExpiredAt:        expiresAt,
+		ExpiresAt:        expiresAt,
 		CreatedAt:        time.Now(),
 	}
 
@@ -85,11 +85,11 @@ func (s *SessionService) ValidateSession(refreshToken string) (*Session, error) 
 		return nil, err
 	}
 
-	if session.RevokedAt != nil {
+	if session.IsRevoked {
 		return nil, errors.New("SESSION_REVOKED: Session telah dicabut")
 	}
 
-	if session.ExpiredAt.Before(time.Now()) {
+	if session.ExpiresAt.Before(time.Now()) {
 		return nil, errors.New("SESSION_EXPIRED: Session telah kedaluwarsa")
 	}
 
@@ -103,8 +103,7 @@ func (s *SessionService) RevokeSession(id string) error {
 		return err
 	}
 
-	now := time.Now()
-	session.RevokedAt = &now
+	session.IsRevoked = true
 
 	if err := s.db.Save(session).Error; err != nil {
 		return errors.New("DB_ERROR: Gagal mencabut session")
@@ -115,9 +114,8 @@ func (s *SessionService) RevokeSession(id string) error {
 
 // RevokeUserSessions revokes all sessions for a user
 func (s *SessionService) RevokeUserSessions(userID string) error {
-	now := time.Now()
-	result := s.db.Model(&Session{}).Where("user_id = ? AND revoked_at IS NULL", userID).
-		Update("revoked_at", &now)
+	result := s.db.Model(&Session{}).Where("user_id = ? AND is_revoked = false", userID).
+		Update("is_revoked", true)
 	if result.Error != nil {
 		return errors.New("DB_ERROR: Gagal mencabut semua session")
 	}
@@ -128,7 +126,7 @@ func (s *SessionService) RevokeUserSessions(userID string) error {
 // ListUserSessions returns all active sessions for a user
 func (s *SessionService) ListUserSessions(userID string) ([]Session, error) {
 	var sessions []Session
-	if err := s.db.Where("user_id = ? AND revoked_at IS NULL AND expired_at > ?", userID, time.Now()).
+	if err := s.db.Where("user_id = ? AND is_revoked = false AND expires_at > ?", userID, time.Now()).
 		Order("created_at DESC").
 		Find(&sessions).Error; err != nil {
 		return nil, errors.New("DB_ERROR: Gagal mengambil daftar session")
@@ -139,10 +137,9 @@ func (s *SessionService) ListUserSessions(userID string) ([]Session, error) {
 
 // CleanupExpiredSessions removes expired sessions
 func (s *SessionService) CleanupExpiredSessions() (int64, error) {
-	now := time.Now()
-	result := s.db.Where("expired_at < ? AND revoked_at IS NULL", now).
+	result := s.db.Where("expires_at < ? AND is_revoked = false", time.Now()).
 		Model(&Session{}).
-		Update("revoked_at", &now)
+		Update("is_revoked", true)
 	if result.Error != nil {
 		return 0, errors.New("DB_ERROR: Gagal membersihkan session expired")
 	}
