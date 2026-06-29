@@ -2,7 +2,9 @@ package handler
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"net/http"
 	"time"
 
@@ -107,10 +109,17 @@ func (h *ImpersonationHandler) Start(c *gin.Context) {
 	_, _ = rand.Read(randBytes)
 	refreshToken := base64.URLEncoding.EncodeToString(randBytes)
 
+	// Hash tokens for storage
+	hashRefresh := sha256.Sum256([]byte(refreshToken))
+	refreshTokenHash := hex.EncodeToString(hashRefresh[:])
+	// Use a placeholder for access token hash; it will be set after JWT generation
+	tokenHashPlaceholder := hex.EncodeToString(sha256.New().Sum(nil))
+
 	session := domain.Session{
-		UserID:       targetUser.ID,
-		RefreshToken: refreshToken,
-		ExpiresAt:    time.Now().Add(time.Duration(durationMinutes) * time.Minute),
+		UserID:           targetUser.ID,
+		TokenHash:        tokenHashPlaceholder,
+		RefreshTokenHash: refreshTokenHash,
+		ExpiredAt:        time.Now().Add(time.Duration(durationMinutes) * time.Minute),
 	}
 	if err := h.sessRepo.CreateSession(&session); err != nil {
 		c.JSON(http.StatusInternalServerError, sharederr.Error("SESSION_CREATION_FAILED", "Gagal membuat sesi target").WithContext(c))
