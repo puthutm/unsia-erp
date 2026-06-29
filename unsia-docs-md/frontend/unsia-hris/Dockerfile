@@ -1,27 +1,29 @@
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM node:18-alpine AS deps
-WORKDIR /app
-COPY package.json ./
-RUN npm install --legacy-peer-deps
-
-# Rebuild the source code only when needed
+# Stage 1: Builder
 FROM node:18-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies (force clean install to avoid npm cache bug)
+RUN npm cache clean --force && rm -rf node_modules && npm install --legacy-peer-deps
+
+# Copy source code
 COPY . .
+
+# Build the application
 RUN npm run build
 
-# Production image, copy all the files and run next
+# Stage 2: Runner (Production)
 FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
+# Copy build artifacts
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -29,7 +31,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 
 EXPOSE 3001
-
 ENV PORT 3001
 ENV HOSTNAME "0.0.0.0"
 
