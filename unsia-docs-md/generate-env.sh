@@ -187,5 +187,165 @@ APP_PORT=8010
 LOG_LEVEL=info
 EOF
 
+# ============================================
+# Frontend Services
+# ============================================
+
+# PMB Frontend
+cat > frontend/unsia-pmb/.env << EOF
+NEXT_PUBLIC_PMB_API=http://$IP_ADDRESS:8003
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_ACADEMIC_API=http://$IP_ADDRESS:8004
+NEXT_PUBLIC_FINANCE_API=http://$IP_ADDRESS:8005
+NEXT_PUBLIC_APP_NAME=UNSIA PMB
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3000
+NEXT_PUBLIC_PORT=3000
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+NEXT_PUBLIC_STORAGE_BUCKET=unsia-pmb-dev
+NEXT_PUBLIC_STORAGE_REGION=ap-southeast-1
+EOF
+
+# CRM Frontend
+cat > frontend/unsia-crm/.env << EOF
+NEXT_PUBLIC_CRM_API=http://$IP_ADDRESS:8083
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_PMB_API=http://$IP_ADDRESS:8003
+NEXT_PUBLIC_APP_NAME=UNSIA CRM
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3001
+NEXT_PUBLIC_PORT=3001
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# Academic Frontend
+cat > frontend/unsia-academic/.env << EOF
+NEXT_PUBLIC_ACADEMIC_API=http://$IP_ADDRESS:8004
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_FINANCE_API=http://$IP_ADDRESS:8005
+NEXT_PUBLIC_APP_NAME=UNSIA Academic
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3002
+NEXT_PUBLIC_PORT=3002
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# Finance Frontend
+cat > frontend/unsia-finance/.env << EOF
+NEXT_PUBLIC_FINANCE_API=http://$IP_ADDRESS:8005
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_APP_NAME=UNSIA Finance
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3003
+NEXT_PUBLIC_PORT=3003
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# LMS Frontend
+cat > frontend/unsia-lms/.env << EOF
+NEXT_PUBLIC_LMS_API=http://$IP_ADDRESS:8006
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_ACADEMIC_API=http://$IP_ADDRESS:8004
+NEXT_PUBLIC_APP_NAME=UNSIA LMS
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3004
+NEXT_PUBLIC_PORT=3004
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# Assessment Frontend
+cat > frontend/unsia-assessment/.env << EOF
+NEXT_PUBLIC_ASSESSMENT_API=http://$IP_ADDRESS:8007
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_ACADEMIC_API=http://$IP_ADDRESS:8004
+NEXT_PUBLIC_APP_NAME=UNSIA Assessment
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3005
+NEXT_PUBLIC_PORT=3005
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# HRIS Frontend
+cat > frontend/unsia-hris/.env << EOF
+NEXT_PUBLIC_HRIS_API=http://$IP_ADDRESS:8008
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_APP_NAME=UNSIA HRIS
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3006
+NEXT_PUBLIC_PORT=3006
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# Core Frontend
+cat > frontend/unsia-core/.env << EOF
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_APP_NAME=UNSIA Core
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3007
+NEXT_PUBLIC_PORT=3007
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# Reference Frontend
+cat > frontend/unsia-reference/.env << EOF
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_APP_NAME=UNSIA Reference
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3008
+NEXT_PUBLIC_PORT=3008
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+# Portal Web Frontend
+cat > frontend/unsia-portal-web/.env << EOF
+NEXT_PUBLIC_PORTAL_API=http://$IP_ADDRESS:8010
+NEXT_PUBLIC_CORE_API=http://$IP_ADDRESS:8001
+NEXT_PUBLIC_REFERENCE_API=http://$IP_ADDRESS:8002
+NEXT_PUBLIC_PMB_API=http://$IP_ADDRESS:8003
+NEXT_PUBLIC_ACADEMIC_API=http://$IP_ADDRESS:8004
+NEXT_PUBLIC_FINANCE_API=http://$IP_ADDRESS:8005
+NEXT_PUBLIC_APP_NAME=UNSIA Portal
+NEXT_PUBLIC_APP_URL=http://$IP_ADDRESS:3009
+NEXT_PUBLIC_PORT=3009
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+EOF
+
+echo ""
+echo "============================================"
 echo "All .env files generated successfully!"
 echo "All services configured to use IP: $IP_ADDRESS"
+echo "============================================"
+echo ""
+echo "Backend Services (Go):"
+echo "  - Core Service:       http://$IP_ADDRESS:8001"
+echo "  - Reference Service: http://$IP_ADDRESS:8002"
+echo "  - PMB Service:      http://$IP_ADDRESS:8003"
+echo "  - Academic Service: http://$IP_ADDRESS:8004"
+echo "  - Finance Service:  http://$IP_ADDRESS:8005"
+echo "  - LMS Service:      http://$IP_ADDRESS:8006"
+echo "  - Assessment Svc:   http://$IP_ADDRESS:8007"
+echo "  - HRIS Service:    http://$IP_ADDRESS:8008"
+echo "  - CRM Service:      http://$IP_ADDRESS:8009"
+echo "  - Portal Service:   http://$IP_ADDRESS:8010"
+echo ""
+echo "Frontend Services (Next.js):"
+echo "  - PMB Frontend:      http://$IP_ADDRESS:3000"
+echo "  - CRM Frontend:     http://$IP_ADDRESS:3001"
+echo "  - Academic Frontend: http://$IP_ADDRESS:3002"
+echo "  - Finance Frontend:  http://$IP_ADDRESS:3003"
+echo "  - LMS Frontend:      http://$IP_ADDRESS:3004"
+echo "  - Assessment Fe:    http://$IP_ADDRESS:3005"
+echo "  - HRIS Frontend:    http://$IP_ADDRESS:3006"
+echo "  - Core Frontend:    http://$IP_ADDRESS:3007"
+echo "  - Reference Front: http://$IP_ADDRESS:3008"
+echo "  - Portal Web Fe:    http://$IP_ADDRESS:3009"
