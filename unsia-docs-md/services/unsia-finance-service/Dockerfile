@@ -1,22 +1,24 @@
 # ==============================
 # Stage 1: Builder
 # ==============================
-FROM golang:1.23.0-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
-# Set the Current Working Directory inside the container
+RUN apk add --no-cache git gcc musl-dev
+
 WORKDIR /app
 
-RUN apk add --no-cache git
-
-# Copy the Go Modules
+# Copy go.mod/go.sum of the service and the shared packages
 COPY services/unsia-finance-service/go.mod services/unsia-finance-service/go.sum* ./services/unsia-finance-service/
 COPY packages/ ./packages/
 
-# Download all the dependencies. Dependencies will be cached if the go.mod and go.sum are not changed
-RUN go mod tidy
+# Change working directory to the service directory
+WORKDIR /app/services/unsia-finance-service
 
-# Copy the entire source code
+# Copy the service source code
 COPY services/unsia-finance-service/ ./
+
+# Download dependencies
+RUN go mod tidy
 
 # Build the Go app
 RUN CGO_ENABLED=1 go build -o /unsia-finance-service ./cmd/finance-service
@@ -26,15 +28,15 @@ RUN CGO_ENABLED=1 go build -o /unsia-finance-service ./cmd/finance-service
 # ==============================
 FROM alpine:latest
 
-# Set the Current Working Directory inside the container
 WORKDIR /root/
 
-# Copy the compiled binary from the builder stage
+# Copy the compiled binary
 COPY --from=builder /unsia-finance-service /app/unsia-finance-service
+COPY services/unsia-finance-service/.env .
 
 # Expose port 8005
 EXPOSE 8005
 
-# Command to run the executable
+# Command to run
 CMD ["/bin/sh", "-c", "apk update && apk add bash"]
 CMD ["/app/unsia-finance-service"]

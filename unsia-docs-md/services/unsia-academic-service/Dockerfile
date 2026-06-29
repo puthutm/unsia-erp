@@ -1,22 +1,24 @@
 # ==============================
 # Stage 1: Builder
 # ==============================
-FROM golang:1.23.0-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
-# Set the Current Working Directory inside the container
+RUN apk add --no-cache git gcc musl-dev
+
 WORKDIR /app
 
-RUN apk add --no-cache git
-
-# Copy the Go Modules
+# Copy go.mod/go.sum of the service and the shared packages
 COPY services/unsia-academic-service/go.mod services/unsia-academic-service/go.sum* ./services/unsia-academic-service/
 COPY packages/ ./packages/
 
-# Download all the dependencies. Dependencies will be cached if the go.mod and go.sum are not changed
-RUN go mod tidy
+# Change working directory to the service directory
+WORKDIR /app/services/unsia-academic-service
 
-# Copy the entire source code
+# Copy the service source code
 COPY services/unsia-academic-service/ ./
+
+# Download dependencies
+RUN go mod tidy
 
 # Build the Go app
 RUN CGO_ENABLED=1 go build -o /unsia-academic-service ./cmd/academic-service
@@ -26,15 +28,15 @@ RUN CGO_ENABLED=1 go build -o /unsia-academic-service ./cmd/academic-service
 # ==============================
 FROM alpine:latest
 
-# Set the Current Working Directory inside the container
 WORKDIR /root/
 
-# Copy the compiled binary from the builder stage
+# Copy the compiled binary
 COPY --from=builder /unsia-academic-service /app/unsia-academic-service
+COPY services/unsia-academic-service/.env .
 
 # Expose port 8004
 EXPOSE 8004
 
-# Command to run the executable
+# Command to run
 CMD ["/bin/sh", "-c", "apk update && apk add bash"]
 CMD ["/app/unsia-academic-service"]
