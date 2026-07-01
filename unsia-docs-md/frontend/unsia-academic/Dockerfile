@@ -1,11 +1,11 @@
-# Academic Frontend Dockerfile
-# Build stage
+# ==============================
+# Stage 1: Builder
+# ==============================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 COPY . .
@@ -15,21 +15,27 @@ RUN mkdir -p public
 
 RUN npm run build
 
-# Production stage
+# ==============================
+# Stage 2: Runner
+# ==============================
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json /app/package-lock.json* ./
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-RUN npm ci --omit=dev --legacy-peer-deps || npm install --omit=dev --legacy-peer-deps
-
-COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js* ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-EXPOSE 3000
+USER nextjs
 
-CMD ["npm", "start"]
+EXPOSE 3004
+
+ENV PORT=3004
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

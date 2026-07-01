@@ -26,17 +26,21 @@ RUN CGO_ENABLED=1 go build -o /unsia-crm-service ./cmd/crm-service
 # ==============================
 # Stage 2: Runner
 # ==============================
-FROM alpine:latest
+FROM alpine:3.19 AS runner
 
-WORKDIR /root/
+RUN apk add --no-cache ca-certificates tzdata
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
 
 # Copy the compiled binary
 COPY --from=builder /unsia-crm-service /app/unsia-crm-service
-COPY services/unsia-crm-service/.env .
+
+USER appuser
 
 # Expose port 8009
 EXPOSE 8009
 
-# Command to run
-CMD ["/bin/sh", "-c", "apk update && apk add bash"]
+# Start the service (use env vars or mounted config instead of .env)
 CMD ["/app/unsia-crm-service"]

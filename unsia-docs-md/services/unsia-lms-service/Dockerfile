@@ -26,17 +26,21 @@ RUN CGO_ENABLED=1 go build -o /unsia-lms-service ./cmd/lms-service
 # ==============================
 # Stage 2: Runner
 # ==============================
-FROM alpine:latest
+FROM alpine:3.19 AS runner
 
-WORKDIR /root/
+RUN apk add --no-cache ca-certificates tzdata
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
 
 # Copy the compiled binary
 COPY --from=builder /unsia-lms-service /app/unsia-lms-service
-COPY services/unsia-lms-service/.env .
+
+USER appuser
 
 # Expose port 8006
 EXPOSE 8006
 
-# Command to run
-CMD ["/bin/sh", "-c", "apk update && apk add bash"]
+# Start the service (use env vars or mounted config instead of .env)
 CMD ["/app/unsia-lms-service"]

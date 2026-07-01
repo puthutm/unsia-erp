@@ -1,18 +1,20 @@
-# CRM Frontend Dockerfile
-# Build stage
+# ==============================
+# Stage 1: Builder
+# ==============================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 COPY . .
 
 RUN npm run build
 
-# Production stage
+# ==============================
+# Stage 2: Runner
+# ==============================
 FROM node:20-alpine AS runner
 
 WORKDIR /app
@@ -30,6 +32,7 @@ USER nextjs
 
 EXPOSE 3009
 
-ENV PORT 3009
+ENV PORT=3009
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]

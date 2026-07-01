@@ -27,22 +27,23 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Copy package files from builder
-COPY --from=builder /app/package.json /app/package-lock.json* ./
-
-# Install production dependencies
-RUN npm ci --only=production --legacy-peer-deps || npm install --only=production --legacy-peer-deps
-
-# Copy built artifacts from builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js* ./
-
-# Set environment
 ENV NODE_ENV=production
 
-# Expose port
-EXPOSE 3000
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone output from builder
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+# Expose port (Portal Web)
+EXPOSE 3010
+
+ENV PORT=3010
+ENV HOSTNAME="0.0.0.0"
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

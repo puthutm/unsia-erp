@@ -26,17 +26,21 @@ RUN CGO_ENABLED=1 go build -o /unsia-reference-service ./cmd/reference-service
 # ==============================
 # Stage 2: Runner
 # ==============================
-FROM alpine:latest
+FROM alpine:3.19 AS runner
 
-WORKDIR /root/
+RUN apk add --no-cache ca-certificates tzdata
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
 
 # Copy the compiled binary
 COPY --from=builder /unsia-reference-service /app/unsia-reference-service
-COPY services/unsia-reference-service/.env .
+
+USER appuser
 
 # Expose port 8002
 EXPOSE 8002
 
-# Command to run
-CMD ["/bin/sh", "-c", "apk update && apk add bash"]
+# Start the service (use env vars or mounted config instead of .env)
 CMD ["/app/unsia-reference-service"]
