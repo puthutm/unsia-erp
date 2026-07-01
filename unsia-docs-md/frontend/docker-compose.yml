@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  unsia-core-web:
+    build:
+      context: ./unsia-core
+      dockerfile: Dockerfile
+    container_name: unsia-core-web
+    restart: always
+    ports:
+      - "3001:3001"
+    networks:
+      - unsia-network
+
+  unsia-reference-web:
+    build:
+      context: ./unsia-reference
+      dockerfile: Dockerfile
+    container_name: unsia-reference-web
+    restart: always
+    ports:
+      - "3002:3002"
+    networks:
+      - unsia-network
+
+  unsia-pmb-web:
+    build:
+      context: ./unsia-pmb
+      dockerfile: Dockerfile
+    container_name: unsia-pmb-web
+    restart: always
+    ports:
+      - "3003:3003"
+    networks:
+      - unsia-network
+
+  unsia-academic-web:
+    build:
+      context: ./unsia-academic
+      dockerfile: Dockerfile
+    container_name: unsia-academic-web
+    restart: always
+    ports:
+      - "3004:3004"
+    networks:
+      - unsia-network
+
+  unsia-finance-web:
+    build:
+      context: ./unsia-finance
+      dockerfile: Dockerfile
+    container_name: unsia-finance-web
+    restart: always
+    ports:
+      - "3005:3005"
+    networks:
+      - unsia-network
+
+  unsia-lms-web:
+    build:
+      context: ./unsia-lms
+      dockerfile: Dockerfile
+    container_name: unsia-lms-web
+    restart: always
+    ports:
+      - "3006:3006"
+    networks:
+      - unsia-network
+
+  unsia-assessment-web:
+    build:
+      context: ./unsia-assessment
+      dockerfile: Dockerfile
+    container_name: unsia-assessment-web
+    restart: always
+    ports:
+      - "3007:3007"
+    networks:
+      - unsia-network
+
+  unsia-hris-web:
+    build:
+      context: ./unsia-hris
+      dockerfile: Dockerfile
+    container_name: unsia-hris-web
+    restart: always
+    ports:
+      - "3008:3008"
+    networks:
+      - unsia-network
+
+  unsia-crm-web:
+    build:
+      context: ./unsia-crm
+      dockerfile: Dockerfile
+    container_name: unsia-crm-web
+    restart: always
+    ports:
+      - "3009:3009"
+    networks:
+      - unsia-network
+
+  unsia-portal-web:
+    build:
+      context: ./unsia-portal-web
+      dockerfile: Dockerfile
+    container_name: unsia-portal-web
+    restart: always
+    ports:
+      - "3010:3010"
+    networks:
+      - unsia-network
+
+networks:
+  unsia-network:
+    external: true
