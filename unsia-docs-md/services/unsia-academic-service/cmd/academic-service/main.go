@@ -123,7 +123,7 @@ func main() {
 
 // Grades
 		protected.POST("/v1/academic/grades/source-imports", academicHandler.ImportGradeSource) // LMS or Assessment calls this
-		protected.POST("/v1/academic/grades/:grade_id/finalize", middleware.PermissionRequired("academic.grade.finalize"), academicHandler.FinalizeGrade)
+		protected.POST("/v1/academic/grades/:id/finalize", middleware.PermissionRequired("academic.grade.finalize"), academicHandler.FinalizeGrade)
 		protected.POST("/v1/academic/grades/:id/corrections", middleware.PermissionRequired("academic.grade.correct"), academicHandler.CorrectGrade)
 
 		// Grade Management (new handlers)
@@ -131,7 +131,8 @@ func main() {
 		protected.GET("/v1/academic/grades/:id", gradeHandler.GetGrade)
 		protected.GET("/v1/academic/grades/student/:student_id", gradeHandler.GetStudentGrades)
 		protected.POST("/v1/academic/grades/:id/submit", gradeHandler.SubmitGrade)
-		protected.POST("/v1/academic/grades/:id/finalize", gradeHandler.FinalizeGrade)
+		// Deprecated duplicate route in favor of OpenAPI-compliant version above
+		// protected.POST("/v1/academic/grades/:id/finalize", gradeHandler.FinalizeGrade)
 		protected.POST("/v1/academic/grades/:id/entries", gradeHandler.EnterStudentGrade)
 		protected.POST("/v1/academic/grades/:id/entries/bulk", gradeHandler.BulkEnterGrades)
 		protected.POST("/v1/academic/grades/conversion", middleware.PermissionRequired("academic.grade.manage"), gradeHandler.UpdateGradeConversion)

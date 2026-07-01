@@ -473,6 +473,9 @@ func (h *AcademicHandler) ImportGradeSource(c *gin.Context) {
 
 func (h *AcademicHandler) FinalizeGrade(c *gin.Context) {
 	gradeID := c.Param("grade_id")
+	if gradeID == "" {
+		gradeID = c.Param("id")
+	}
 	var req GradeFinalizeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
