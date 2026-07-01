@@ -2,13 +2,13 @@
 -- Run this after running migrations on reference_db
 
 -- 1. Seeding Religions
-INSERT INTO religions (id, name) VALUES
-('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'Islam'),
-('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'Kristen Protestan'),
-('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'Katolik'),
-('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04', 'Hindu'),
-('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a05', 'Buddha'),
-('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a06', 'Khonghucu')
+INSERT INTO religions (id, code, name) VALUES
+('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'ISLAM', 'Islam'),
+('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'PROTESTANT', 'Kristen Protestan'),
+('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'CATHOLIC', 'Katolik'),
+('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04', 'HINDU', 'Hindu'),
+('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a05', 'BUDDHA', 'Buddha'),
+('a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a06', 'CONFUCIANISM', 'Khonghucu')
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Seeding Countries
@@ -17,25 +17,25 @@ INSERT INTO countries (id, code, name) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Seeding Provinces (Indonesia)
-INSERT INTO provinces (id, country_id, name) VALUES
-('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'DKI Jakarta'),
-('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'Jawa Barat'),
-('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'Banten')
+INSERT INTO provinces (id, country_id, code, name) VALUES
+('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', '31', 'DKI Jakarta'),
+('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', '32', 'Jawa Barat'),
+('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', '36', 'Banten')
 ON CONFLICT (id) DO NOTHING;
 
 -- 4. Seeding Cities
-INSERT INTO cities (id, province_id, name) VALUES
-('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'Jakarta Selatan'),
-('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'Bandung'),
-('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'Tangerang')
+INSERT INTO cities (id, province_id, code, name) VALUES
+('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', '3174', 'Jakarta Selatan'),
+('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', '3273', 'Bandung'),
+('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', '3603', 'Tangerang')
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Seeding Study Programs
-INSERT INTO study_programs (id, code, name, degree, status, created_at, updated_at) VALUES
-('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'IF', 'Informatika', 'S1', 'ACTIVE', NOW(), NOW()),
-('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'SI', 'Sistem Informasi', 'S1', 'ACTIVE', NOW(), NOW()),
-('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'MN', 'Manajemen', 'S1', 'ACTIVE', NOW(), NOW()),
-('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04', 'IK', 'Ilmu Komunikasi', 'S1', 'ACTIVE', NOW(), NOW())
+INSERT INTO study_programs (id, code, name, degree_level, is_active, created_at, updated_at) VALUES
+('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'IF', 'Informatika', 'S1', TRUE, NOW(), NOW()),
+('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'SI', 'Sistem Informasi', 'S1', TRUE, NOW(), NOW()),
+('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'MN', 'Manajemen', 'S1', TRUE, NOW(), NOW()),
+('e1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04', 'IK', 'Ilmu Komunikasi', 'S1', TRUE, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. Seeding Status Codes (Managed Business State Machines)
@@ -51,10 +51,10 @@ INSERT INTO status_codes (id, module, code, name, description) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. Seeding Payment Components
-INSERT INTO payment_components (id, code, name, default_amount, is_active, created_at, updated_at) VALUES
-('71eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'pmb_reg', 'Uang Pendaftaran PMB', 250000.00, TRUE, NOW(), NOW()),
-('71eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'development_fee', 'Uang Gedung / Pengembangan', 2000000.00, TRUE, NOW(), NOW()),
-('71eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'tuition_sem', 'Uang Kuliah Semester (BPP)', 3000000.00, TRUE, NOW(), NOW())
+INSERT INTO payment_components (id, code, name, component_type, is_active, created_at, updated_at) VALUES
+('71eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'pmb_reg', 'Uang Pendaftaran PMB', 'REGISTRATION', TRUE, NOW(), NOW()),
+('71eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'development_fee', 'Uang Gedung / Pengembangan', 'DEVELOPMENT', TRUE, NOW(), NOW()),
+('71eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'tuition_sem', 'Uang Kuliah Semester (BPP)', 'TUITION', TRUE, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- 8. Seeding Payment Methods
@@ -65,7 +65,7 @@ INSERT INTO payment_methods (id, code, name, provider, is_active, created_at, up
 ON CONFLICT (id) DO NOTHING;
 
 -- 9. Seeding Document Types
-INSERT INTO document_types (id, code, name, is_mandatory, is_active, created_at, updated_at) VALUES
+INSERT INTO document_types (id, code, name, is_required, is_active, created_at, updated_at) VALUES
 ('91eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'ijazah_sma', 'Ijazah SMA / Sederajat', TRUE, TRUE, NOW(), NOW()),
 ('91eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'ktp', 'Kartu Tanda Penduduk (KTP)', TRUE, TRUE, NOW(), NOW()),
 ('91eebc99-9c0b-4ef8-bb6d-6bb9bd380a03', 'kk', 'Kartu Keluarga (KK)', FALSE, TRUE, NOW(), NOW())
