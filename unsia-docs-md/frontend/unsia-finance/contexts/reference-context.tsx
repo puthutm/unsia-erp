@@ -36,7 +36,8 @@ export interface PaymentComponent {
   id: string;
   code: string;
   name: string;
-  amount: number;
+  defaultAmount: number;
+  isActive: boolean;
 }
 
 export interface PaymentMethod {
