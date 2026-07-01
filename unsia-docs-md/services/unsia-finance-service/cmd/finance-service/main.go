@@ -76,6 +76,7 @@ func main() {
 
 	r := gin.New()
 
+	r.Use(sharedobservability.CORSMiddleware())
 	r.Use(sharedobservability.CorrelationIDMiddleware())
 	r.Use(sharedobservability.RequestLoggerMiddleware())
 	r.Use(sharedobservability.MetricsMiddleware())

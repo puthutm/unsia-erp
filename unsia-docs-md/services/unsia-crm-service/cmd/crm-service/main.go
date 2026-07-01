@@ -71,7 +71,8 @@ func main() {
 	// Setup Gin Engine
 	r := gin.New()
 
-	// Attach shared observability middlewares
+	// Attach shared CORS and observability middlewares
+	r.Use(sharedobservability.CORSMiddleware())
 	r.Use(sharedobservability.CorrelationIDMiddleware())
 	r.Use(sharedobservability.RequestLoggerMiddleware())
 	r.Use(sharedobservability.MetricsMiddleware())
