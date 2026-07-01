@@ -57,18 +57,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = getToken();
+      let token = getToken();
+
+      // Check query params for SSO token injection
+      if (typeof window !== "undefined") {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlToken = searchParams.get("token");
+        const urlRefreshToken = searchParams.get("refresh_token");
+
+        if (urlToken && urlRefreshToken) {
+          token = urlToken;
+          localStorage.setItem(STORAGE_KEYS.accessToken, urlToken);
+          localStorage.setItem(STORAGE_KEYS.refreshToken, urlRefreshToken);
+          document.cookie = `${STORAGE_KEYS.accessToken}=${urlToken}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `${STORAGE_KEYS.refreshToken}=${urlRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+          
+          // Clear query params from URL
+          const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          window.history.replaceState({ path: cleanUrl }, "", cleanUrl);
+        }
+      }
+
       if (token) {
         const userData = await fetchUserInfo(token);
         if (userData) {
           setUser(userData);
         } else {
-          localStorage.removeItem(STORAGE_KEYS.accessToken);
-          localStorage.removeItem(STORAGE_KEYS.refreshToken);
-          localStorage.removeItem(STORAGE_KEYS.user);
+          clearAuthStorage();
+          redirectToLogin();
         }
+      } else {
+        redirectToLogin();
       }
       setIsLoading(false);
+    };
+
+    const redirectToLogin = () => {
+      if (typeof window !== "undefined") {
+        const currentUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3010";
+        window.location.href = `${portalUrl}/login?redirect=${encodeURIComponent(currentUrl)}`;
+      }
+    };
+
+    const clearAuthStorage = () => {
+      localStorage.removeItem(STORAGE_KEYS.accessToken);
+      localStorage.removeItem(STORAGE_KEYS.refreshToken);
+      localStorage.removeItem(STORAGE_KEYS.user);
     };
 
     initAuth();

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { API_BASE_URLS, AUTH_ENDPOINTS, STORAGE_KEYS, type TokenResponse, type UserInfo } from "@/lib/constants";
+import { API_BASE_URLS, FRONTEND_URLS, AUTH_ENDPOINTS, STORAGE_KEYS, type TokenResponse, type UserInfo } from "@/lib/constants";
 
 interface User {
   id: string;
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const redirectToLogin = () => {
       if (typeof window !== "undefined") {
         const currentUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.location.href = `http://localhost:3000/login?redirect=${encodeURIComponent(currentUrl)}`;
+        window.location.href = `${FRONTEND_URLS.portal}/login?redirect=${encodeURIComponent(currentUrl)}`;
       }
     };
 
