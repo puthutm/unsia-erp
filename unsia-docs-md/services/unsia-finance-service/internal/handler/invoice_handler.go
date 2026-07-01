@@ -15,7 +15,6 @@ import (
 	"github.com/unsia-erp/unsia-finance-service/internal/domain"
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
 	"github.com/unsia-erp/unsia-finance-service/internal/service"
-	"gorm.io/gorm"
 )
 
 // CreateInvoice handles POST /api/v1/finance/invoices
