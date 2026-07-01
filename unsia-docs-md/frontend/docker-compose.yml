@@ -113,4 +113,5 @@ services:
 
 networks:
   unsia-network:
+    name: unsia-network
     external: true

@@ -369,6 +369,7 @@ services:
 
 networks:
   unsia-network:
+    name: unsia-network
     driver: bridge
 
 volumes:
