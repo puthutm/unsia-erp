@@ -72,7 +72,7 @@ export interface Agent {
   updatedAt: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_CRM_API || "http://localhost:8083";
+const API_BASE_URL = process.env.NEXT_PUBLIC_CRM_API || "http://localhost:8009";
 const STORAGE_KEY = "unsia_access_token";
 
 export function useCRM() {

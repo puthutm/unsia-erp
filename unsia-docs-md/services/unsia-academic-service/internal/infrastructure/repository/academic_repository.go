@@ -249,6 +249,12 @@ func (r *AcademicRepository) CreateCourse(co *domain.Course) error {
 	return r.db.Create(co).Error
 }
 
+func (r *AcademicRepository) GetCourses() ([]domain.Course, error) {
+	var courses []domain.Course
+	err := r.db.Find(&courses).Error
+	return courses, err
+}
+
 func (r *AcademicRepository) GetCourseByID(id string) (*domain.Course, error) {
 	var c domain.Course
 	err := r.db.Where("id = ?", id).First(&c).Error

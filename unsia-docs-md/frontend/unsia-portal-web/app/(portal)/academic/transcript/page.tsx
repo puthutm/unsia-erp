@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAcademic } from "@/hooks/use-academic";
 import { useAuth } from "@/contexts/auth-context";
 import { useReference } from "@/contexts/reference-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TranscriptPage() {
   const { isAuthenticated, user } = useAuth();
@@ -132,7 +133,7 @@ export default function TranscriptPage() {
         {/* Content area */}
         <div className="p-6">
           {isLoading ? (
-            <div className="text-center text-slate-500 py-12">Memuat data nilai...</div>
+            <Skeleton variant="table" rows={6} />
           ) : activeTab === "khs" ? (
             <div className="space-y-6">
               {/* Period Filter */}

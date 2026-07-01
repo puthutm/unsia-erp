@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -91,7 +92,7 @@ func (h *FinanceHandler) GetCashMutations(c *gin.Context) {
 		return
 	}
 
-	filter := repository.CashMutationFilter{}
+	filter := repository.CashTransactionFilter{}
 
 	page := 1
 	limit := 20
@@ -106,7 +107,7 @@ func (h *FinanceHandler) GetCashMutations(c *gin.Context) {
 
 	result, err := h.repo.GetCashMutationsByAccountID(id, filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambilmutations").WithContext(c))
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil mutations").WithContext(c))
 		return
 	}
 
@@ -135,24 +136,23 @@ func (h *FinanceHandler) CreateCashMutation(c *gin.Context) {
 		return
 	}
 
-	mutation := domain.CashMutation{
-		CashAccountID: id,
-		MutationType:  req.MutationType,
-		Amount:       req.Amount,
-		MutationDate:  parsed,
-		Description:  req.Description,
-		Reference:   req.Reference,
+	mutation := domain.CashTransaction{
+		CashAccountID:   id,
+		TransactionType: strings.ToUpper(req.MutationType),
+		Amount:          req.Amount,
+		TransactionAt:   parsed,
+		Description:     req.Description,
 	}
 
 	if err := h.repo.CreateCashMutation(&mutation); err != nil {
-		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menyimpan mutation").WithContext(c))
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menyimpan transaction").WithContext(c))
 		return
 	}
 
 	sharedaudit.Log(c, sharedaudit.AuditEntry{
-		Action:       "finance.cash_mutation.create",
+		Action:       "finance.cash_transaction.create",
 		Module:       "finance",
-		ResourceType: "cash_mutation",
+		ResourceType: "cash_transaction",
 		ResourceID:   mutation.ID,
 		NewValue:     mutation,
 	})

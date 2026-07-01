@@ -60,9 +60,13 @@ async function loginUser(email: string, password: string) {
   const result = await response.json();
   const { access_token, refresh_token } = result.data;
 
-  // Store tokens
+  // Store tokens in localStorage
   localStorage.setItem(STORAGE_KEYS.accessToken, access_token);
   localStorage.setItem(STORAGE_KEYS.refreshToken, refresh_token);
+
+  // Store tokens in cookies for middleware
+  document.cookie = `${STORAGE_KEYS.accessToken}=${access_token}; path=/; max-age=604800; SameSite=Lax`;
+  document.cookie = `${STORAGE_KEYS.refreshToken}=${refresh_token}; path=/; max-age=604800; SameSite=Lax`;
 
   // Fetch user info
   const userResponse = await fetch(`${API_BASE_URLS.auth}${AUTH_ENDPOINTS.me}`, {
@@ -94,8 +98,16 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await loginUser(email, password);
-      router.push("/dashboard");
+      const data = await loginUser(email, password);
+      
+      // Handle SSO redirect if present in query params
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectUrl = searchParams.get("redirect");
+      if (redirectUrl) {
+        window.location.href = `${redirectUrl}?token=${data.access_token}&refresh_token=${data.refresh_token}`;
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Login failed";
       setError(message);

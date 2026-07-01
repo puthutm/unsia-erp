@@ -467,3 +467,75 @@ func (h *LMSHandler) ListAttendance(c *gin.Context) {
 	c.JSON(http.StatusOK, sharederr.Success(list).WithContext(c))
 }
 
+func (h *LMSHandler) ListAllSessions(c *gin.Context) {
+	classID := c.Query("course_id")
+	
+	var list []domain.Session
+	var err error
+	
+	if classID != "" {
+		var class domain.Class
+		if err := h.db.Where("id = ? OR academic_class_id = ?", classID, classID).First(&class).Error; err == nil {
+			list, err = h.repo.ListSessionsByClassID(class.ID)
+		} else {
+			list = []domain.Session{}
+		}
+	} else {
+		err = h.db.Order("session_number asc").Find(&list).Error
+	}
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data sesi").WithContext(c))
+		return
+	}
+	
+	// Map to frontend expected model structure
+	type SessionResponse struct {
+		ID              string `json:"id"`
+		CourseID        string `json:"courseId"`
+		CourseName      string `json:"courseName"`
+		Title           string `json:"title"`
+		Description     string `json:"description"`
+		ScheduledAt     string `json:"scheduledAt"`
+		Duration        int    `json:"duration"`
+		Status          string `json:"status"`
+		MaterialCount   int    `json:"materialCount"`
+		AssignmentCount int    `json:"assignmentCount"`
+	}
+	
+	responses := make([]SessionResponse, 0, len(list))
+	for _, session := range list {
+		// Get counts
+		var matCount, assignCount int64
+		h.db.Model(&domain.Material{}).Where("session_id = ?", session.ID).Count(&matCount)
+		h.db.Model(&domain.Assignment{}).Where("session_id = ?", session.ID).Count(&assignCount)
+		
+		scheduledAt := ""
+		if session.SessionDate != nil {
+			scheduledAt = session.SessionDate.Format("2006-01-02T15:04:05Z")
+		} else {
+			scheduledAt = time.Now().Format("2006-01-02T15:04:05Z")
+		}
+		
+		status := "upcoming"
+		if session.Status == "active" {
+			status = "ongoing"
+		}
+		
+		responses = append(responses, SessionResponse{
+			ID:              session.ID,
+			CourseID:        session.LmsClassID,
+			CourseName:      "Kelas " + session.LmsClassID,
+			Title:           session.Title,
+			Description:     session.Title,
+			ScheduledAt:     scheduledAt,
+			Duration:        90, // Default duration in minutes
+			Status:          status,
+			MaterialCount:   int(matCount),
+			AssignmentCount: int(assignCount),
+		})
+	}
+	
+	c.JSON(http.StatusOK, sharederr.Success(responses).WithContext(c))
+}
+

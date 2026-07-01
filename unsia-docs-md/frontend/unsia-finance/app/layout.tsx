@@ -1,22 +1,29 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+import "./globals.css";
+import { AuthProvider } from "@/contexts/auth-context";
+import { ReferenceProvider } from "@/contexts/reference-context";
+import PortalLayout from "@/components/layout/PortalLayout";
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'UNSIA Finance Portal',
-  description: 'Finance Management System',
-}
+export const metadata = {
+  title: "UNSIA Finance Portal",
+  description: "Finance Management System",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="id">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <AuthProvider>
+          <ReferenceProvider>
+            <PortalLayout>
+              {children}
+            </PortalLayout>
+          </ReferenceProvider>
+        </AuthProvider>
+      </body>
     </html>
-  )
+  );
 }

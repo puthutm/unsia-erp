@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAcademic } from "@/hooks/use-academic";
 import { useAuth } from "@/contexts/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GradeEntryPage() {
   const { isAuthenticated, user } = useAuth();
@@ -115,7 +116,9 @@ export default function GradeEntryPage() {
       {/* Grades List Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="text-center text-slate-500 py-12">Memuat nilai mahasiswa...</div>
+          <div className="p-4">
+            <Skeleton variant="table" rows={5} />
+          </div>
         ) : grades.length === 0 ? (
           <div className="text-center text-slate-500 py-12">
             Tidak ada data nilai atau kelas terdaftar untuk Student ID ini.

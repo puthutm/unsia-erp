@@ -84,6 +84,7 @@ func main() {
 		protected.GET("/v1/lms/enrollments", lmsHandler.ListEnrollments)
 
 		// Sessions & Materials
+		protected.GET("/v1/lms/sessions", lmsHandler.ListAllSessions)
 		protected.POST("/v1/lms/classes/:id/sessions", lmsHandler.CreateSession)
 		protected.GET("/v1/lms/classes/:id/sessions", lmsHandler.ListSessions)
 		protected.POST("/v1/lms/sessions/:id/materials", lmsHandler.CreateMaterial)
@@ -100,7 +101,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8008"
+		port = "8006"
 	}
 
 	sharedobservability.Logger.Info().Msgf("LMS Service started on port %s", port)

@@ -31,7 +31,7 @@ export interface LeaveRequest {
   status: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_HRIS_API || "http://localhost:8086";
+const API_BASE_URL = process.env.NEXT_PUBLIC_HRIS_API || "http://localhost:8008";
 const STORAGE_KEY = "unsia_access_token";
 
 export function useHRIS() {

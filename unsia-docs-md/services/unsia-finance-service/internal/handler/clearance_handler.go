@@ -3,15 +3,25 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	sharedaudit "github.com/unsia-erp/shared-audit"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
+	sharedevent "github.com/unsia-erp/shared-event"
 	"github.com/unsia-erp/unsia-finance-service/internal/domain"
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
+	"github.com/unsia-erp/unsia-finance-service/internal/state_machine"
+	"gorm.io/gorm"
 )
 
-
+type ClearanceCreateRequest struct {
+	StudentID        string  `json:"student_id" binding:"required"`
+	AcademicPeriodID string  `json:"academic_period_id" binding:"required"`
+	ServiceScope     string  `json:"service_scope" binding:"required,oneof=registration krs graduation"`
+	Status           string  `json:"status" binding:"required,oneof=BLOCKED CONDITIONAL CLEARED REVOKED"`
+	Reason           *string `json:"reason"`
+}
 
 // CheckClearance handles GET /api/v1/finance/clearances/check
 func (h *FinanceHandler) CheckClearance(c *gin.Context) {
@@ -20,7 +30,11 @@ func (h *FinanceHandler) CheckClearance(c *gin.Context) {
 	scope := c.Query("service_scope")
 
 	if studentID == "" {
-		c.JSON(http.StatusBadRequest, sharederr.Error("BAD_REQUEST", "student_id is required").WithContext(c))
+		c.JSON(http.StatusNotFound, sharederr.Error("STUDENT_NOT_FOUND", "student_id is required").WithContext(c))
+		return
+	}
+	if periodID == "" {
+		c.JSON(http.StatusUnprocessableEntity, sharederr.Error("NO_ACTIVE_ACADEMIC_PERIOD", "academic_period_id is required").WithContext(c))
 		return
 	}
 	if scope == "" {
@@ -36,7 +50,7 @@ func (h *FinanceHandler) CheckClearance(c *gin.Context) {
 		return
 	}
 
-	status := "cleared"
+	status := "CLEARED"
 	reasons := []string{}
 
 	if cl != nil {
@@ -44,15 +58,23 @@ func (h *FinanceHandler) CheckClearance(c *gin.Context) {
 		if cl.Reason != nil && *cl.Reason != "" {
 			reasons = append(reasons, *cl.Reason)
 		}
+
+		if status == "BLOCKED" {
+			var disp domain.ClearanceDispensation
+			errDisp := h.db.Where("student_clearance_id = ? AND status = 'approved' AND valid_until > ?", cl.ID, time.Now()).First(&disp).Error
+			if errDisp == nil {
+				status = "CONDITIONAL"
+			}
+		}
 	} else {
 		// If no clearance record exists, let's verify if they have unpaid invoices for this period
 		var unpaidCount int64
 		h.db.Model(&domain.Invoice{}).
-			Where("student_id = ? AND academic_period_id = ? AND status != 'paid'", studentID, periodID).
+			Where("student_id = ? AND academic_period_id = ? AND status != 'PAID'", studentID, periodID).
 			Count(&unpaidCount)
 
 		if unpaidCount > 0 {
-			status = "blocked"
+			status = "BLOCKED"
 			reasons = append(reasons, "Mahasiswa memiliki tagihan aktif yang belum lunas pada periode ini.")
 		}
 	}
@@ -64,6 +86,151 @@ func (h *FinanceHandler) CheckClearance(c *gin.Context) {
 		ClearanceStatus:  status,
 		BlockReasons:     reasons,
 	}).WithContext(c))
+}
+
+// CreateOrUpdateClearance handles POST /api/v1/finance/clearances
+func (h *FinanceHandler) CreateOrUpdateClearance(c *gin.Context) {
+	var req ClearanceCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	if req.Status == "REVOKED" {
+		if req.Reason == nil || *req.Reason == "" {
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("REASON_REQUIRED", "Reason is required when revoking clearance").WithContext(c))
+			return
+		}
+	}
+
+	correlationID, _ := c.Get("x-correlation-id")
+	cid, _ := correlationID.(string)
+
+	var existing domain.StudentClearance
+	err := h.db.Where("student_id = ? AND academic_period_id = ? AND service_scope = ?", req.StudentID, req.AcademicPeriodID, req.ServiceScope).First(&existing).Error
+
+	now := time.Now()
+	statusChanged := false
+	var oldStatus string
+
+	if err == gorm.ErrRecordNotFound {
+		statusChanged = true
+		cl := domain.StudentClearance{
+			StudentID:        req.StudentID,
+			AcademicPeriodID: &req.AcademicPeriodID,
+			ServiceScope:     req.ServiceScope,
+			Status:           req.Status,
+			Reason:           req.Reason,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+		}
+
+		errSave := h.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&cl).Error; err != nil {
+				return err
+			}
+			envelope := sharedevent.EventEnvelope{
+				EventName:        "finance.clearance_changed",
+				EventVersion:     "v1",
+				PublisherService: "finance-service",
+				AggregateType:    "clearance",
+				AggregateID:      cl.ID,
+				CorrelationID:    cid,
+				Payload: map[string]interface{}{
+					"student_id":         cl.StudentID,
+					"academic_period_id": cl.AcademicPeriodID,
+					"service_scope":      cl.ServiceScope,
+					"previous_status":    "",
+					"new_status":         cl.Status,
+					"changed_at":         now,
+				},
+			}
+			conn := tx.Statement.ConnPool
+			_, err := sharedevent.WriteOutbox(c.Request.Context(), conn, envelope, "INTEGRATION_EVENT")
+			return err
+		})
+
+		if errSave != nil {
+			c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menyimpan clearance").WithContext(c))
+			return
+		}
+
+		sharedaudit.Log(c, sharedaudit.AuditEntry{
+			Action:       "finance.clearance.create",
+			Module:       "finance",
+			ResourceType: "clearance",
+			ResourceID:   cl.ID,
+			NewValue:     cl,
+		})
+
+		c.JSON(http.StatusCreated, sharederr.Success(cl).WithContext(c))
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", err.Error()).WithContext(c))
+		return
+	}
+
+	oldStatus = existing.Status
+	if oldStatus != req.Status {
+		statusChanged = true
+	}
+
+	if statusChanged {
+		sm := state_machine.NewClearanceStateMachine()
+		if errSM := sm.ValidateTransitionWithReason(state_machine.ClearanceStatus(oldStatus), state_machine.ClearanceStatus(req.Status), req.Reason); errSM != nil {
+			c.JSON(http.StatusConflict, sharederr.Error("INVALID_CLEARANCE_STATUS_TRANSITION", errSM.Error()).WithContext(c))
+			return
+		}
+	}
+
+	existing.Status = req.Status
+	existing.Reason = req.Reason
+	existing.UpdatedAt = now
+
+	errUpdate := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&existing).Error; err != nil {
+			return err
+		}
+
+		if statusChanged {
+			envelope := sharedevent.EventEnvelope{
+				EventName:        "finance.clearance_changed",
+				EventVersion:     "v1",
+				PublisherService: "finance-service",
+				AggregateType:    "clearance",
+				AggregateID:      existing.ID,
+				CorrelationID:    cid,
+				Payload: map[string]interface{}{
+					"student_id":         existing.StudentID,
+					"academic_period_id": existing.AcademicPeriodID,
+					"service_scope":      existing.ServiceScope,
+					"previous_status":    oldStatus,
+					"new_status":         existing.Status,
+					"changed_at":         now,
+				},
+			}
+			conn := tx.Statement.ConnPool
+			_, err := sharedevent.WriteOutbox(c.Request.Context(), conn, envelope, "INTEGRATION_EVENT")
+			return err
+		}
+		return nil
+	})
+
+	if errUpdate != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal memperbarui clearance").WithContext(c))
+		return
+	}
+
+	sharedaudit.Log(c, sharedaudit.AuditEntry{
+		Action:       "finance.clearance.update",
+		Module:       "finance",
+		ResourceType: "clearance",
+		ResourceID:   existing.ID,
+		OldValue:     oldStatus,
+		NewValue:     existing,
+	})
+
+	c.JSON(http.StatusOK, sharederr.Success(existing).WithContext(c))
 }
 
 // CreateClearancePolicy handles POST /api/v1/finance/clearance-policies

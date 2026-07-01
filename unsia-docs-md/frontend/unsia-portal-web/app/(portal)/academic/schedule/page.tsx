@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAcademic } from "@/hooks/use-academic";
 import { useAuth } from "@/contexts/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SchedulePage() {
   const { isAuthenticated } = useAuth();
@@ -111,7 +112,10 @@ export default function SchedulePage() {
                 {dayName}
               </h3>
               {isLoading ? (
-                <div className="text-[10px] text-slate-400 text-center py-4">Memuat...</div>
+                <div className="space-y-2 py-4">
+                  <Skeleton variant="text" className="h-8" />
+                  <Skeleton variant="text" className="h-8" />
+                </div>
               ) : daySchedules.length === 0 ? (
                 <div className="text-xs text-slate-400 text-center py-12 my-auto">Tidak ada kelas.</div>
               ) : (
@@ -139,7 +143,9 @@ export default function SchedulePage() {
           <h2 className="text-base font-bold text-slate-900">Daftar Lengkap Jadwal Kuliah</h2>
         </div>
         {isLoading ? (
-          <div className="text-center text-slate-500 py-12">Memuat daftar jadwal...</div>
+          <div className="p-4">
+            <Skeleton variant="table" rows={6} />
+          </div>
         ) : schedules.length === 0 ? (
           <div className="text-center text-slate-500 py-12">Belum ada jadwal kuliah yang terpetakan.</div>
         ) : (

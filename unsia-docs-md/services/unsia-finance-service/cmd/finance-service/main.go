@@ -90,25 +90,29 @@ func main() {
 
 	// Initialize services
 	invoiceService := service.NewInvoiceService(db)
+	paymentGatewayService := service.NewPaymentGatewayService(db)
 	financeHandler := handler.NewFinanceHandler(db)
 	financeHandler.InvoiceService = invoiceService
+	financeHandler.PaymentGatewayService = paymentGatewayService
 
 	// Auth middleware - use NewAuthMiddleware (new implementation)
 	jwtMiddleware := middleware.NewAuthMiddleware(jwksURL)
+
+	// Public Webhook callback (no token required, uses signature verification)
+	r.POST("/api/v1/finance/payment-callbacks/:provider", financeHandler.ReceivePaymentCallback)
 
 	// Protected routes
 	protected := r.Group("/api", jwtMiddleware.JWTAuth())
 	{
 		// Invoices
 		protected.POST("/v1/finance/invoices", financeHandler.CreateInvoice)
+		protected.POST("/v1/finance/invoices/:id/issue", middleware.RequirePermission("finance.invoice.manage"), financeHandler.IssueInvoice)
+		protected.POST("/v1/finance/invoices/:id/cancel", middleware.RequirePermission("finance.invoice.manage"), financeHandler.CancelInvoice)
 		protected.GET("/v1/finance/invoices", financeHandler.GetInvoices)
 		protected.GET("/v1/finance/invoices/:id", financeHandler.GetInvoice)
 
 		// Payments
 		protected.GET("/v1/finance/payments", financeHandler.GetPayments)
-
-		// Webhook callback (no permission required - uses provider signature)
-		protected.POST("/v1/finance/payment-callbacks/:provider", financeHandler.ReceivePaymentCallback)
 
 		// Verification
 		protected.POST("/v1/finance/payment-verifications", middleware.RequirePermission("finance.payment.verify"), financeHandler.VerifyManualPayment)
@@ -116,11 +120,12 @@ func main() {
 		// Clearances/List
 		protected.GET("/v1/finance/clearances", financeHandler.GetClearances)
 		protected.GET("/v1/finance/clearances/check", financeHandler.CheckClearance)
+		protected.POST("/v1/finance/clearances", middleware.RequirePermission("finance.clearance.manage"), financeHandler.CreateOrUpdateClearance)
 		protected.POST("/v1/finance/clearance-policies", middleware.RequirePermission("finance.clearance.manage"), financeHandler.CreateClearancePolicy)
 		protected.PUT("/v1/finance/clearance-policies/:id", middleware.RequirePermission("finance.clearance-policy.manage"), financeHandler.UpdateClearancePolicy)
 
 // Installment/dispensation requests
-		protected.POST("/v1/finance/installment-requests", middleware.RequirePermission("finance.installment.request"), financeHandler.CreateInstallmentRequest)
+		protected.POST("/v1/finance/invoices/:id/request-installment", middleware.RequirePermission("finance.installment.request"), financeHandler.CreateInstallmentRequest)
 		protected.PATCH("/v1/finance/installment-requests/:id/approve", middleware.RequirePermission("finance.installment.approve"), financeHandler.ApproveInstallmentRequest)
 
 		// Scholarships
@@ -137,7 +142,9 @@ func main() {
 
 // Journals & Buku Besar
 		protected.GET("/v1/finance/journals", financeHandler.GetJournals)
+		protected.POST("/v1/finance/journals", middleware.RequirePermission("finance.journal.manage"), financeHandler.CreateJournal)
 		protected.GET("/v1/finance/journals/:id", financeHandler.GetJournalDetail)
+		protected.GET("/v1/finance/coa-accounts", financeHandler.GetCoaAccounts)
 
 		// Budgets (RAB)
 		protected.GET("/v1/finance/budgets", financeHandler.GetBudgets)
@@ -159,6 +166,7 @@ func main() {
 
 		// Payroll Runs
 		protected.GET("/v1/finance/payroll-runs", financeHandler.GetPayrollRuns)
+		protected.POST("/v1/finance/payroll-runs", middleware.RequirePermission("finance.payroll.manage"), financeHandler.CreatePayrollRun)
 		protected.POST("/v1/finance/payroll-runs/:id/approve", middleware.RequirePermission("finance.payroll.approve"), financeHandler.ApprovePayrollRun)
 
 		// Disbursements (CRM Commission)

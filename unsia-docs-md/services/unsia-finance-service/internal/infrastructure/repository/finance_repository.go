@@ -555,19 +555,19 @@ func (r *FinanceRepository) UpdateCashAccount(id string, updates map[string]inte
 	return r.db.Model(&domain.CashAccount{}).Where("id = ?", id).Updates(updates).Error
 }
 
-// Cash Mutations
-func (r *FinanceRepository) CreateCashMutation(c *domain.CashMutation) error {
+// Cash Transactions
+func (r *FinanceRepository) CreateCashMutation(c *domain.CashTransaction) error {
 	return r.db.Create(c).Error
 }
 
-// CashMutationFilter for filtering cash mutations
-type CashMutationFilter struct {
+// CashTransactionFilter for filtering cash transactions
+type CashTransactionFilter struct {
 	Page  int
 	Limit int
 }
 
-func (r *FinanceRepository) GetCashMutationsByAccountID(accountID string, filter CashMutationFilter) (*PaginatedResult, error) {
-	query := r.db.Model(&domain.CashMutation{}).Where("cash_account_id = ?", accountID)
+func (r *FinanceRepository) GetCashMutationsByAccountID(accountID string, filter CashTransactionFilter) (*PaginatedResult, error) {
+	query := r.db.Model(&domain.CashTransaction{}).Where("cash_account_id = ?", accountID)
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
@@ -584,8 +584,8 @@ func (r *FinanceRepository) GetCashMutationsByAccountID(accountID string, filter
 	}
 	offset := (page - 1) * limit
 
-	var mutations []domain.CashMutation
-	err := query.Order("mutation_date DESC").Offset(offset).Limit(limit).Find(&mutations).Error
+	var mutations []domain.CashTransaction
+	err := query.Order("transaction_at DESC").Offset(offset).Limit(limit).Find(&mutations).Error
 	if err != nil {
 		return nil, err
 	}
@@ -755,18 +755,18 @@ func (r *FinanceRepository) GetBudgets(filter BudgetFilter) (*PaginatedResult, e
 	}, nil
 }
 
-func (r *FinanceRepository) GetBudgetItems(budgetID string) ([]domain.BudgetItem, error) {
-	var items []domain.BudgetItem
+func (r *FinanceRepository) GetBudgetItems(budgetID string) ([]domain.BudgetLine, error) {
+	var items []domain.BudgetLine
 	err := r.db.Where("budget_id = ?", budgetID).Find(&items).Error
 	return items, err
 }
 
-func (r *FinanceRepository) CreateBudgetItem(bi *domain.BudgetItem) error {
+func (r *FinanceRepository) CreateBudgetItem(bi *domain.BudgetLine) error {
 	return r.db.Create(bi).Error
 }
 
 func (r *FinanceRepository) UpdateBudgetItem(id string, realization float64) error {
-	return r.db.Model(&domain.BudgetItem{}).Where("id = ?", id).Update("realization", realization).Error
+	return r.db.Model(&domain.BudgetLine{}).Where("id = ?", id).Update("realized_amount", realization).Error
 }
 
 // ============ Vendors ============
@@ -1088,13 +1088,13 @@ func (r *FinanceRepository) UpdatePayrollRunStatus(id string, status string) err
 	return r.db.Model(&domain.PayrollRun{}).Where("id = ?", id).Updates(updates).Error
 }
 
-func (r *FinanceRepository) CreatePayrollRunItem(pri *domain.PayrollRunItem) error {
+func (r *FinanceRepository) CreatePayrollRunItem(pri *domain.PayrollItem) error {
 	return r.db.Create(pri).Error
 }
 
-func (r *FinanceRepository) GetPayrollRunItems(runID string) ([]domain.PayrollRunItem, error) {
-	var items []domain.PayrollRunItem
-	err := r.db.Where("run_id = ?", runID).Find(&items).Error
+func (r *FinanceRepository) GetPayrollRunItems(runID string) ([]domain.PayrollItem, error) {
+	var items []domain.PayrollItem
+	err := r.db.Where("payroll_run_id = ?", runID).Find(&items).Error
 	return items, err
 }
 
@@ -1234,11 +1234,11 @@ func (r *FinanceRepository) GenerateIncomeStatementReport(startDate, endDate tim
 func (r *FinanceRepository) GenerateCashFlowReport(startDate, endDate time.Time) (*domain.CashFlowReport, error) {
 	// Calculate cash in (debits to cash accounts)
 	var cashIn float64
-	r.db.Model(&domain.CashMutation{}).Where("mutation_type = ? AND mutation_date BETWEEN ? AND ?", "debit", startDate, endDate).Select("COALESCE(SUM(amount), 0)").Scan(&cashIn)
+	r.db.Model(&domain.CashTransaction{}).Where("transaction_type = ? AND transaction_at BETWEEN ? AND ?", "DEBIT", startDate, endDate).Select("COALESCE(SUM(amount), 0)").Scan(&cashIn)
 
 	// Calculate cash out (credits from cash accounts)
 	var cashOut float64
-	r.db.Model(&domain.CashMutation{}).Where("mutation_type = ? AND mutation_date BETWEEN ? AND ?", "credit", startDate, endDate).Select("COALESCE(SUM(amount), 0)").Scan(&cashOut)
+	r.db.Model(&domain.CashTransaction{}).Where("transaction_type = ? AND transaction_at BETWEEN ? AND ?", "CREDIT", startDate, endDate).Select("COALESCE(SUM(amount), 0)").Scan(&cashOut)
 
 	netChange := cashIn - cashOut
 
@@ -1255,4 +1255,53 @@ func (r *FinanceRepository) GenerateCashFlowReport(startDate, endDate time.Time)
 
 	err := r.db.Create(report).Error
 	return report, err
+}
+
+type CoaAccountFilter struct {
+	IsActive *bool
+	Search   string
+	Page     int
+	Limit    int
+}
+
+func (r *FinanceRepository) GetCoaAccounts(filter CoaAccountFilter) (*PaginatedResult, error) {
+	query := r.db.Model(&domain.CoaAccount{})
+
+	if filter.IsActive != nil {
+		query = query.Where("is_active = ?", *filter.IsActive)
+	}
+	if filter.Search != "" {
+		query = query.Where("account_code ILIKE ? OR account_name ILIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	limit := filter.Limit
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	offset := (page - 1) * limit
+
+	var accounts []domain.CoaAccount
+	err := query.Order("account_code ASC").Offset(offset).Limit(limit).Find(&accounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
+	return &PaginatedResult{
+		Data:       accounts,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}, nil
 }

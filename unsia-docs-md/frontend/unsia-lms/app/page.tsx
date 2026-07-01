@@ -41,13 +41,13 @@ export default function LMSPage() {
   }, [isAuthenticated]);
 
   const fetchLMSData = async () => {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("unsia_access_token");
     if (!token) return;
 
     setLoading(true);
     try {
       // Fetch courses
-      const coursesRes = await fetch("http://localhost:8081/api/v1/lms/courses", {
+      const coursesRes = await fetch("http://localhost:8006/api/v1/lms/courses", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (coursesRes.ok) {
@@ -56,7 +56,7 @@ export default function LMSPage() {
       }
 
       // Fetch sessions
-      const sessionsRes = await fetch("http://localhost:8081/api/v1/lms/sessions", {
+      const sessionsRes = await fetch("http://localhost:8006/api/v1/lms/sessions", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (sessionsRes.ok) {

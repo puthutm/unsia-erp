@@ -18,7 +18,7 @@ export interface Participant {
   status: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_ASSESSMENT_API || "http://localhost:8087";
+const API_BASE_URL = process.env.NEXT_PUBLIC_ASSESSMENT_API || "http://localhost:8007";
 const STORAGE_KEY = "unsia_access_token";
 
 export function useAssessment() {

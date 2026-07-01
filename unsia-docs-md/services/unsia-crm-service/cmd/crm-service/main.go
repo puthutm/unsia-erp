@@ -112,7 +112,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8003"
+		port = "8009"
 	}
 
 	sharedobservability.Logger.Info().Msgf("CRM Service started on port %s", port)

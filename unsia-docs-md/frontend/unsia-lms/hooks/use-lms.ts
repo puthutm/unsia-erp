@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 
-const LMS_API_BASE_URL = "http://localhost:8081/api/v1/lms";
+const LMS_API_BASE_URL = "http://localhost:8006/api/v1/lms";
 
 export interface Course {
   id: string;
@@ -77,7 +77,7 @@ export function useLMS() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getToken = () => localStorage.getItem("accessToken");
+  const getToken = () => localStorage.getItem("unsia_access_token");
 
   // Course hooks
   const fetchCourses = useCallback(async () => {

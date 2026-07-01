@@ -13,8 +13,10 @@ type Invoice struct {
 	AcademicPeriodID *string       `gorm:"column:academic_period_id"`   // external_ref: ref.academic_periods.id
 	TotalAmount      float64       `gorm:"column:total_amount;default:0.00;not null"`
 	PaidAmount       float64       `gorm:"column:paid_amount;default:0.00;not null"`
-	Status           string        `gorm:"column:status;default:'unpaid';not null"` // unpaid, partially_paid, paid, cancelled
+	Status           string        `gorm:"column:status;default:'DRAFT';not null"` // DRAFT, ISSUED, PARTIALLY_PAID, PAID, CANCELLED, EXPIRED
 	DueDate          *time.Time    `gorm:"column:due_date"`
+	SourceModule     *string       `gorm:"column:source_module"`
+	SourceRefID      *string       `gorm:"column:source_ref_id"`
 	CreatedAt        time.Time     `gorm:"column:created_at"`
 	UpdatedAt        time.Time     `gorm:"column:updated_at"`
 	Items            []InvoiceItem `gorm:"foreignKey:InvoiceID;references:ID"`
@@ -45,7 +47,7 @@ type Payment struct {
 	PaymentMethodID   *string    `gorm:"column:payment_method_id"` // external_ref: ref.payment_methods.id
 	PaymentNumber     *string    `gorm:"column:payment_number;unique"`
 	Amount            float64    `gorm:"column:amount;default:0.00;not null"`
-	PaymentStatus     string     `gorm:"column:payment_status;default:'pending';not null"` // pending, success, failed, expired
+	PaymentStatus     string     `gorm:"column:payment_status;default:'RECEIVED';not null"` // RECEIVED, VERIFIED, POSTED, FAILED, REVERSED
 	PaidAt            *time.Time `gorm:"column:paid_at"`
 	ExternalReference *string    `gorm:"column:external_reference"`
 	IdempotencyKey    *string    `gorm:"column:idempotency_key;unique"`
@@ -93,7 +95,7 @@ type StudentClearance struct {
 	StudentID       string     `gorm:"column:student_id;not null"` // external_ref: academic.students.id
 	AcademicPeriodID *string    `gorm:"column:academic_period_id"`  // external_ref: ref.academic_periods.id
 	ServiceScope    string     `gorm:"column:service_scope;not null"` // registration, krs, graduation
-	Status          string     `gorm:"column:status;default:'cleared';not null"` // cleared, blocked
+	Status          string     `gorm:"column:status;default:'BLOCKED';not null"` // BLOCKED, CONDITIONAL, CLEARED, REVOKED
 	Reason          *string    `gorm:"column:reason"`
 	ValidUntil      *time.Time `gorm:"column:valid_until"`
 	UpdatedBy       *string    `gorm:"column:updated_by"` // external_ref: core.users.id
@@ -236,17 +238,14 @@ func (IdempotencyKey) TableName() string {
 // Scholarship represents a scholarship/discount for students
 type Scholarship struct {
 	ID              string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
-	Code            string     `gorm:"column:code;unique;not null"`
-	Name            string     `gorm:"column:name;not null"`
-	Description     *string    `gorm:"column:description"`
-	DiscountType    string     `gorm:"column:discount_type;not null"` // percentage, fixed
-	DiscountValue  float64    `gorm:"column:discount_value;default:0;not null"`
-	MaxAmount      *float64   `gorm:"column:max_amount"`
-	StartDate      *time.Time `gorm:"column:start_date"`
-	EndDate        *time.Time `gorm:"column:end_date"`
-	IsActive       bool       `gorm:"column:is_active;default:true;not null"`
-	CreatedAt      time.Time  `gorm:"column:created_at"`
-	UpdatedAt      time.Time  `gorm:"column:updated_at"`
+	StudentID       string     `gorm:"column:student_id;not null"` // external_ref: academic.students.id
+	ScholarshipType string     `gorm:"column:scholarship_type"`
+	Amount          float64    `gorm:"column:amount;default:0.00;not null"`
+	Status          string     `gorm:"column:status;default:'PENDING_APPROVAL';not null"` // PENDING_APPROVAL, APPROVED, etc
+	ApprovedBy      *string    `gorm:"column:approved_by"` // external_ref: core.users.id
+	ApprovedAt      *time.Time `gorm:"column:approved_at"`
+	CreatedAt       time.Time  `gorm:"column:created_at"`
+	UpdatedAt       time.Time  `gorm:"column:updated_at"`
 }
 
 func (Scholarship) TableName() string {
@@ -270,21 +269,20 @@ func (CashAccount) TableName() string {
 	return "cash_accounts"
 }
 
-// CashMutation represents cash/bank mutations (deposits, withdrawals)
-type CashMutation struct {
-	ID            string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
-	CashAccountID string     `gorm:"column:cash_account_id;not nil"`
-	MutationDate  time.Time `gorm:"column:mutation_date;type:date;not null"`
-	MutationType  string    `gorm:"column:mutation_type;not null"` // debit, credit
-	Amount       float64    `gorm:"column:amount;default:0;not null"`
-	Description  string    `gorm:"column:description"`
-	Reference    *string    `gorm:"column:reference"`
-	CreatedBy    *string    `gorm:"column:created_by"`
-	CreatedAt    time.Time  `gorm:"column:created_at"`
+// CashTransaction represents cash/bank mutations (deposits, withdrawals)
+type CashTransaction struct {
+	ID              string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	CashAccountID   string     `gorm:"column:cash_account_id;not null"`
+	TransactionType string     `gorm:"column:transaction_type;not null"` // DEBIT, CREDIT
+	SourceType      *string    `gorm:"column:source_type"`
+	SourceID        *string    `gorm:"column:source_id"`
+	Amount          float64    `gorm:"column:amount;default:0;not null"`
+	Description     string     `gorm:"column:description"`
+	TransactionAt   time.Time  `gorm:"column:transaction_at;default:now()"`
 }
 
-func (CashMutation) TableName() string {
-	return "cash_mutations"
+func (CashTransaction) TableName() string {
+	return "cash_transactions"
 }
 
 // Budget represents budget for Rencana Anggaran Biaya (RAB)
@@ -307,18 +305,18 @@ func (Budget) TableName() string {
 	return "budgets"
 }
 
-// BudgetItem represents individual budget line items
-type BudgetItem struct {
-	ID          string   `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
-	BudgetID    string   `gorm:"column:budget_id;not null"`
-	CoaAccountID *string  `gorm:"column:coa_account_id"`
-	Description string   `gorm:"column:description"`
-	BudgetAmount float64  `gorm:"column:budget_amount;default:0;not null"`
-	Realization float64  `gorm:"column:realization;default:0;not null"`
+// BudgetLine represents individual budget line items
+type BudgetLine struct {
+	ID             string   `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	BudgetID       string   `gorm:"column:budget_id;not null"`
+	CoaAccountID   *string  `gorm:"column:coa_account_id"`
+	Description    string   `gorm:"column:description"`
+	Amount         float64  `gorm:"column:amount;default:0;not null"`
+	RealizedAmount float64  `gorm:"column:realized_amount;default:0;not null"`
 }
 
-func (BudgetItem) TableName() string {
-	return "budget_items"
+func (BudgetLine) TableName() string {
+	return "budget_lines"
 }
 
 // Vendor represents suppliers/vendors
@@ -394,32 +392,32 @@ func (ExpenseEvent) TableName() string {
 // PayrollRun represents payroll runs synced from HRIS
 type PayrollRun struct {
 	ID            string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
-	RunNumber     string    `gorm:"column:run_number;unique;not null"`
-	PeriodMonth  int       `gorm:"column:period_month;not null"`
-	PeriodYear   int       `gorm:"column:period_year;not null"`
-	TotalGross  float64   `gorm:"column:total_gross;default:0;not null"`
-	TotalNet    float64   `gorm:"column:total_net;default:0;not null"`
-	Status      string    `gorm:"column:status;default:'draft';not null"` // draft, approved, processed, cancelled
-	ProcessedAt *time.Time `gorm:"column:processed_at"`
-	CreatedAt   time.Time `gorm:"column:created_at"`
+	PayrollPeriod string     `gorm:"column:payroll_period;not null"`
+	RunDate       time.Time  `gorm:"column:run_date;not null"`
+	TotalAmount   float64    `gorm:"column:total_amount;default:0;not null"`
+	Status        string     `gorm:"column:status;default:'draft';not null"`
+	ApprovedBy    *string    `gorm:"column:approved_by"`
+	CreatedAt     time.Time  `gorm:"column:created_at"`
+	UpdatedAt     time.Time  `gorm:"column:updated_at"`
 }
 
 func (PayrollRun) TableName() string {
 	return "payroll_runs"
 }
 
-// PayrollRunItem represents individual employee payroll
-type PayrollRunItem struct {
-	ID         string   `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
-	RunID      string   `gorm:"column:run_id;not null"`
-	EmployeeID string   `gorm:"column:employee_id;not null"`
-	GrossAmount float64 `gorm:"column:gross_amount;default:0;not null"`
-	TaxAmount  float64 `gorm:"column:tax_amount;default:0;not null"`
-	NetAmount  float64 `gorm:"column:net_amount;default:0;not null"`
+// PayrollItem represents individual employee payroll
+type PayrollItem struct {
+	ID              string   `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	PayrollRunID    string   `gorm:"column:payroll_run_id;not null"`
+	EmployeeID      string   `gorm:"column:employee_id;not null"`
+	GrossAmount     float64  `gorm:"column:gross_amount;default:0;not null"`
+	DeductionAmount float64  `gorm:"column:deduction_amount;default:0;not null"`
+	NetAmount       float64  `gorm:"column:net_amount;default:0;not null"`
+	Status          string   `gorm:"column:status;default:'draft';not null"`
 }
 
-func (PayrollRunItem) TableName() string {
-	return "payroll_run_items"
+func (PayrollItem) TableName() string {
+	return "payroll_items"
 }
 
 // Disbursement represents CRM commission disbursements
@@ -492,4 +490,19 @@ type CashFlowReport struct {
 
 func (CashFlowReport) TableName() string {
 	return "cash_flow_reports"
+}
+
+// ClearanceDispensation represents temporary dispensation for clearance block
+type ClearanceDispensation struct {
+	ID                 string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id"`
+	StudentClearanceID string     `gorm:"column:student_clearance_id;not null"`
+	Reason             string     `gorm:"column:reason"`
+	ApprovedBy         *string    `gorm:"column:approved_by"`
+	ApprovedAt         *time.Time `gorm:"column:approved_at"`
+	ValidUntil         *time.Time `gorm:"column:valid_until;type:date"`
+	Status             string     `gorm:"column:status;default:'pending';not null"`
+}
+
+func (ClearanceDispensation) TableName() string {
+	return "clearance_dispensations"
 }

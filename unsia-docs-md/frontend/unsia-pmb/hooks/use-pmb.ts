@@ -133,7 +133,7 @@ export function usePmb() {
       const token = getToken();
       if (!token) throw new Error("Not authenticated");
 
-      const response = await fetch(`${API_BASE_URLS.pmb}${PMB_ENDPOINTS.waves}`, {
+      const response = await fetch(`${API_BASE_URLS.reference}/api/v1/reference/pmb-waves`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
 

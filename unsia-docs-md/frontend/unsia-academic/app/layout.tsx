@@ -1,6 +1,7 @@
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ReferenceProvider } from "@/contexts/reference-context";
+import PortalLayout from "@/components/layout/PortalLayout";
 
 export const metadata = {
   title: "UNSIA-ACADEMIC - UNSIA ERP",
@@ -17,9 +18,9 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <ReferenceProvider>
-            <div className="min-h-screen bg-gray-50 p-6">
+            <PortalLayout>
               {children}
-            </div>
+            </PortalLayout>
           </ReferenceProvider>
         </AuthProvider>
       </body>

@@ -1,114 +1,126 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	sharedaudit "github.com/unsia-erp/shared-audit"
+	sharedauth "github.com/unsia-erp/shared-auth"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
-	sharedevent "github.com/unsia-erp/shared-event"
+	sharedidempotency "github.com/unsia-erp/shared-idempotency"
 	"github.com/unsia-erp/unsia-finance-service/internal/domain"
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
+	"github.com/unsia-erp/unsia-finance-service/internal/service"
 	"gorm.io/gorm"
 )
 
-
-
 // CreateInvoice handles POST /api/v1/finance/invoices
 func (h *FinanceHandler) CreateInvoice(c *gin.Context) {
-	var req InvoiceCreateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
-		return
+	// Idempotency check
+	idempotencyKey := c.GetHeader("Idempotency-Key")
+	var useIdempotency bool
+	if idempotencyKey != "" {
+		useIdempotency = true
+		idempotencyKey = "finance:invoice:create:" + idempotencyKey
+		cachedResponse, exists, err := sharedidempotency.CheckAndLock(c.Request.Context(), idempotencyKey, 24*time.Hour)
+		if err != nil {
+			if err == sharedidempotency.ErrConcurrentRequest {
+				c.JSON(http.StatusConflict, sharederr.Error("IDEMPOTENCY_KEY_IN_PROGRESS", "Request is currently being processed").WithContext(c))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, sharederr.Error("INTERNAL_ERROR", err.Error()).WithContext(c))
+			return
+		}
+		if exists {
+			var cached interface{}
+			if json.Unmarshal([]byte(cachedResponse), &cached) == nil {
+				c.JSON(http.StatusOK, cached)
+				return
+			}
+		}
 	}
 
-	correlationID, _ := c.Get("x-correlation-id")
-	cid, _ := correlationID.(string)
+	var req InvoiceCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		if useIdempotency {
+			_ = sharedidempotency.SaveFailure(c.Request.Context(), idempotencyKey, err.Error())
+		}
+		c.JSON(http.StatusUnprocessableEntity, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
 
 	var dueTime *time.Time
 	if req.DueDate != "" {
 		parsed, err := time.Parse("2006-01-02", req.DueDate)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, sharederr.Error("INVALID_DATE", "due_date format must be YYYY-MM-DD").WithContext(c))
+			if useIdempotency {
+				_ = sharedidempotency.SaveFailure(c.Request.Context(), idempotencyKey, "invalid due date format")
+			}
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("INVALID_DUE_DATE", "due_date format must be YYYY-MM-DD").WithContext(c))
 			return
 		}
 		dueTime = &parsed
 	}
 
-	var applicantID, studentID *string
-	if req.PayerType == "applicant" {
-		applicantID = &req.PayerRefID
-	} else {
-		studentID = &req.PayerRefID
+	// Validate items: minimal satu items dengan payment_component_id dan final_amount positif
+	if len(req.Items) == 0 {
+		if useIdempotency {
+			_ = sharedidempotency.SaveFailure(c.Request.Context(), idempotencyKey, "at least one item is required")
+		}
+		c.JSON(http.StatusUnprocessableEntity, sharederr.Error("VALIDATION_ERROR", "At least one item is required").WithContext(c))
+		return
 	}
 
-	invoice := domain.Invoice{
-		InvoiceNumber:    generateInvoiceNumber(),
-		TargetType:       req.PayerType,
-		ApplicantID:      applicantID,
-		StudentID:        studentID,
+	var serviceItems []service.InvoiceItemRequest
+	for _, it := range req.Items {
+		finalAmt := it.FinalAmount
+		if finalAmt == 0 {
+			finalAmt = it.Amount
+		}
+		if finalAmt <= 0 {
+			if useIdempotency {
+				_ = sharedidempotency.SaveFailure(c.Request.Context(), idempotencyKey, "final_amount must be positive")
+			}
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("VALIDATION_ERROR", "final_amount must be positive").WithContext(c))
+			return
+		}
+		serviceItems = append(serviceItems, service.InvoiceItemRequest{
+			PaymentComponentID: it.PaymentComponentID,
+			Description:        it.Description,
+			Amount:             it.Amount,
+			DiscountAmount:     it.DiscountAmount,
+			FinalAmount:        finalAmt,
+		})
+	}
+
+	serviceReq := service.InvoiceCreateRequest{
+		PayerType:        req.PayerType,
+		PayerRefID:       req.PayerRefID,
 		AcademicPeriodID: req.AcademicPeriodID,
-		Status:           "unpaid",
 		DueDate:          dueTime,
+		Items:            serviceItems,
+		SourceModule:     req.SourceModule,
+		SourceRefID:      req.SourceRefID,
 	}
 
-	var total float64
-	var items []domain.InvoiceItem
-	for _, itemReq := range req.Items {
-		item := domain.InvoiceItem{
-			PaymentComponentID: itemReq.PaymentComponentID,
-			Description:        itemReq.Description,
-			Amount:             itemReq.Amount,
-			FinalAmount:        itemReq.Amount,
-		}
-		total += itemReq.Amount
-		items = append(items, item)
-	}
-	invoice.TotalAmount = total
-	invoice.Items = items
-
-	err := h.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&invoice).Error; err != nil {
-			return err
-		}
-
-		// Also auto create a pending payment record for this invoice
-		payNum := "PAY-" + invoice.InvoiceNumber
-		payment := domain.Payment{
-			InvoiceID:     invoice.ID,
-			PaymentNumber: &payNum,
-			Amount:        invoice.TotalAmount,
-			PaymentStatus: "pending",
-		}
-		if err := tx.Create(&payment).Error; err != nil {
-			return err
-		}
-
-		envelope := sharedevent.EventEnvelope{
-			EventName:        "finance.invoice_created",
-			EventVersion:     "v1",
-			PublisherService: "finance-service",
-			AggregateType:    "invoice",
-			AggregateID:      invoice.ID,
-			CorrelationID:    cid,
-			Payload: map[string]interface{}{
-				"invoice_id":     invoice.ID,
-				"invoice_number": invoice.InvoiceNumber,
-				"payer_type":     invoice.TargetType,
-				"payer_ref_id":   req.PayerRefID,
-				"total_amount":   invoice.TotalAmount,
-			},
-		}
-
-		conn := tx.Statement.ConnPool
-		_, err := sharedevent.WriteOutbox(c.Request.Context(), conn, envelope, "INTEGRATION_EVENT")
-		return err
-	})
-
+	invoice, err := h.InvoiceService.CreateInvoice(&serviceReq, c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menyimpan invoice").WithContext(c))
+		if useIdempotency {
+			_ = sharedidempotency.SaveFailure(c.Request.Context(), idempotencyKey, err.Error())
+		}
+		if err.Error() == "PAYMENT_COMPONENT_NOT_FOUND" {
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("PAYMENT_COMPONENT_NOT_FOUND", "Payment component not found or inactive").WithContext(c))
+			return
+		}
+		if strings.Contains(err.Error(), "UPSTREAM_SERVICE_UNAVAILABLE") {
+			c.JSON(http.StatusServiceUnavailable, sharederr.Error("UPSTREAM_SERVICE_UNAVAILABLE", "Reference service is currently unavailable").WithContext(c))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", err.Error()).WithContext(c))
 		return
 	}
 
@@ -120,7 +132,14 @@ func (h *FinanceHandler) CreateInvoice(c *gin.Context) {
 		NewValue:     invoice,
 	})
 
-	c.JSON(http.StatusCreated, sharederr.Success(mapInvoiceToDetailResponse(invoice)).WithContext(c))
+	respPayload := sharederr.Success(mapInvoiceToDetailResponse(*invoice)).WithContext(c)
+
+	if useIdempotency {
+		respBytes, _ := json.Marshal(respPayload)
+		_ = sharedidempotency.SaveResponse(c.Request.Context(), idempotencyKey, string(respBytes), 24*time.Hour)
+	}
+
+	c.JSON(http.StatusCreated, respPayload)
 }
 
 // GetInvoice handles GET /api/v1/finance/invoices/:id
@@ -241,4 +260,48 @@ func mapInvoiceToDetailResponse(inv domain.Invoice) InvoiceDetailResponse {
 		Items:            items,
 		Payments:         payments,
 	}
+}
+
+// IssueInvoice handles POST /api/v1/finance/invoices/:id/issue
+func (h *FinanceHandler) IssueInvoice(c *gin.Context) {
+	id := c.Param("id")
+	claimsVal, _ := c.Get("claims")
+	claims, _ := claimsVal.(*sharedauth.Claims)
+	actor := ""
+	if claims != nil {
+		actor = claims.Subject
+	}
+
+	err := h.InvoiceService.UpdateInvoiceStatus(id, "ISSUED", actor, c)
+	if err != nil {
+		if err.Error() == "record not found" {
+			c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Invoice tidak ditemukan").WithContext(c))
+			return
+		}
+		c.JSON(http.StatusConflict, sharederr.Error("INVALID_STATUS_TRANSITION", err.Error()).WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.SuccessWithMessage(nil, "Invoice status updated to ISSUED").WithContext(c))
+}
+
+// CancelInvoice handles POST /api/v1/finance/invoices/:id/cancel
+func (h *FinanceHandler) CancelInvoice(c *gin.Context) {
+	id := c.Param("id")
+	claimsVal, _ := c.Get("claims")
+	claims, _ := claimsVal.(*sharedauth.Claims)
+	actor := ""
+	if claims != nil {
+		actor = claims.Subject
+	}
+
+	err := h.InvoiceService.UpdateInvoiceStatus(id, "CANCELLED", actor, c)
+	if err != nil {
+		if err.Error() == "record not found" {
+			c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Invoice tidak ditemukan").WithContext(c))
+			return
+		}
+		c.JSON(http.StatusConflict, sharederr.Error("INVALID_STATUS_TRANSITION", err.Error()).WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.SuccessWithMessage(nil, "Invoice status updated to CANCELLED").WithContext(c))
 }

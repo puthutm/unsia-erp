@@ -119,7 +119,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8004"
+		port = "8003"
 	}
 
 	sharedobservability.Logger.Info().Msgf("PMB Service started on port %s", port)

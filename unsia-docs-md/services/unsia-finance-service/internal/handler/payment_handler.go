@@ -17,17 +17,34 @@ import (
 
 
 
-// ReceivePaymentCallback handles POST /api/v1/finance/payments/callback/:provider
+// ReceivePaymentCallback handles POST /api/v1/finance/payment-callbacks/:provider
 func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 	provider := c.Param("provider")
 	var req CallbackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		c.JSON(http.StatusBadRequest, sharederr.Error("CALLBACK_PAYLOAD_INVALID", err.Error()).WithContext(c))
 		return
 	}
 
 	correlationID, _ := c.Get("x-correlation-id")
 	cid, _ := correlationID.(string)
+
+	prov, err := service.GetProvider(provider)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.Error("PROVIDER_INVALID", err.Error()).WithContext(c))
+		return
+	}
+
+	if h.PaymentGatewayService.ProviderNotConfigured(prov) {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("PROVIDER_NOT_CONFIGURED", "Secret key not configured for provider").WithContext(c))
+		return
+	}
+
+	isDuplicate, err := h.PaymentGatewayService.IsDuplicateCallback(prov, req.ProviderEventID)
+	if err == nil && isDuplicate {
+		c.JSON(http.StatusOK, gin.H{"status": "ignored", "message": "Duplicate callback"})
+		return
+	}
 
 	payment, err := h.repo.GetPaymentByID(req.PaymentID)
 	if err != nil || payment == nil {
@@ -36,6 +53,42 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 	}
 
 	rawPayload, _ := json.Marshal(req)
+	sigHeader := c.GetHeader("X-Callback-Signature")
+	if sigHeader == "" {
+		sigHeader = req.SignatureStatus
+	}
+
+	isValid, err := h.PaymentGatewayService.ValidateSignature(prov, rawPayload, sigHeader)
+	if err != nil || !isValid {
+		// Log the invalid callback
+		now := time.Now()
+		cb := domain.PaymentGatewayCallback{
+			PaymentID:         &payment.ID,
+			Provider:          provider,
+			ProviderEventID:   &req.ProviderEventID,
+			ExternalReference: &req.ExternalReference,
+			Payload:           string(rawPayload),
+			SignatureValid:    false,
+			CallbackStatus:    "ignored",
+			ProcessedAt:       &now,
+		}
+		_ = h.db.Create(&cb)
+		c.JSON(http.StatusOK, gin.H{"status": "ignored", "message": "Invalid signature"})
+		return
+	}
+
+	// Fetch invoice
+	var invoice domain.Invoice
+	if err := h.db.Where("id = ?", payment.InvoiceID).First(&invoice).Error; err != nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Invoice tidak ditemukan").WithContext(c))
+		return
+	}
+
+	// Validate invoice is payable
+	if invoice.Status == "CANCELLED" || invoice.Status == "EXPIRED" {
+		c.JSON(http.StatusConflict, sharederr.Error("INVOICE_NOT_PAYABLE", "Invoice has been cancelled or expired").WithContext(c))
+		return
+	}
 
 	err = h.db.Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
@@ -56,10 +109,15 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 		}
 
 		// 2. Update payment status
-		paymentStatus := "failed"
+		paymentStatus := "FAILED"
 		if req.PaymentStatus == "success" {
-			paymentStatus = "success"
+			if req.Amount != invoice.TotalAmount {
+				paymentStatus = "RECEIVED"
+			} else {
+				paymentStatus = "VERIFIED"
+			}
 		}
+
 		payment.PaymentStatus = paymentStatus
 		payment.PaidAt = &now
 		payment.ExternalReference = &req.ExternalReference
@@ -71,19 +129,19 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 			return err
 		}
 
-		// 3. Update invoice paid amount
-		var invoice domain.Invoice
-		if err := tx.Where("id = ?", payment.InvoiceID).First(&invoice).Error; err != nil {
-			return err
-		}
+		// 3. Update invoice paid amount (only if payment is VERIFIED)
+		if paymentStatus == "VERIFIED" {
+			if invoice.PaidAmount+payment.Amount > invoice.TotalAmount {
+				return fmt.Errorf("OVERPAYMENT_NOT_ALLOWED")
+			}
 
-		if paymentStatus == "success" {
 			invoice.PaidAmount += payment.Amount
 			if invoice.PaidAmount >= invoice.TotalAmount {
-				invoice.Status = "paid"
+				invoice.Status = "PAID"
 			} else if invoice.PaidAmount > 0 {
-				invoice.Status = "partially_paid"
+				invoice.Status = "PARTIALLY_PAID"
 			}
+
 			if err := tx.Model(&invoice).Updates(map[string]interface{}{
 				"paid_amount": invoice.PaidAmount,
 				"status":      invoice.Status,
@@ -128,12 +186,12 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 			}
 
 			// Auto clearance if fully paid for student
-			if invoice.Status == "paid" && invoice.StudentID != nil {
+			if invoice.Status == "PAID" && invoice.StudentID != nil {
 				clearance := domain.StudentClearance{
 					StudentID:        *invoice.StudentID,
 					AcademicPeriodID: invoice.AcademicPeriodID,
 					ServiceScope:     "registration",
-					Status:           "cleared",
+					Status:           "CLEARED",
 					Reason:           nil,
 				}
 				// Save or update clearance
@@ -141,7 +199,7 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 				err := tx.Where("student_id = ? AND academic_period_id = ?", *invoice.StudentID, invoice.AcademicPeriodID).First(&existing).Error
 				if err == nil {
 					tx.Model(&existing).Updates(map[string]interface{}{
-						"status": "cleared",
+						"status": "CLEARED",
 						"reason": nil,
 					})
 				} else {
@@ -154,6 +212,10 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 	})
 
 	if err != nil {
+		if err.Error() == "OVERPAYMENT_NOT_ALLOWED" {
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("OVERPAYMENT_NOT_ALLOWED", "Overpayment is not allowed").WithContext(c))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal memproses callback").WithContext(c))
 		return
 	}
@@ -161,12 +223,19 @@ func (h *FinanceHandler) ReceivePaymentCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, sharederr.Success(payment).WithContext(c))
 }
 
-// VerifyManualPayment handles POST /api/v1/finance/payments/verify
+// VerifyManualPayment handles POST /api/v1/finance/payment-verifications
 func (h *FinanceHandler) VerifyManualPayment(c *gin.Context) {
 	var req VerificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		c.JSON(http.StatusUnprocessableEntity, sharederr.ValidationError(err.Error()).WithContext(c))
 		return
+	}
+
+	if req.VerificationStatus == "rejected" {
+		if req.Reason == nil || *req.Reason == "" {
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("REASON_REQUIRED", "Reason is required when rejecting payment").WithContext(c))
+			return
+		}
 	}
 
 	correlationID, _ := c.Get("x-correlation-id")
@@ -185,14 +254,25 @@ func (h *FinanceHandler) VerifyManualPayment(c *gin.Context) {
 		return
 	}
 
+	if payment.PaymentStatus == "VERIFIED" || payment.PaymentStatus == "POSTED" {
+		c.JSON(http.StatusConflict, sharederr.Error("PAYMENT_ALREADY_VERIFIED", "Payment already verified or posted").WithContext(c))
+		return
+	}
+
 	err = h.db.Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
+
+		var count int64
+		tx.Model(&domain.PaymentVerification{}).Where("payment_id = ?", payment.ID).Count(&count)
+		if count > 0 {
+			return fmt.Errorf("PAYMENT_ALREADY_VERIFIED")
+		}
 
 		ver := domain.PaymentVerification{
 			PaymentID:          payment.ID,
 			VerifiedBy:         &actor,
 			VerificationStatus: req.VerificationStatus,
-			RejectionReason:    req.RejectionReason,
+			RejectionReason:    req.Reason,
 			Note:               req.Note,
 			VerifiedAt:         &now,
 		}
@@ -201,21 +281,25 @@ func (h *FinanceHandler) VerifyManualPayment(c *gin.Context) {
 		}
 
 		if req.VerificationStatus == "approved" {
-			payment.PaymentStatus = "success"
+			payment.PaymentStatus = "VERIFIED"
 			payment.PaidAt = &now
 			tx.Model(payment).Updates(map[string]interface{}{
-				"payment_status": "success",
+				"payment_status": "VERIFIED",
 				"paid_at":        &now,
 			})
 
 			var invoice domain.Invoice
 			tx.Where("id = ?", payment.InvoiceID).First(&invoice)
 
+			if invoice.PaidAmount+req.Amount > invoice.TotalAmount {
+				return fmt.Errorf("OVERPAYMENT_NOT_ALLOWED")
+			}
+
 			invoice.PaidAmount += req.Amount
 			if invoice.PaidAmount >= invoice.TotalAmount {
-				invoice.Status = "paid"
+				invoice.Status = "PAID"
 			} else {
-				invoice.Status = "partially_paid"
+				invoice.Status = "PARTIALLY_PAID"
 			}
 			if err := tx.Model(&invoice).Updates(map[string]interface{}{
 				"paid_amount": invoice.PaidAmount,
@@ -258,15 +342,44 @@ func (h *FinanceHandler) VerifyManualPayment(c *gin.Context) {
 			if err != nil {
 				return err
 			}
+
+			// Auto clearance if fully paid for student
+			if invoice.Status == "PAID" && invoice.StudentID != nil {
+				clearance := domain.StudentClearance{
+					StudentID:        *invoice.StudentID,
+					AcademicPeriodID: invoice.AcademicPeriodID,
+					ServiceScope:     "registration",
+					Status:           "CLEARED",
+					Reason:           nil,
+				}
+				var existing domain.StudentClearance
+				err := tx.Where("student_id = ? AND academic_period_id = ?", *invoice.StudentID, invoice.AcademicPeriodID).First(&existing).Error
+				if err == nil {
+					tx.Model(&existing).Updates(map[string]interface{}{
+						"status": "CLEARED",
+						"reason": nil,
+					})
+				} else {
+					tx.Create(&clearance)
+				}
+			}
 		} else {
-			payment.PaymentStatus = "failed"
-			tx.Model(payment).Update("payment_status", "failed")
+			payment.PaymentStatus = "FAILED"
+			tx.Model(payment).Update("payment_status", "FAILED")
 		}
 
 		return nil
 	})
 
 	if err != nil {
+		if err.Error() == "PAYMENT_ALREADY_VERIFIED" {
+			c.JSON(http.StatusConflict, sharederr.Error("PAYMENT_ALREADY_VERIFIED", "Payment already verified").WithContext(c))
+			return
+		}
+		if err.Error() == "OVERPAYMENT_NOT_ALLOWED" {
+			c.JSON(http.StatusUnprocessableEntity, sharederr.Error("OVERPAYMENT_NOT_ALLOWED", "Overpayment is not allowed").WithContext(c))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal memverifikasi pembayaran").WithContext(c))
 		return
 	}

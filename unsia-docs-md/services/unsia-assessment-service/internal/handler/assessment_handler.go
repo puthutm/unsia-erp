@@ -42,6 +42,10 @@ type ParticipantRegisterRequest struct {
 	UserID              *string `json:"user_id"`
 }
 
+type RegisterSessionParticipantRequest struct {
+	PersonID string `json:"personId" binding:"required"`
+}
+
 type QuestionBankCreateRequest struct {
 	Code        string `json:"code" binding:"required"`
 	Name        string `json:"name" binding:"required"`
@@ -80,11 +84,11 @@ type AssessmentHandler struct {
 func NewAssessmentHandler(db *gorm.DB) *AssessmentHandler {
 	pmbURL := os.Getenv("PMB_SERVICE_URL")
 	if pmbURL == "" {
-		pmbURL = "http://localhost:8004"
+		pmbURL = "http://localhost:8003"
 	}
 	academicURL := os.Getenv("ACADEMIC_SERVICE_URL")
 	if academicURL == "" {
-		academicURL = "http://localhost:8006"
+		academicURL = "http://localhost:8004"
 	}
 	srvToken := os.Getenv("ASSESSMENT_SERVICE_TOKEN")
 	if srvToken == "" {
@@ -186,6 +190,84 @@ func (h *AssessmentHandler) RegisterParticipant(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, sharederr.Success(part).WithContext(c))
+}
+
+func (h *AssessmentHandler) RegisterSessionParticipant(c *gin.Context) {
+	sessionID := c.Param("session_id")
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, sharederr.Error("VALIDATION_ERROR", "session_id path parameter is required").WithContext(c))
+		return
+	}
+
+	var req RegisterSessionParticipantRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	session, err := h.repo.GetSessionByID(sessionID)
+	if err != nil || session == nil {
+		c.JSON(http.StatusNotFound, sharederr.Error("NOT_FOUND", "Sesi ujian tidak ditemukan").WithContext(c))
+		return
+	}
+
+	participantType := "student"
+	var applicantID *string
+	var studentID *string
+
+	if session.ContextModule != nil && *session.ContextModule == "pmb" {
+		participantType = "applicant"
+		applicantID = &req.PersonID
+	} else {
+		studentID = &req.PersonID
+	}
+
+	part := domain.AssessmentParticipant{
+		AssessmentSessionID: sessionID,
+		ParticipantType:     participantType,
+		ApplicantID:         applicantID,
+		StudentID:           studentID,
+		Status:              "registered",
+	}
+
+	if err := h.repo.RegisterParticipant(&part); err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mendaftarkan peserta").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusCreated, sharederr.Success(part).WithContext(c))
+}
+
+func (h *AssessmentHandler) ListSessionParticipants(c *gin.Context) {
+	sessionID := c.Param("session_id")
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, sharederr.Error("VALIDATION_ERROR", "session_id path parameter is required").WithContext(c))
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "10")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit := 10
+	offset := 0
+
+	if val, err := strconv.Atoi(limitStr); err == nil {
+		limit = val
+	}
+	if val, err := strconv.Atoi(offsetStr); err == nil {
+		offset = val
+	}
+
+	list, total, err := h.repo.ListParticipantsBySessionID(sessionID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil data peserta").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusOK, sharederr.Success(gin.H{
+		"participants": list,
+		"total":        total,
+	}).WithContext(c))
 }
 
 func (h *AssessmentHandler) ListSessions(c *gin.Context) {

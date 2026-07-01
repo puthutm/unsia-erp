@@ -258,6 +258,15 @@ func (h *AcademicHandler) CreateClass(c *gin.Context) {
 	c.JSON(http.StatusCreated, sharederr.Success(class).WithContext(c))
 }
 
+func (h *AcademicHandler) ListCourses(c *gin.Context) {
+	courses, err := h.repo.GetCourses()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal mengambil daftar mata kuliah").WithContext(c))
+		return
+	}
+	c.JSON(http.StatusOK, sharederr.Success(courses).WithContext(c))
+}
+
 func (h *AcademicHandler) CreateKrsDraft(c *gin.Context) {
 	var req KrsCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

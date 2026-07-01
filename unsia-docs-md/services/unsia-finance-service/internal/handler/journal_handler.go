@@ -2,14 +2,30 @@ package handler
 
 import (
 	"fmt"
+	"math"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
+	"github.com/unsia-erp/unsia-finance-service/internal/domain"
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
+	"gorm.io/gorm"
 )
 
+type JournalCreateRequest struct {
+	JournalDate string                `json:"journal_date" binding:"required"`
+	Description string                `json:"description"`
+	SourceType  string                `json:"source_type" binding:"required"`
+	SourceID    *string               `json:"source_id"`
+	Entries     []JournalEntryRequest `json:"entries" binding:"required,gt=1"`
+}
 
+type JournalEntryRequest struct {
+	CoaAccountID string  `json:"coa_account_id" binding:"required"`
+	Debit        float64 `json:"debit"`
+	Credit       float64 `json:"credit"`
+}
 
 // GetJournals handles GET /api/v1/finance/journals
 func (h *FinanceHandler) GetJournals(c *gin.Context) {
@@ -60,4 +76,65 @@ func (h *FinanceHandler) GetJournalDetail(c *gin.Context) {
 		"journal": journal,
 		"entries": entries,
 	}).WithContext(c))
+}
+
+// CreateJournal handles POST /api/v1/finance/journals
+func (h *FinanceHandler) CreateJournal(c *gin.Context) {
+	var req JournalCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.ValidationError(err.Error()).WithContext(c))
+		return
+	}
+
+	parsedDate, err := time.Parse("2006-01-02", req.JournalDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, sharederr.Error("INVALID_DATE", "journal_date format must be YYYY-MM-DD").WithContext(c))
+		return
+	}
+
+	var totalDebit, totalCredit float64
+	for _, entry := range req.Entries {
+		totalDebit += entry.Debit
+		totalCredit += entry.Credit
+	}
+
+	if math.Abs(totalDebit-totalCredit) > 0.001 {
+		c.JSON(http.StatusUnprocessableEntity, sharederr.Error("JOURNAL_UNBALANCED", "Total debit must equal total credit").WithContext(c))
+		return
+	}
+
+	journalNumber := "JV-" + time.Now().Format("20060102150405")
+	journal := domain.Journal{
+		JournalNumber: journalNumber,
+		JournalDate:   parsedDate,
+		Description:   req.Description,
+		SourceType:    req.SourceType,
+		SourceID:      req.SourceID,
+	}
+
+	errTx := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&journal).Error; err != nil {
+			return err
+		}
+
+		for _, entryReq := range req.Entries {
+			entry := domain.JournalEntry{
+				JournalID:    journal.ID,
+				CoaAccountID: entryReq.CoaAccountID,
+				Debit:        entryReq.Debit,
+				Credit:       entryReq.Credit,
+			}
+			if err := tx.Create(&entry).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	if errTx != nil {
+		c.JSON(http.StatusInternalServerError, sharederr.Error("DB_ERROR", "Gagal menyimpan journal").WithContext(c))
+		return
+	}
+
+	c.JSON(http.StatusCreated, sharederr.Success(journal).WithContext(c))
 }

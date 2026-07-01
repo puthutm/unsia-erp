@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { useReference } from "@/contexts/reference-context";
+import { FRONTEND_URLS } from "@/lib/constants";
 
 // Navigation items for each module
 const navigation = {
@@ -258,52 +259,59 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const moduleNav = navigation[currentModule as keyof typeof navigation] || navigation.pmb;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between h-16 px-4">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+      {/* Top Header - Glassmorphic */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-300">
+        <div className="flex items-center justify-between h-16 px-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100"
+              className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors"
             >
               <icons.menu className="w-5 h-5" />
             </button>
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">U</span>
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#0f487b] rounded-lg flex items-center justify-center shadow relative overflow-hidden">
+                <div className="absolute inset-0 bg-[#FED524]/20"></div>
+                <span className="text-white font-bold text-sm relative z-10">U</span>
               </div>
-              <span className="font-semibold text-gray-900">UNSIA</span>
+              <div className="hidden sm:block">
+                <span className="font-bold text-slate-800 tracking-wide text-sm">ERP UNSIA<span className="text-[#FED524]">.</span></span>
+              </div>
             </Link>
           </div>
           
-          <div className="flex items-center gap-4">
-            {/* Module Selector */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 overflow-x-auto max-w-[200px] sm:max-w-[400px] md:max-w-none whitespace-nowrap scrollbar-none">
-              {modules.map((mod) => (
-                <Link
-                  key={mod.id}
-                  href={mod.href}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    pathname.startsWith(mod.href)
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  {mod.name}
-                </Link>
-              ))}
+          <div className="flex items-center gap-6">
+            {/* Module Selector - Pills */}
+            <div className="flex items-center gap-1.5 bg-slate-100 rounded-xl p-1 overflow-x-auto max-w-[200px] sm:max-w-[400px] md:max-w-none whitespace-nowrap scrollbar-none shadow-inner">
+              {modules.map((mod) => {
+                const targetUrl = FRONTEND_URLS[mod.id as keyof typeof FRONTEND_URLS] || mod.href;
+                const isActive = pathname.startsWith(mod.href);
+                return (
+                  <a
+                    key={mod.id}
+                    href={targetUrl}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      isActive
+                        ? "bg-white text-[#0f487b] shadow-sm scale-102"
+                        : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
+                    }`}
+                  >
+                    {mod.name}
+                  </a>
+                );
+              })}
             </div>
             
             {/* User Menu */}
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.name || "Admin"}</p>
-                <p className="text-xs text-gray-500">{user?.role || "Administrator"}</p>
+            <div className="flex items-center gap-4 border-l border-slate-100 pl-6">
+              <div className="text-right hidden md:block">
+                <p className="text-sm font-semibold text-slate-800 leading-none">{user?.name || "Admin"}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{user?.role || "Administrator"}</p>
               </div>
               <button
                 onClick={logout}
-                className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+                className="p-2 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
                 title="Logout"
               >
                 <icons.logout className="w-5 h-5" />
@@ -313,36 +321,55 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </div>
       </header>
 
-      {/* Sidebar */}
+      {/* Sidebar - Gradient Theme */}
       <aside
-        className={`fixed left-0 top-16 bottom-0 bg-white border-r border-gray-200 transition-all duration-300 z-40 ${
+        className={`fixed left-0 top-16 bottom-0 bg-gradient-to-b from-[#0f487b] to-[#00719f] transition-all duration-300 z-40 border-r border-white/5 flex flex-col shadow-xl ${
           sidebarOpen ? "w-64" : "w-0 overflow-hidden"
         }`}
       >
-        <nav className="p-4 space-y-1">
-          {moduleNav.map((item) => {
-            const Icon = icons[item.icon as keyof typeof icons];
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  pathname === item.href
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                {Icon && <Icon className="w-5 h-5" />}
-                <span className="font-medium">{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex-1 overflow-y-auto no-scrollbar py-6 px-4 space-y-6">
+          <div>
+            <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">
+              Menu Navigasi
+            </p>
+            <nav className="space-y-1.5">
+              {moduleNav.map((item) => {
+                const Icon = icons[item.icon as keyof typeof icons];
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm border-l-4 ${
+                      isActive
+                        ? "bg-white/15 text-white font-bold border-[#FED524] shadow-md"
+                        : "text-white/70 hover:bg-white/10 hover:text-white border-transparent"
+                    }`}
+                  >
+                    {Icon && (
+                      <Icon
+                        className={`w-5 h-5 transition-colors ${
+                          isActive ? "text-[#FED524]" : "text-white/60 group-hover:text-[#FED524]"
+                        }`}
+                      />
+                    )}
+                    <span className="font-semibold">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+        
+        {/* Footer Area inside Sidebar */}
+        <div className="p-4 border-t border-white/10 text-center shrink-0">
+          <p className="text-[10px] text-white/40 font-semibold tracking-wider uppercase">Universitas Siber Asia</p>
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className={`pt-16 min-h-screen transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"}`}>
-        <div className="p-6">
+      <main className={`pt-16 min-h-screen transition-all duration-350 ${sidebarOpen ? "ml-64" : "ml-0"}`}>
+        <div className="p-8 max-w-[1600px] mx-auto animate-fade-in">
           {children}
         </div>
       </main>

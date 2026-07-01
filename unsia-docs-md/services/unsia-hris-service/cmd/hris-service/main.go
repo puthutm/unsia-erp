@@ -85,11 +85,15 @@ func main() {
 
 		// Attendances
 		protected.GET("/v1/hris/attendances", middleware.PermissionRequired("hris.attendance.view"), hrisHandler.ListAttendances)
+		protected.GET("/v1/hris/attendance", middleware.PermissionRequired("hris.attendance.view"), hrisHandler.ListAttendances)
 		protected.POST("/v1/hris/attendances", hrisHandler.RecordAttendance)
+		protected.POST("/v1/hris/attendance", hrisHandler.RecordAttendance)
 
 		// Leave requests
 		protected.GET("/v1/hris/leave-requests", middleware.PermissionRequired("hris.leave.view"), hrisHandler.ListLeaveRequests)
+		protected.GET("/v1/hris/leave", middleware.PermissionRequired("hris.leave.view"), hrisHandler.ListLeaveRequests)
 		protected.POST("/v1/hris/leave-requests", hrisHandler.SubmitLeaveRequest)
+		protected.POST("/v1/hris/leave", hrisHandler.SubmitLeaveRequest)
 
 		// BKD records
 		protected.POST("/v1/hris/bkd-records", middleware.PermissionRequired("hris.bkd.manage"), hrisHandler.CreateBkdRecord)
@@ -97,7 +101,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8007"
+		port = "8008"
 	}
 
 	sharedobservability.Logger.Info().Msgf("HRIS Service started on port %s", port)

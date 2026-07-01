@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +19,41 @@ import (
 // InvoiceService handles invoice business logic
 type InvoiceService struct {
 	db *gorm.DB
+}
+
+func (s *InvoiceService) validatePaymentComponent(componentID string) (bool, error) {
+	refServiceURL := os.Getenv("REFERENCE_SERVICE_URL")
+	if refServiceURL == "" {
+		refServiceURL = "http://localhost:8002"
+	}
+	url := fmt.Sprintf("%s/api/v1/ref/payment-components/%s", refServiceURL, componentID)
+
+	var err error
+	var resp *http.Response
+	backoff := 100 * time.Millisecond
+
+	for i := 0; i < 3; i++ {
+		client := &http.Client{Timeout: 2 * time.Second}
+		resp, err = client.Get(url)
+		if err == nil {
+			break
+		}
+		time.Sleep(backoff)
+		backoff *= 2
+	}
+
+	if err != nil {
+		return false, fmt.Errorf("UPSTREAM_SERVICE_UNAVAILABLE: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
+	} else if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("unexpected status from reference service: %d", resp.StatusCode)
 }
 
 // NewInvoiceService creates a new invoice service
@@ -190,12 +227,25 @@ func (s *InvoiceService) UpdateInvoiceStatus(invoiceID, newStatus string, actor 
 func (s *InvoiceService) CreateInvoice(req *InvoiceCreateRequest, c *gin.Context) (*domain.Invoice, error) {
 	// Validate due date
 	if req.DueDate != nil && req.DueDate.Before(time.Now()) {
-		return nil, fmt.Errorf("due_date cannot be in the past")
+		return nil, fmt.Errorf("INVALID_DUE_DATE: due_date cannot be in the past")
 	}
 
 	// Validate items
 	if len(req.Items) == 0 {
 		return nil, fmt.Errorf("at least one invoice item is required")
+	}
+
+	// Validate payment_component_id to reference-service
+	for _, item := range req.Items {
+		if item.PaymentComponentID != nil && *item.PaymentComponentID != "" {
+			valid, err := s.validatePaymentComponent(*item.PaymentComponentID)
+			if err != nil {
+				return nil, err
+			}
+			if !valid {
+				return nil, fmt.Errorf("PAYMENT_COMPONENT_NOT_FOUND")
+			}
+		}
 	}
 
 	// Generate invoice number
@@ -229,6 +279,8 @@ func (s *InvoiceService) CreateInvoice(req *InvoiceCreateRequest, c *gin.Context
 		PaidAmount:       0,
 		Status:           "DRAFT",
 		DueDate:          req.DueDate,
+		SourceModule:     req.SourceModule,
+		SourceRefID:      req.SourceRefID,
 	}
 
 	// Create invoice items
@@ -255,7 +307,7 @@ func (s *InvoiceService) CreateInvoice(req *InvoiceCreateRequest, c *gin.Context
 			InvoiceID:     invoice.ID,
 			PaymentNumber: &payNum,
 			Amount:        invoice.TotalAmount,
-			PaymentStatus: "pending",
+			PaymentStatus: "RECEIVED",
 		}
 		if err := tx.Create(&payment).Error; err != nil {
 			return err
@@ -303,11 +355,13 @@ func (s *InvoiceService) CreateInvoice(req *InvoiceCreateRequest, c *gin.Context
 
 // InvoiceCreateRequest represents the request to create an invoice
 type InvoiceCreateRequest struct {
-	PayerType        string     `json:"payer_type" binding:"required,oneof=applicant student"`
-	PayerRefID       string     `json:"payer_ref_id" binding:"required"`
-	AcademicPeriodID *string    `json:"academic_period_id"`
-	DueDate          *time.Time `json:"due_date"`
+	PayerType        string               `json:"payer_type" binding:"required,oneof=applicant student"`
+	PayerRefID       string               `json:"payer_ref_id" binding:"required"`
+	AcademicPeriodID *string              `json:"academic_period_id"`
+	DueDate          *time.Time           `json:"due_date"`
 	Items            []InvoiceItemRequest `json:"items" binding:"required,gt=0"`
+	SourceModule     *string              `json:"source_module"`
+	SourceRefID      *string              `json:"source_ref_id"`
 }
 
 // InvoiceItemRequest represents an invoice item

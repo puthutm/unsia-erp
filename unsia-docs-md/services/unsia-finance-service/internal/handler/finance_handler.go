@@ -17,6 +17,8 @@ type InvoiceItemRequest struct {
 	PaymentComponentID *string `json:"payment_component_id"`
 	Description        string  `json:"description"`
 	Amount             float64 `json:"amount" binding:"required"`
+	DiscountAmount     float64 `json:"discount_amount"`
+	FinalAmount        float64 `json:"final_amount"`
 }
 
 type InvoiceCreateRequest struct {
@@ -25,21 +27,30 @@ type InvoiceCreateRequest struct {
 	AcademicPeriodID *string              `json:"academic_period_id"`
 	DueDate          string               `json:"due_date"` // format: YYYY-MM-DD
 	Items            []InvoiceItemRequest `json:"items" binding:"required,gt=0"`
+	SourceModule     *string              `json:"source_module"`
+	SourceRefID      *string              `json:"source_ref_id"`
 }
 
 type CallbackRequest struct {
-	PaymentID         string  `json:"payment_id" binding:"required"`
-	ProviderEventID   string  `json:"provider_event_id" binding:"required"`
-	Amount            float64 `json:"amount" binding:"required"`
-	PaymentStatus     string  `json:"payment_status" binding:"required,oneof=success failed"`
-	ExternalReference string  `json:"external_reference"`
+	PaymentID         string      `json:"payment_id" binding:"required"`
+	ProviderEventID   string      `json:"provider_event_id" binding:"required"`
+	Amount            float64     `json:"amount" binding:"required"`
+	PaymentStatus     string      `json:"payment_status" binding:"required,oneof=success failed"`
+	ExternalReference string      `json:"external_reference"`
+	InvoiceID         string      `json:"invoice_id"`
+	SignatureStatus   string      `json:"signature_status"`
+	PayloadHash       string      `json:"payload_hash"`
+	RawPayload        interface{} `json:"raw_payload"`
 }
 
 type VerificationRequest struct {
+	InvoiceID          string  `json:"invoice_id"`
 	PaymentID          string  `json:"payment_id" binding:"required"`
 	VerificationStatus string  `json:"verification_status" binding:"required,oneof=approved rejected"`
 	Amount             float64 `json:"amount" binding:"required"`
-	RejectionReason    *string `json:"rejection_reason"`
+	PaidAt             *string `json:"paid_at"`
+	AttachmentRef      *string `json:"attachment_ref"`
+	Reason             *string `json:"reason"`
 	Note               *string `json:"note"`
 }
 
@@ -149,9 +160,10 @@ type ScholarshipUpdateRequest struct {
 // ============ FinanceHandler Struct ============
 
 type FinanceHandler struct {
-	repo           *repository.FinanceRepository
-	db             *gorm.DB
-	InvoiceService *service.InvoiceService
+	repo                  *repository.FinanceRepository
+	db                    *gorm.DB
+	InvoiceService        *service.InvoiceService
+	PaymentGatewayService *service.PaymentGatewayService
 }
 
 func NewFinanceHandler(db *gorm.DB) *FinanceHandler {

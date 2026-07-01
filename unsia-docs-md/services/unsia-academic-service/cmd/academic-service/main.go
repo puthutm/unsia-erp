@@ -66,10 +66,13 @@ func main() {
 
 	r.GET("/metrics", sharedobservability.MetricsHandler())
 
-academicHandler := handler.NewAcademicHandler(db)
+	academicHandler := handler.NewAcademicHandler(db)
 	studentHandler := handler.NewStudentHandler(db)
 	gradeHandler := handler.NewGradeHandler(db)
 	graduationHandler := handler.NewGraduationHandler(db)
+	scheduleHandler := handler.NewScheduleHandler(db)
+	clearanceHandler := handler.NewClearanceHandler(db)
+	krsHandler := handler.NewKrsHandler(db)
 
 	// Protected routes
 	protected := r.Group("/api", middleware.AuthRequired())
@@ -88,6 +91,22 @@ academicHandler := handler.NewAcademicHandler(db)
 		protected.POST("/v1/academic/curriculums", middleware.PermissionRequired("academic.curriculum.manage"), academicHandler.CreateCurriculum)
 		protected.POST("/v1/academic/courses", middleware.PermissionRequired("academic.course.manage"), academicHandler.CreateCourse)
 		protected.POST("/v1/academic/curriculum-courses", middleware.PermissionRequired("academic.curriculum.manage"), academicHandler.CreateCurriculumCourse)
+		protected.GET("/v1/academic/courses", academicHandler.ListCourses)
+
+		// Schedules - NEW
+		protected.POST("/v1/academic/schedules", scheduleHandler.CreateSchedule)
+		protected.GET("/v1/academic/schedules", scheduleHandler.ListSchedules)
+		protected.GET("/v1/academic/schedules/:id", scheduleHandler.GetSchedule)
+		protected.PUT("/v1/academic/schedules/:id", scheduleHandler.UpdateSchedule)
+		protected.DELETE("/v1/academic/schedules/:id", scheduleHandler.DeleteSchedule)
+		protected.POST("/v1/academic/schedules/bulk", scheduleHandler.CreateBulkSchedules)
+
+		// Clearances - NEW
+		protected.GET("/v1/academic/clearance/:student_id", clearanceHandler.GetStudentClearance)
+		protected.GET("/v1/academic/clearance/me", clearanceHandler.GetMyClearance)
+		protected.GET("/v1/academic/clearance/:student_id/payments", clearanceHandler.GetPaymentHistory)
+		protected.GET("/v1/academic/clearance/:student_id/krs-eligibility", clearanceHandler.CheckKrsClearance)
+		protected.POST("/v1/academic/clearance/verify", clearanceHandler.VerifyClearance)
 
 		// Classes & Offerings
 		protected.POST("/v1/academic/classes", middleware.PermissionRequired("academic.class.manage"), academicHandler.CreateClass)
@@ -98,6 +117,9 @@ academicHandler := handler.NewAcademicHandler(db)
 		protected.POST("/v1/academic/krs", middleware.PermissionRequired("academic.krs.create"), academicHandler.CreateKrsDraft)
 		protected.POST("/v1/academic/krs/:krs_id/submit", middleware.PermissionRequired("academic.krs.create"), academicHandler.SubmitKrs)
 		protected.POST("/v1/academic/krs/:krs_id/approve", middleware.PermissionRequired("academic.krs.approve"), academicHandler.ApproveKrs)
+		protected.GET("/v1/academic/krs", krsHandler.ListKrs)
+		protected.GET("/v1/academic/krs/:id", krsHandler.GetKrsDetail)
+		protected.GET("/v1/academic/krs/available-classes", krsHandler.GetAvailableClasses)
 
 // Grades
 		protected.POST("/v1/academic/grades/source-imports", academicHandler.ImportGradeSource) // LMS or Assessment calls this
@@ -129,7 +151,7 @@ academicHandler := handler.NewAcademicHandler(db)
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8006"
+		port = "8004"
 	}
 
 	sharedobservability.Logger.Info().Msgf("Academic Service started on port %s", port)

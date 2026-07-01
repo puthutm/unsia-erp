@@ -102,6 +102,24 @@ func main() {
 		protected.GET("/v1/ref/districts", refHandler.ListDistricts)
 		protected.GET("/v1/ref/villages", refHandler.ListVillages)
 
+		// /v1/reference Alias mapping for portal compatibility
+		refGroup := protected.Group("/v1/reference")
+		{
+			refGroup.GET("/study-programs", refHandler.ListStudyPrograms)
+			refGroup.GET("/academic-years", refHandler.ListAcademicYears)
+			refGroup.GET("/academic-periods", refHandler.ListAcademicPeriods)
+			refGroup.GET("/payment-components", refHandler.ListPaymentComponents)
+			refGroup.GET("/payment-methods", refHandler.ListPaymentMethods)
+			refGroup.GET("/document-types", refHandler.ListDocumentTypes)
+			refGroup.GET("/pmb-waves", refHandler.ListPmbWaves)
+			refGroup.GET("/religions", refHandler.ListReligions)
+			refGroup.GET("/admission-paths", refHandler.ListAdmissionPaths)
+			refGroup.GET("/provinces", refHandler.ListProvinces)
+			refGroup.GET("/cities", refHandler.ListCities)
+			refGroup.GET("/districts", refHandler.ListDistricts)
+			refGroup.GET("/villages", refHandler.ListVillages)
+		}
+
 		// Prefix-free Aliases
 		protected.GET("/v1/provinces", refHandler.ListProvinces)
 		protected.GET("/v1/cities", refHandler.ListCities)
@@ -123,6 +141,19 @@ func main() {
 			academicAdmin.POST("/v1/ref/document-types", refHandler.CreateDocumentType)
 			academicAdmin.POST("/v1/ref/religions", refHandler.CreateReligion)
 			academicAdmin.POST("/v1/ref/countries", refHandler.CreateCountry)
+
+			// /v1/reference Administrative creation aliases
+			academicAdmin.POST("/v1/reference/study-programs", refHandler.CreateStudyProgram)
+			academicAdmin.POST("/v1/reference/academic-years", refHandler.CreateAcademicYear)
+			academicAdmin.POST("/v1/reference/academic-periods", refHandler.CreateAcademicPeriod)
+			academicAdmin.POST("/v1/reference/pmb-waves", refHandler.CreatePmbWave)
+			academicAdmin.PUT("/v1/reference/pmb-waves/:id", refHandler.UpdatePmbWave)
+			academicAdmin.DELETE("/v1/reference/pmb-waves/:id", refHandler.DeletePmbWave)
+			academicAdmin.POST("/v1/reference/payment-components", refHandler.CreatePaymentComponent)
+			academicAdmin.POST("/v1/reference/payment-methods", refHandler.CreatePaymentMethod)
+			academicAdmin.POST("/v1/reference/document-types", refHandler.CreateDocumentType)
+			academicAdmin.POST("/v1/reference/religions", refHandler.CreateReligion)
+			academicAdmin.POST("/v1/reference/countries", refHandler.CreateCountry)
 		}
 	}
 

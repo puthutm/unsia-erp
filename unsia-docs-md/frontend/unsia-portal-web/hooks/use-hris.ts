@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URLS, HRIS_ENDPOINTS, STORAGE_KEYS } from "@/lib/constants";
 
 export interface Employee {
@@ -36,6 +37,7 @@ export interface LeaveRequest {
 }
 
 export function useHRIS() {
+  const queryClient = useQueryClient();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -48,17 +50,22 @@ export function useHRIS() {
     setIsLoading(true);
     setError(null);
     try {
-      const token = getToken();
-      if (!token) throw new Error("Not authenticated");
+      const records = await queryClient.fetchQuery({
+        queryKey: ["hris", "employees"],
+        queryFn: async () => {
+          const token = getToken();
+          if (!token) throw new Error("Not authenticated");
 
-      const url = `${API_BASE_URLS.hris}${HRIS_ENDPOINTS.employees}`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          const url = `${API_BASE_URLS.hris}${HRIS_ENDPOINTS.employees}`;
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          });
+
+          if (!response.ok) throw new Error("Failed to fetch employees");
+          const data = await response.json();
+          return data.data || [];
+        },
       });
-
-      if (!response.ok) throw new Error("Failed to fetch employees");
-      const data = await response.json();
-      const records: Employee[] = data.data || [];
       setEmployees(records);
       return records;
     } catch (err) {
@@ -67,23 +74,28 @@ export function useHRIS() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const fetchAttendances = useCallback(async (): Promise<Attendance[]> => {
     setIsLoading(true);
     setError(null);
     try {
-      const token = getToken();
-      if (!token) throw new Error("Not authenticated");
+      const records = await queryClient.fetchQuery({
+        queryKey: ["hris", "attendances"],
+        queryFn: async () => {
+          const token = getToken();
+          if (!token) throw new Error("Not authenticated");
 
-      const url = `${API_BASE_URLS.hris}${HRIS_ENDPOINTS.attendances}`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          const url = `${API_BASE_URLS.hris}${HRIS_ENDPOINTS.attendances}`;
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          });
+
+          if (!response.ok) throw new Error("Failed to fetch attendances");
+          const data = await response.json();
+          return data.data || [];
+        },
       });
-
-      if (!response.ok) throw new Error("Failed to fetch attendances");
-      const data = await response.json();
-      const records: Attendance[] = data.data || [];
       setAttendances(records);
       return records;
     } catch (err) {
@@ -92,7 +104,7 @@ export function useHRIS() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const clockIn = useCallback(async (notes?: string) => {
     setIsLoading(true);
@@ -108,6 +120,9 @@ export function useHRIS() {
       });
 
       if (!response.ok) throw new Error("Failed to clock in");
+      
+      // Invalidate query cache to trigger background refresh
+      await queryClient.invalidateQueries({ queryKey: ["hris", "attendances"] });
       await fetchAttendances();
       return true;
     } catch (err) {
@@ -116,7 +131,7 @@ export function useHRIS() {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchAttendances]);
+  }, [queryClient, fetchAttendances]);
 
   const clockOut = useCallback(async (notes?: string) => {
     setIsLoading(true);
@@ -132,6 +147,9 @@ export function useHRIS() {
       });
 
       if (!response.ok) throw new Error("Failed to clock out");
+      
+      // Invalidate query cache to trigger background refresh
+      await queryClient.invalidateQueries({ queryKey: ["hris", "attendances"] });
       await fetchAttendances();
       return true;
     } catch (err) {
@@ -140,23 +158,28 @@ export function useHRIS() {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchAttendances]);
+  }, [queryClient, fetchAttendances]);
 
   const fetchLeaveRequests = useCallback(async (): Promise<LeaveRequest[]> => {
     setIsLoading(true);
     setError(null);
     try {
-      const token = getToken();
-      if (!token) throw new Error("Not authenticated");
+      const records = await queryClient.fetchQuery({
+        queryKey: ["hris", "leaveRequests"],
+        queryFn: async () => {
+          const token = getToken();
+          if (!token) throw new Error("Not authenticated");
 
-      const url = `${API_BASE_URLS.hris}${HRIS_ENDPOINTS.leaveRequests}`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          const url = `${API_BASE_URLS.hris}${HRIS_ENDPOINTS.leaveRequests}`;
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          });
+
+          if (!response.ok) throw new Error("Failed to fetch leave requests");
+          const data = await response.json();
+          return data.data || [];
+        },
       });
-
-      if (!response.ok) throw new Error("Failed to fetch leave requests");
-      const data = await response.json();
-      const records: LeaveRequest[] = data.data || [];
       setLeaveRequests(records);
       return records;
     } catch (err) {
@@ -165,7 +188,7 @@ export function useHRIS() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const createLeaveRequest = useCallback(async (leaveData: Partial<LeaveRequest>) => {
     setIsLoading(true);
@@ -181,6 +204,9 @@ export function useHRIS() {
       });
 
       if (!response.ok) throw new Error("Failed to create leave request");
+      
+      // Invalidate query cache to trigger background refresh
+      await queryClient.invalidateQueries({ queryKey: ["hris", "leaveRequests"] });
       await fetchLeaveRequests();
       return true;
     } catch (err) {
@@ -189,7 +215,7 @@ export function useHRIS() {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchLeaveRequests]);
+  }, [queryClient, fetchLeaveRequests]);
 
   return {
     employees,

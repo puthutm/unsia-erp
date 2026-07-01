@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCRM } from "@/hooks/use-crm";
 import { useAuth } from "@/contexts/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CRMLeadsPage() {
   const { isAuthenticated } = useAuth();
@@ -103,7 +104,9 @@ export default function CRMLeadsPage() {
       {/* Leads Table Card */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="text-center text-slate-500 py-12">Memuat data leads...</div>
+          <div className="p-4">
+            <Skeleton variant="table" rows={6} />
+          </div>
         ) : leads.length === 0 ? (
           <div className="text-center text-slate-500 py-12">
             <p className="text-base font-medium">Belum ada leads calon pendaftar.</p>

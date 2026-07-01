@@ -78,6 +78,8 @@ func main() {
 		// Participants
 		protected.POST("/v1/assessment/participants", assessHandler.RegisterParticipant)
 		protected.GET("/v1/assessment/participants", assessHandler.ListParticipants)
+		protected.POST("/v1/assessment/sessions/:session_id/participants", assessHandler.RegisterSessionParticipant)
+		protected.GET("/v1/assessment/sessions/:session_id/participants", assessHandler.ListSessionParticipants)
 
 		// Question Bank & Questions
 		protected.POST("/v1/assessment/question-banks", middleware.PermissionRequired("assessment.question-bank.manage"), assessHandler.CreateQuestionBank)
@@ -96,7 +98,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8009"
+		port = "8007"
 	}
 
 	sharedobservability.Logger.Info().Msgf("Assessment Service started on port %s", port)

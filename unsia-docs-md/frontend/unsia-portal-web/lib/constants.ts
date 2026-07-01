@@ -21,6 +21,19 @@ export const API_BASE_URLS = {
   portal: process.env.NEXT_PUBLIC_PORTAL_API || "http://localhost:8010",
 } as const;
 
+export const FRONTEND_URLS = {
+  portal: process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3000",
+  pmb: process.env.NEXT_PUBLIC_PMB_URL || "http://localhost:3001",
+  academic: process.env.NEXT_PUBLIC_ACADEMIC_URL || "http://localhost:3002",
+  finance: process.env.NEXT_PUBLIC_FINANCE_URL || "http://localhost:3003",
+  lms: process.env.NEXT_PUBLIC_LMS_URL || "http://localhost:3004",
+  hris: process.env.NEXT_PUBLIC_HRIS_URL || "http://localhost:3005",
+  assessment: process.env.NEXT_PUBLIC_ASSESSMENT_URL || "http://localhost:3006",
+  crm: process.env.NEXT_PUBLIC_CRM_URL || "http://localhost:3007",
+  reference: process.env.NEXT_PUBLIC_REFERENCE_URL || "http://localhost:3008",
+  core: process.env.NEXT_PUBLIC_CORE_URL || "http://localhost:3009",
+} as const;
+
 // Auth API endpoints (from unsia-core-service)
 export const AUTH_ENDPOINTS = {
   login: "/api/v1/auth/login",

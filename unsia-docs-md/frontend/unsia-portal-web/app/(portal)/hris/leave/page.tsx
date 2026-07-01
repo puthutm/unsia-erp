@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useHRIS } from "@/hooks/use-hris";
 import { useAuth } from "@/contexts/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HRISLeavePage() {
   const { isAuthenticated } = useAuth();
@@ -151,7 +152,9 @@ export default function HRISLeavePage() {
           <h2 className="text-base font-bold text-slate-900 font-sans">Riwayat Pengajuan Cuti Anda</h2>
         </div>
         {isLoading ? (
-          <div className="text-center text-slate-500 py-12">Memuat riwayat pengajuan cuti...</div>
+          <div className="p-6">
+            <Skeleton variant="table" rows={4} />
+          </div>
         ) : leaveRequests.length === 0 ? (
           <div className="text-center text-slate-500 py-12">
             <p className="text-sm font-medium">Belum ada riwayat pengajuan cuti.</p>
