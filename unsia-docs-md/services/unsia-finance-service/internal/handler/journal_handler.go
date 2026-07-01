@@ -120,7 +120,7 @@ func (h *FinanceHandler) CreateJournal(c *gin.Context) {
 		for _, entryReq := range req.Entries {
 			entry := domain.JournalEntry{
 				JournalID:    journal.ID,
-				CoaAccountID: entryReq.CoaAccountID,
+				CoaAccountID: &entryReq.CoaAccountID,
 				Debit:        entryReq.Debit,
 				Credit:       entryReq.Credit,
 			}

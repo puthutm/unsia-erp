@@ -17,8 +17,9 @@ import (
 // GetScholarships handles GET /api/v1/finance/scholarships
 func (h *FinanceHandler) GetScholarships(c *gin.Context) {
 	filter := repository.ScholarshipFilter{
-		IsActive: c.Query("is_active") == "true",
-		Search:  c.Query("search"),
+		StudentID:       c.Query("student_id"),
+		ScholarshipType: c.Query("scholarship_type"),
+		Status:          c.Query("status"),
 	}
 
 	page := 1
@@ -49,35 +50,16 @@ func (h *FinanceHandler) CreateScholarship(c *gin.Context) {
 		return
 	}
 
-	var startDate, endDate *time.Time
-	if req.StartDate != nil {
-		parsed, err := time.Parse("2006-01-02", *req.StartDate)
-		if err == nil {
-			startDate = &parsed
-		}
-	}
-	if req.EndDate != nil {
-		parsed, err := time.Parse("2006-01-02", *req.EndDate)
-		if err == nil {
-			endDate = &parsed
-		}
-	}
-
-	isActive := true
-	if req.IsActive != nil {
-		isActive = *req.IsActive
+	status := req.Status
+	if status == "" {
+		status = "active"
 	}
 
 	scholarship := domain.Scholarship{
-		Code:          req.Code,
-		Name:          req.Name,
-		Description:   req.Description,
-		DiscountType:  req.DiscountType,
-		DiscountValue: req.DiscountValue,
-		MaxAmount:     req.MaxAmount,
-		StartDate:     startDate,
-		EndDate:       endDate,
-		IsActive:      isActive,
+		StudentID:       req.StudentID,
+		ScholarshipType: req.ScholarshipType,
+		Amount:          req.Amount,
+		Status:          status,
 	}
 
 	if err := h.repo.CreateScholarship(&scholarship); err != nil {
@@ -112,33 +94,19 @@ func (h *FinanceHandler) UpdateScholarship(c *gin.Context) {
 	}
 
 	updates := make(map[string]interface{})
-	if req.Name != nil {
-		updates["name"] = *req.Name
+	if req.ScholarshipType != nil {
+		updates["scholarship_type"] = *req.ScholarshipType
 	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
+	if req.Amount != nil {
+		updates["amount"] = *req.Amount
 	}
-	if req.DiscountType != nil {
-		updates["discount_type"] = *req.DiscountType
+	if req.Status != nil {
+		updates["status"] = *req.Status
 	}
-	if req.DiscountValue != nil {
-		updates["discount_value"] = *req.DiscountValue
-	}
-	if req.MaxAmount != nil {
-		updates["max_amount"] = *req.MaxAmount
-	}
-	if req.StartDate != nil {
-		if parsed, err := time.Parse("2006-01-02", *req.StartDate); err == nil {
-			updates["start_date"] = parsed
-		}
-	}
-	if req.EndDate != nil {
-		if parsed, err := time.Parse("2006-01-02", *req.EndDate); err == nil {
-			updates["end_date"] = parsed
-		}
-	}
-	if req.IsActive != nil {
-		updates["is_active"] = *req.IsActive
+	if req.ApprovedBy != nil {
+		updates["approved_by"] = *req.ApprovedBy
+		now := time.Now()
+		updates["approved_at"] = &now
 	}
 
 	if err := h.repo.UpdateScholarship(id, updates); err != nil {

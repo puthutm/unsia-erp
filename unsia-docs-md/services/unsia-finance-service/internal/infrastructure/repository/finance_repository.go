@@ -407,10 +407,11 @@ return &PaginatedResult{
 
 // ScholarshipFilter for filtering scholarships
 type ScholarshipFilter struct {
-	IsActive bool
-	Search  string
-	Page    int
-	Limit   int
+	StudentID       string
+	ScholarshipType string
+	Status          string
+	Page            int
+	Limit           int
 }
 
 func (r *FinanceRepository) CreateScholarship(s *domain.Scholarship) error {
@@ -432,11 +433,14 @@ func (r *FinanceRepository) GetScholarshipByID(id string) (*domain.Scholarship, 
 func (r *FinanceRepository) GetScholarships(filter ScholarshipFilter) (*PaginatedResult, error) {
 	query := r.db.Model(&domain.Scholarship{})
 
-	if filter.IsActive {
-		query = query.Where("is_active = ?", true)
+	if filter.StudentID != "" {
+		query = query.Where("student_id = ?", filter.StudentID)
 	}
-	if filter.Search != "" {
-		query = query.Where("code ILIKE ? OR name ILIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
+	if filter.ScholarshipType != "" {
+		query = query.Where("scholarship_type ILIKE ?", "%"+filter.ScholarshipType+"%")
+	}
+	if filter.Status != "" {
+		query = query.Where("status = ?", filter.Status)
 	}
 
 	var total int64

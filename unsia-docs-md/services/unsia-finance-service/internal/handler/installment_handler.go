@@ -10,6 +10,7 @@ import (
 	sharedauth "github.com/unsia-erp/shared-auth"
 	sharederr "github.com/unsia-erp/shared-errorenvelope"
 	"github.com/unsia-erp/unsia-finance-service/internal/domain"
+	"gorm.io/gorm"
 )
 
 // CreateInstallmentRequest handles POST /api/v1/finance/invoices/:id/request-installment

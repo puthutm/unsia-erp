@@ -135,26 +135,17 @@ type EventCreateRequest struct {
 }
 
 type ScholarshipCreateRequest struct {
-	Code           string   `json:"code" binding:"required"`
-	Name           string   `json:"name" binding:"required"`
-	Description    *string  `json:"description"`
-	DiscountType   string   `json:"discount_type" binding:"required,oneof=percentage fixed"`
-	DiscountValue  float64  `json:"discount_value" binding:"required"`
-	MaxAmount      *float64 `json:"max_amount"`
-	StartDate      *string  `json:"start_date"` // YYYY-MM-DD
-	EndDate        *string  `json:"end_date"`   // YYYY-MM-DD
-	IsActive       *bool    `json:"is_active"`
+	StudentID       string  `json:"student_id" binding:"required,uuid"`
+	ScholarshipType string  `json:"scholarship_type" binding:"required"`
+	Amount          float64 `json:"amount" binding:"required,gt=0"`
+	Status          string  `json:"status"`
 }
 
 type ScholarshipUpdateRequest struct {
-	Name          *string  `json:"name"`
-	Description   *string  `json:"description"`
-	DiscountType  *string  `json:"discount_type"`
-	DiscountValue *float64 `json:"discount_value"`
-	MaxAmount     *float64 `json:"max_amount"`
-	StartDate     *string  `json:"start_date"`
-	EndDate       *string  `json:"end_date"`
-	IsActive      *bool    `json:"is_active"`
+	ScholarshipType *string  `json:"scholarship_type"`
+	Amount          *float64 `json:"amount"`
+	Status          *string  `json:"status"`
+	ApprovedBy      *string  `json:"approved_by"`
 }
 
 // ============ FinanceHandler Struct ============

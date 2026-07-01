@@ -12,6 +12,7 @@ import (
 	sharedevent "github.com/unsia-erp/shared-event"
 	"github.com/unsia-erp/unsia-finance-service/internal/domain"
 	"github.com/unsia-erp/unsia-finance-service/internal/infrastructure/repository"
+	"github.com/unsia-erp/unsia-finance-service/internal/service"
 	"gorm.io/gorm"
 )
 
