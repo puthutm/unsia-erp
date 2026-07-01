@@ -30,14 +30,10 @@ FROM alpine:3.19 AS runner
 
 RUN apk add --no-cache ca-certificates tzdata
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
 WORKDIR /app
 
 # Copy the compiled binary
 COPY --from=builder /unsia-core-service /app/unsia-core-service
-
-USER appuser
 
 # Expose port 8001
 EXPOSE 8001
